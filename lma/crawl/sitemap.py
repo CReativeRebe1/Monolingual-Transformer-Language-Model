@@ -40,15 +40,31 @@ async def discover_sitemap_urls(client: httpx.AsyncClient, domain: str) -> list[
 
 
 async def fetch_urls_from_sitemap(
-    client: httpx.AsyncClient, sitemap_url: str, max_depth: int = 3
+    client: httpx.AsyncClient,
+    sitemap_url: str,
+    max_depth: int = 3,
+    max_sitemaps_total: int = 40,
+    _budget: list[int] | None = None,
 ) -> list[str]:
     """Recursively resolve a sitemap (or sitemap index) into leaf page URLs.
 
     Handles both <urlset> (leaf URLs) and <sitemapindex> (pointers to further sitemaps),
     which is the structure news sites typically use to shard sitemaps by month/year.
+
+    max_sitemaps_total bounds the total number of sitemap documents fetched across the whole
+    recursion (not just per level): some large news sites (bbc.com in particular) expose a
+    single global archive index sharded into 100+ dated sub-sitemaps going back years, across
+    every language edition. Walking all of them before seeding a single other domain would
+    burn most of a crawl session's startup time on one site. Capping the total lets bootstrap
+    seeding finish in a bounded amount of wall-clock time; later crawler runs against the same
+    frontier can raise the cap to pick up more of a large site's archive once other domains are
+    already flowing.
     """
-    if max_depth <= 0:
+    if _budget is None:
+        _budget = [max_sitemaps_total]
+    if max_depth <= 0 or _budget[0] <= 0:
         return []
+    _budget[0] -= 1
     try:
         resp = await client.get(sitemap_url, timeout=15.0, follow_redirects=True)
         if resp.status_code != 200:
@@ -76,5 +92,11 @@ async def fetch_urls_from_sitemap(
                 sub_sitemaps.append(loc.text.strip())
 
     for sub in sub_sitemaps:
-        urls.extend(await fetch_urls_from_sitemap(client, sub, max_depth=max_depth - 1))
+        if _budget[0] <= 0:
+            break
+        urls.extend(
+            await fetch_urls_from_sitemap(
+                client, sub, max_depth=max_depth - 1, _budget=_budget
+            )
+        )
     return urls

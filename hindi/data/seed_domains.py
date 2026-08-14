@@ -18,7 +18,6 @@ already Hindi-primary in their entirety and need no filtering.
 """
 
 NEWS = [
-    "www.bbc.com",          # BBC Hindi is served under /hindi/ paths on this shared-sitemap domain
     "www.amarujala.com",
     "www.jagran.com",
     "navbharattimes.indiatimes.com",
@@ -26,6 +25,12 @@ NEWS = [
     "www.livehindustan.com",
     "www.aajtak.in",
     "www.abplive.com",
+    # bbc.com last: its sitemap is a single global archive index shared across every language
+    # edition, sharded into 100+ dated sub-sitemaps -- by far the slowest domain to seed from
+    # (see lma/crawl/sitemap.py's max_sitemaps_total budget). Seeding it last means every
+    # faster, higher-yield domain is already flowing into the frontier before crawl time is
+    # spent walking BBC's archive.
+    "www.bbc.com",          # BBC Hindi is served under /hindi/ paths on this shared-sitemap domain
 ]
 
 ENCYCLOPEDIC_LITERARY = [

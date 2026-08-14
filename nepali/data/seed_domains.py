@@ -16,8 +16,10 @@ NEWS = [
     "www.setopati.com",
     "ratopati.com",
     "www.nagariknews.nagariknetwork.com",
-    "www.bbc.com",          # BBC Nepali is served under /nepali/ paths on this shared-sitemap domain
     "www.himalkhabar.com",
+    # bbc.com last: see hindi/data/seed_domains.py for why (single global sitemap index, 100+
+    # dated sub-sitemaps, by far the slowest domain to seed).
+    "www.bbc.com",          # BBC Nepali is served under /nepali/ paths on this shared-sitemap domain
 ]
 
 ENCYCLOPEDIC_LITERARY = [
