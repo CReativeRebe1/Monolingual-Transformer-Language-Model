@@ -1,0 +1,98 @@
+"""Tests for lma.dedup.lsh -- LSH banding over MinHash signatures."""
+import numpy as np
+import pytest
+
+from lma.dedup.lsh import LSHIndex, find_threshold, s_curve_probability
+from lma.dedup.minhash import MinHasher, word_shingles
+
+DOC_A = "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में विस्तार से बताता है और सर्दियों की बात करता है"
+DOC_B = "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में विस्तार से बताता है लेकिन गर्मियों की बात करता है"
+DOC_C = "क्रिकेट मैच में भारत ने आज शानदार प्रदर्शन करते हुए जीत दर्ज की और सभी दर्शक बहुत खुश हुए"
+DOC_D = "शेयर बाजार में आज भारी गिरावट देखी गई और निवेशकों को भारी नुकसान उठाना पड़ा है"
+
+
+def test_bad_banding_raises():
+    with pytest.raises(ValueError):
+        LSHIndex(num_perm=128, b=10, r=16)  # 10*16 = 160 != 128
+
+
+def test_valid_banding_constructs():
+    index = LSHIndex(num_perm=128, b=8, r=16)
+    assert index.b * index.r == index.num_perm
+
+
+def test_duplicate_doc_id_raises():
+    hasher = MinHasher(num_perm=32, seed=1)
+    index = LSHIndex(num_perm=32, b=8, r=4)
+    sig = hasher.signature_for_text(DOC_A)
+    index.insert("doc1", sig)
+    with pytest.raises(ValueError):
+        index.insert("doc1", sig)
+
+
+def test_near_duplicates_become_candidate_pair():
+    # DOC_A vs DOC_B has true Jaccard ~0.667 (verified separately via exact_jaccard); a strict
+    # b=8,r=16 banding (threshold ~0.86, see test_find_threshold_b8_r16_is_near_0_8) is tuned for
+    # much higher similarity than that and would legitimately miss this pair. A looser banding
+    # (b=32, r=4 -> threshold ~0.38) is the appropriate choice for catching this level of
+    # near-duplication, which is realistic for "same article, one clause reworded".
+    hasher = MinHasher(num_perm=128, seed=7)
+    index = LSHIndex(num_perm=128, b=32, r=4)
+    index.insert("a", hasher.signature_for_text(DOC_A))
+    index.insert("b", hasher.signature_for_text(DOC_B))
+    index.insert("c", hasher.signature_for_text(DOC_C))
+    index.insert("d", hasher.signature_for_text(DOC_D))
+
+    pairs = index.candidate_pairs()
+    assert ("a", "b") in pairs
+    # Unrelated documents (different topics entirely, true Jaccard ~0) should not collide.
+    assert ("a", "c") not in pairs
+    assert ("c", "d") not in pairs
+
+
+def test_identical_documents_always_become_candidates():
+    hasher = MinHasher(num_perm=128, seed=7)
+    index = LSHIndex(num_perm=128, b=8, r=16)
+    sig = hasher.signature_for_text(DOC_A)
+    index.insert("a1", sig)
+    index.insert("a2", sig)  # identical signature (e.g. exact-duplicate text)
+    assert ("a1", "a2") in index.candidate_pairs()
+
+
+def test_candidate_pairs_are_symmetric_and_unique():
+    hasher = MinHasher(num_perm=64, seed=3)
+    index = LSHIndex(num_perm=64, b=8, r=8)
+    sig = hasher.signature_for_text(DOC_A)
+    index.insert("x", sig)
+    index.insert("y", sig)
+    index.insert("z", sig)
+    pairs = index.candidate_pairs()
+    # 3 identical documents -> exactly 3 unique unordered pairs, each stored once (a < b).
+    assert pairs == {("x", "y"), ("x", "z"), ("y", "z")}
+
+
+# --- S-curve tuning ---
+
+def test_s_curve_probability_at_similarity_one_is_one():
+    assert s_curve_probability(1.0, b=8, r=16) == pytest.approx(1.0)
+
+
+def test_s_curve_probability_at_similarity_zero_is_near_zero():
+    assert s_curve_probability(0.0, b=8, r=16) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_s_curve_is_monotonically_increasing_in_similarity():
+    probs = [s_curve_probability(s, b=8, r=16) for s in np.linspace(0, 1, 11)]
+    assert all(a <= b + 1e-12 for a, b in zip(probs, probs[1:]))
+
+
+def test_find_threshold_b8_r16_is_near_0_8():
+    # The b=8, r=16 (num_perm=128) configuration cited in the Phase-1 plan targets ~0.8.
+    threshold = find_threshold(b=8, r=16)
+    assert 0.7 < threshold < 0.9
+
+
+def test_find_threshold_matches_s_curve_crossing():
+    b, r = 8, 16
+    threshold = find_threshold(b, r)
+    assert s_curve_probability(threshold, b, r) == pytest.approx(0.5, abs=0.05)
