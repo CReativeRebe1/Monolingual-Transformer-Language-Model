@@ -5,48 +5,64 @@
     {
       "algorithm": "bpe",
       "vocab_size": 8000,
-      "fertility": 1.5164514145141452,
-      "chars_per_token": 4.585116090439015,
+      "fertility": 1.5223475653291447,
+      "chars_per_token": 4.510599380921114,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.325625
+      "vocab_utilization": 0.507875
     },
     {
       "algorithm": "bpe",
       "vocab_size": 16000,
-      "fertility": 1.4014452644526445,
-      "chars_per_token": 4.9613823368074605,
+      "fertility": 1.3794802227616736,
+      "chars_per_token": 4.977744423166503,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.1775625
+      "vocab_utilization": 0.3006875
     },
     {
       "algorithm": "bpe",
       "vocab_size": 24000,
-      "fertility": 1.3587023370233702,
-      "chars_per_token": 5.1174606767002375,
+      "fertility": 1.3269313151506497,
+      "chars_per_token": 5.1748722087705135,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.122
+      "vocab_utilization": 0.21216666666666667
     },
     {
       "algorithm": "bpe",
       "vocab_size": 32000,
-      "fertility": 1.3376383763837638,
-      "chars_per_token": 5.198045977011494,
+      "fertility": 1.302870198486363,
+      "chars_per_token": 5.270440596229724,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.09359375
+      "vocab_utilization": 0.16134375
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 48000,
+      "fertility": 1.2701699271740683,
+      "chars_per_token": 5.406127037661608,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.11083333333333334
     },
     {
       "algorithm": "unigram",
       "vocab_size": 8000,
-      "fertility": 1.5390528905289054,
-      "chars_per_token": 4.517782217782218,
+      "fertility": 1.539554476652863,
+      "chars_per_token": 4.460186430459584,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.296625
+      "vocab_utilization": 0.437125
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 16000,
+      "fertility": 1.393759817221191,
+      "chars_per_token": 4.926745556067824,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.2754375
     }
   ],
   "selected": {
     "algorithm": "bpe",
     "vocab_size": 24000,
-    "fertility": 1.3587023370233702
+    "fertility": 1.3269313151506497
   },
   "final_model_path": "nepali\\tokenizer\\nepali_bpe_24000.model"
 }

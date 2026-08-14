@@ -5,16 +5,56 @@
     {
       "algorithm": "bpe",
       "vocab_size": 8000,
-      "fertility": 1.479048697621744,
-      "chars_per_token": 3.385145482388974,
+      "fertility": 1.4277122503795399,
+      "chars_per_token": 3.635679522309926,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.063375
+      "vocab_utilization": 0.444125
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 16000,
+      "fertility": 1.3090622445404647,
+      "chars_per_token": 3.9652080824300815,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.2494375
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 24000,
+      "fertility": 1.2728015882284247,
+      "chars_per_token": 4.078172309386182,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.17341666666666666
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 32000,
+      "fertility": 1.2507882751372184,
+      "chars_per_token": 4.149946314364409,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.13240625
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 48000,
+      "fertility": 1.2324535793530305,
+      "chars_per_token": 4.211683327805941,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.09016666666666667
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 8000,
+      "fertility": 1.4368212075207287,
+      "chars_per_token": 3.612630552281871,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.39175
     }
   ],
   "selected": {
     "algorithm": "bpe",
-    "vocab_size": 8000,
-    "fertility": 1.479048697621744
+    "vocab_size": 16000,
+    "fertility": 1.3090622445404647
   },
-  "final_model_path": "hindi\\tokenizer\\hindi_bpe_8000.model"
+  "final_model_path": "hindi\\tokenizer\\hindi_bpe_16000.model"
 }

@@ -2,45 +2,46 @@
   "language": "nepali",
   "status": "ok",
   "funnel": {
-    "collected": 2584,
-    "language_filtered": 2419,
-    "heuristic_filtered": 2275,
-    "quality_filtered": 2056,
-    "deduplicated": 2028
+    "collected": 9292,
+    "language_filtered": 6506,
+    "heuristic_filtered": 5259,
+    "quality_filtered": 4256,
+    "deduplicated": 4157
   },
   "heuristic_rejection_counts": {
-    "repeated_line_fraction_too_high": 6,
-    "symbol_to_word_ratio_too_high": 107,
-    "bullet_or_ellipsis_line_fraction_too_high": 53,
-    "insufficient_stopword_evidence": 21,
-    "too_few_words": 9
+    "repeated_line_fraction_too_high": 53,
+    "symbol_to_word_ratio_too_high": 946,
+    "bullet_or_ellipsis_line_fraction_too_high": 848,
+    "insufficient_stopword_evidence": 222,
+    "too_few_words": 96,
+    "too_long": 1
   },
   "dedup_stats": {
-    "input_count": 2056,
-    "exact_duplicates_removed": 12,
-    "near_duplicate_clusters": 16,
-    "near_duplicates_removed": 16,
-    "kept_count": 2028
+    "input_count": 4256,
+    "exact_duplicates_removed": 77,
+    "near_duplicate_clusters": 19,
+    "near_duplicates_removed": 22,
+    "kept_count": 4157
   },
   "corpus": {
-    "n_documents": 2028,
-    "n_words": 698403,
-    "n_chars": 4801440,
-    "n_bytes": 12947748,
+    "n_documents": 4157,
+    "n_words": 1622675,
+    "n_chars": 10930637,
+    "n_bytes": 29380009,
     "docs_per_source": {
-      "www.setopati.com": 51,
-      "www.bbc.com": 1779,
-      "www.onlinekhabar.com": 70,
-      "ekantipur.com": 105,
-      "ne.wikipedia.org": 15,
+      "www.bbc.com": 2938,
+      "ekantipur.com": 735,
+      "www.onlinekhabar.com": 158,
+      "www.setopati.com": 186,
+      "ne.wikipedia.org": 131,
       "www.nagariknews.nagariknetwork.com": 5,
       "www.himalkhabar.com": 2,
-      "ne.wikisource.org": 1
+      "ne.wikisource.org": 2
     }
   },
   "splits": {
-    "train": 1988,
-    "val": 20,
-    "test": 20
+    "train": 4075,
+    "val": 41,
+    "test": 41
   }
 }
