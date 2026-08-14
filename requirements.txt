@@ -6,6 +6,7 @@ tqdm>=4.66
 
 # Data collection / crawling
 httpx[http2]>=0.27
+h2>=4
 aiolimiter>=1.1
 selectolax>=0.3
 trafilatura>=1.12
