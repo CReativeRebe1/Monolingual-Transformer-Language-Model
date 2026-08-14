@@ -21,6 +21,7 @@ import hashlib
 import json
 import logging
 import sys
+import zlib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -48,13 +49,17 @@ SEED_TOKEN_BUDGET = 300_000  # small trusted-seed pull for training the langid/q
 
 
 def _iter_shard_records(shard_path: Path):
-    """Yields records from one JSONL.gz shard, tolerating a truncated tail.
+    """Yields records from one JSONL.gz shard, tolerating a truncated or mid-write-corrupted tail.
 
     The crawler (and, less often, the downloader) may still be appending to a shard file while
-    this script reads it -- a shard mid-flush can end in a truncated gzip stream or a partial
-    final JSON line. Both are treated as "stop reading this shard here", not a fatal error: a
-    corpus build should never crash because it raced an in-progress crawl, it should simply see
-    whatever was durably flushed at read time and pick up the rest on the next re-run.
+    this script reads it. This can surface two different ways, both treated as "stop reading this
+    shard here", not a fatal error: a clean truncation (EOFError/OSError, e.g. gzip.BadGzipFile),
+    or -- confirmed live, once the crawler started running as a genuinely concurrent long-lived
+    process rather than something this script always outlived -- a torn gzip DEFLATE block caught
+    mid-flush, which zlib reports as `zlib.error: Error -3 ... invalid block type` rather than a
+    clean end-of-stream signal. A corpus build should never crash because it raced an in-progress
+    crawl; it should simply see whatever was durably flushed at read time and pick up the rest on
+    the next re-run.
     """
     try:
         with gzip.open(shard_path, "rt", encoding="utf-8") as f:
@@ -66,7 +71,7 @@ def _iter_shard_records(shard_path: Path):
                     yield json.loads(line)
                 except json.JSONDecodeError:
                     continue
-    except (EOFError, OSError) as e:
+    except (EOFError, OSError, zlib.error, UnicodeDecodeError) as e:
         logger.warning("shard %s ended early (likely still being written): %s", shard_path.name, e)
 
 
