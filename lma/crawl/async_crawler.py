@@ -26,6 +26,7 @@ import httpx
 
 from lma.crawl.extractors import extract
 from lma.crawl.frontier import Frontier
+from lma.crawl.linkextract import extract_same_domain_links
 from lma.crawl.robots import USER_AGENT, PolitenessManager
 from lma.crawl.sitemap import discover_sitemap_urls, fetch_urls_from_sitemap
 
@@ -33,6 +34,7 @@ logger = logging.getLogger("lma.crawl")
 
 MAX_DOC_BYTES = 2_000_000  # skip anything absurdly large (not article text)
 MIN_TEXT_CHARS = 200  # below this, almost certainly a stub/nav page, not real content
+MAX_LINK_FOLLOW_DEPTH = 4  # bounds the BFS fallback for domains without a usable sitemap
 
 
 class ShardWriter:
@@ -174,7 +176,7 @@ async def run_crawl(
             fetched_this_run = 0
             sem = asyncio.Semaphore(concurrency)
 
-            async def worker(url: str):
+            async def worker(url: str, depth: int):
                 nonlocal fetched_this_run
                 async with sem:
                     status, html, error = await _fetch_one(client, politeness, url)
@@ -184,16 +186,25 @@ async def run_crawl(
                     doc = extract(html, url)
                     if doc is None or len(doc.text) < MIN_TEXT_CHARS:
                         frontier.mark_skipped(url, "extraction_empty_or_too_short")
-                        return
-                    writer.write(
-                        {
-                            **asdict(doc),
-                            "host": urlsplit(url).netloc,
-                            "fetched_at": datetime.now(timezone.utc).isoformat(),
-                        }
-                    )
-                    frontier.mark_done(url, status, doc.content_sha256)
-                    fetched_this_run += 1
+                    else:
+                        writer.write(
+                            {
+                                **asdict(doc),
+                                "host": urlsplit(url).netloc,
+                                "fetched_at": datetime.now(timezone.utc).isoformat(),
+                            }
+                        )
+                        frontier.mark_done(url, status, doc.content_sha256)
+                        fetched_this_run += 1
+                    # Link-following fallback: even a skipped page (e.g. a category/listing page
+                    # that itself has too little text to count as an article) is still useful as
+                    # a source of further same-domain links, which is exactly how a domain with
+                    # no working sitemap gets past its single seeded homepage URL. Every fetched
+                    # page (whether or not it counted as a document) contributes links up to the
+                    # depth cap, so BFS naturally reaches deeper into a site's archive over time.
+                    if depth < MAX_LINK_FOLLOW_DEPTH:
+                        links = extract_same_domain_links(html, url)
+                        frontier.add_many(links, depth=depth + 1)
 
             try:
                 while fetched_this_run < max_docs:
@@ -204,7 +215,7 @@ async def run_crawl(
                             logger.info("frontier exhausted (no pending, nothing to requeue)")
                             break
                         continue
-                    await asyncio.gather(*(worker(url) for url, _, _ in batch))
+                    await asyncio.gather(*(worker(url, depth) for url, _, depth in batch))
                     if fetched_this_run % 500 < batch_size:
                         logger.info(
                             "progress: %d fetched this run | frontier=%s",
