@@ -17,16 +17,14 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 2,411 docs | 1,506 docs |
-| Crawl frontier: queued (pending) | 555,949 URLs | 5,155 URLs |
-| Crawl frontier: total discovered | 558,363 URLs | 7,967 URLs |
-| Domains fully seeded | 3 of 13 so far (amarujala, jagran, navbharattimes) — climbing now that the seeding bugs are fixed | **10 of 10** — all configured Nepali domains seeded |
-| Cleaned corpus (last `build_corpus.py` run, pre-fix) | 130 docs, 56,247 words | 797 docs, 220,893 words |
+| Crawl frontier: fetched | 3,136 docs | 2,315 docs |
+| Crawl frontier: queued (pending) | 894,987 URLs | 6,742 URLs |
+| Crawl frontier: total discovered | 898,908 URLs | 11,273 URLs |
+| Domains actively contributing (`done`) | 9 (amarujala, bhaskar, navbharattimes, livehindustan, jagran, hi.wikipedia/wikisource/wiktionary, aajtak) | 9 (bbc, onlinekhabar, ekantipur, wikisource, wikipedia, setopati, himalkhabar, nagariknews, ratopati) |
+| Cleaned corpus (latest `build_corpus.py` run, post-fix) | **442 docs, 241,420 words, 8 sources** | **2,028 docs, 698,403 words, 8 sources** |
 
-Test suite: **191 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
-not installed on this dev machine — see the OCR section below). Cleaned-corpus numbers above
-predate the section-16 crawler fixes and will jump once `build_corpus.py` is re-run against the
-now-much-larger, much-more-diverse frontier.
+Test suite: **193 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+not installed on this dev machine — see the OCR section below).
 
 **Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
 ~500M-token target yet. The crawlers have been running continuously since work started and need
@@ -378,6 +376,19 @@ fixes), so it required a restart to take effect — judged safe this time since 
 is now itself restart-safe and bounded (sections 16), unlike earlier restarts that interrupted an
 in-progress unbounded seeding walk.
 
+**Confirmed working, ~2 minutes after restart**: Hindi's `done` set went from 1 domain to 9
+(amarujala, bhaskar, navbharattimes, livehindustan, jagran, hi.wikipedia, hi.wikisource,
+hi.wiktionary, aajtak — abplive joining shortly after); Nepali's went from 1 to 9 as well.
+Re-running `build_corpus.py` on this fresh data confirms real diversity, not just frontier
+diversity: **Hindi 442 docs / 241,420 words across 8 sources** (amarujala 218, livehindustan 80,
+navbharattimes 85, aajtak 20, bhaskar 14, hi.wikisource 15, hi.wikipedia 7, hi.wiktionary 3);
+**Nepali 2,028 docs / 698,403 words across 8 sources** (bbc 1,779, ekantipur 105, onlinekhabar
+70, setopati 51, wikipedia 15, nagariknews 5, himalkhabar 2, wikisource 1). bbc.com is still
+Nepali's largest single source — expected, since it had a multi-hour head start before the
+fairness fix landed, and round-robin fairness only affects claiming *going forward*, it does not
+retroactively rebalance work already done. Its share will keep shrinking in relative terms as the
+other 9 domains get an equal claim priority per round from here on.
+
 ---
 
 ## What's left to do
@@ -436,6 +447,14 @@ Ordered by what's actually blocking:
   Nepali now has all 10 configured domains seeded (was 6), Hindi is climbing past its first
   domain for the first time. 9 new tests, 191 total. **Lesson recorded**: stop restarting the
   crawlers casually — let them run continuously from here.
+
+- **2026-08-14, very late night**: Found and fixed a third crawler bug (section 17):
+  `claim_batch`'s plain FIFO selection let one bulk-seeded domain (bbc.com) crowd out every
+  other domain almost entirely (1,759/1,766 Nepali docs from one source). Fixed with round-robin
+  claiming across hosts; confirmed working within ~2 minutes of restart — both languages now
+  actively fetching from 9 distinct domains each. Re-ran `build_corpus.py` on the fresh data:
+  Hindi 442 docs / 241,420 words across 8 sources, Nepali 2,028 docs / 698,403 words across 8
+  sources — real, measured diversity, not just frontier diversity. 2 new tests, 193 total.
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
