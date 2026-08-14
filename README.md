@@ -70,3 +70,11 @@ upload date and file manifest)*
 - [ ] Phase 1 — Data Collection and Tokenizer Construction (due 19 Aug 2026)
 - [ ] Phase 2 — Model Implementation, Pretraining, Evaluation (due 5 Sep 2026)
 - [ ] Phase 3 — Reasoning Finetuning, Attention Analysis, Final Report (due 16 Sep 2026)
+
+## Development log
+
+[`PHASE1_LOG.md`](PHASE1_LOG.md) is a running, commit-by-commit development log for Phase 1 —
+what was built and why, every bug found by running the pipeline against live data (and how it
+was fixed), current corpus/frontier numbers, and an explicit "what's left" list. It is a working
+log, not the graded deliverable: the polished `report/phase1.md` (tables, figures, written
+analysis) will be written once the corpus reaches representative scale, close to the deadline.
