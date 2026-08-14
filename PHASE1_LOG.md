@@ -17,13 +17,13 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 1,983 docs | 1,064 docs |
-| Crawl frontier: queued (pending) | 99,901 URLs | 5,701 URLs |
-| Crawl frontier: total discovered | 101,887 URLs | 7,695 URLs |
+| Crawl frontier: fetched | 2,116 docs | 1,129 docs |
+| Crawl frontier: queued (pending) | 99,776 URLs | 5,568 URLs |
+| Crawl frontier: total discovered | 101,895 URLs | 7,695 URLs |
 | Cleaned corpus (last `build_corpus.py` run) | 130 docs, 56,247 words | 797 docs, 220,893 words |
 | Dominant source so far | www.amarujala.com (sitemap-heavy) | www.bbc.com/nepali (link-follow reaching deep) |
 
-Test suite: **169 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **177 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below).
 
 **Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
@@ -278,6 +278,22 @@ stated selection criterion).
 - Exits non-zero on any real failure, so it doubles as a pre-push guard. 6 tests isolate the
   check logic from actual repo state via a monkeypatched `REPO_ROOT`.
 
+### 14. Corpus encoding to memmap format (commit `d22b94e`)
+
+`lma/tokenizer/encode_corpus.py` — encodes a cleaned/split corpus (one document per line, as
+`build_corpus.py` writes) into the nanoGPT-style format Phase 2's trainer will read directly:
+a flat `uint16` token-id array (`.bin`) plus a `uint64` document-boundary offset array (`.idx`),
+opened via `np.memmap` so a ~500M-token corpus never needs to fully load into RAM.
+
+- `uint16` validity (vocab must stay under 65,536) is asserted explicitly at encode time, not
+  left to silently wrap token ids if a future vocab choice exceeded it.
+- `document_slice()` recovers a single document's token span from the offset array without
+  re-tokenizing or re-scanning the original text — needed for Phase-2 generation-prefix
+  evaluation.
+- **Verified**: trained a small real tokenizer, encoded real text end to end, confirmed exact
+  match against direct `encode()`, correct EOS-append behavior, genuine memmap (not fully
+  materialized) access, and the uint16-overflow guard. 8 tests.
+
 ---
 
 ## What's left to do
@@ -301,8 +317,9 @@ Ordered by what's actually blocking:
 5. **Re-run `scripts/tokenizer_sweep.py`** once each language's train split is large enough to
    support the full {8k...48k} range — pick the final vocab size/algorithm from real fertility
    numbers, not the current placeholder.
-6. **Encode the final corpus** to `uint16` memmap `.bin`/`.idx` for fast Phase-2 training
-   (module not built yet — small, will follow directly from the chosen tokenizer).
+6. ~~Encode the final corpus to `uint16` memmap `.bin`/`.idx` for fast Phase-2 training~~ —
+   **done** (`lma/tokenizer/encode_corpus.py`, commit `d22b94e`); just needs to be run against
+   the final chosen tokenizer once item 5 is complete.
 7. **Write `report/phase1.md`** with the real final numbers, funnel charts, tokenizer sweep
    table, dataset statistics, and the manual-vs-downloaded split — once items 1-6 are far
    enough along that the numbers are representative, not a 130-document snapshot.
@@ -316,6 +333,11 @@ Ordered by what's actually blocking:
 ## Change log
 
 *(newest first; each entry = one working session's worth of changes)*
+
+- **2026-08-14, night**: Added `lma/tokenizer/encode_corpus.py` (section 14) — nanoGPT-style
+  `.bin`/`.idx` memmap corpus encoding, ready for Phase 2 once the tokenizer sweep is finalized.
+  8 new tests, 177 total. Crawlers still running continuously in the background (Hindi 2,116 /
+  Nepali 1,129 docs fetched at time of this entry, both still climbing).
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
