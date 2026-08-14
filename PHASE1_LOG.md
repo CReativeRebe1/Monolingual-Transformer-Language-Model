@@ -20,11 +20,13 @@ against the actual history.
 | Crawl frontier: fetched | 3,136 docs | 2,315 docs |
 | Crawl frontier: queued (pending) | 894,987 URLs | 6,742 URLs |
 | Crawl frontier: total discovered | 898,908 URLs | 11,273 URLs |
-| Domains actively contributing (`done`) | 9 (amarujala, bhaskar, navbharattimes, livehindustan, jagran, hi.wikipedia/wikisource/wiktionary, aajtak) | 9 (bbc, onlinekhabar, ekantipur, wikisource, wikipedia, setopati, himalkhabar, nagariknews, ratopati) |
-| Cleaned corpus (latest `build_corpus.py` run, post-fix) | **442 docs, 241,420 words, 8 sources** | **2,028 docs, 698,403 words, 8 sources** |
+| Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **442 docs, 241,420 words, 8 sources** (committed to branch) | **2,028 docs, 698,403 words, 8 sources** (committed to branch) |
 
 Test suite: **193 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
-not installed on this dev machine — see the OCR section below).
+not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
+full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
+needed (section 19).
 
 **Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
 ~500M-token target yet. The crawlers have been running continuously since work started and need
@@ -413,6 +415,36 @@ The crawler is fully resume-safe either way — restarting it from either side n
 progress — but it needs to actually be *running* to make progress, and that now needs to happen
 outside a single assistant turn.
 
+### 19. `scripts/reproduce.sh`: full pipeline demo, no GPU or live crawl needed (commit `d9ec7e0`)
+
+A plan deliverable that hadn't been built yet: a grader (or a fresh clone) should be able to run
+the entire Phase-1 pipeline end to end in minutes without waiting on the live crawl or needing a
+GPU.
+
+- `scripts/make_sample_shards.py`: a small, hand-written bundle of real Devanagari paragraphs per
+  language (news-like, encyclopedic, narrative topics; one intentional near-duplicate pair; one
+  intentional too-short reject), in the exact JSONL.gz shard format the real crawler produces —
+  clearly documented as illustrative, **not** a claim about the real training corpus.
+- `scripts/reproduce.sh`: runs it through the full cascade — normalize → language-ID → heuristic
+  filter → learned quality filter → dedup → split → stats/figures → tokenizer training → corpus
+  encoding (`.bin`/`.idx`).
+- Along the way, added `--lang-dir` and `--report-dir` overrides to `build_corpus.py` (previously
+  hardcoded to `REPO_ROOT/<lang>` and `REPO_ROOT/report/figures`) so a demo run operates against
+  a fully isolated directory and can never read, write, or overwrite the real corpus or the real
+  graded figures — which matters concretely, since `hindi/` and `nepali/` are actively receiving
+  new raw shards from the live crawl right now.
+- **Caught its own bug on first run**: the initial sample paragraphs were too short to clear the
+  heuristic filter's 40-word/200-char minimums, so 0 documents survived per language — a poor
+  demonstration of a pipeline that's supposed to show survival, not just rejection. Lengthened
+  each to 3-4 sentences; re-ran and confirmed **6 of 7 sample documents survive per language**
+  (the 7th is the intentional low-content reject), a tokenizer trains, and the corpus encodes.
+  `git status` after the run confirmed zero changes to `hindi/`, `nepali/`, or `report/figures/`.
+
+Also committed the first real (non-demo) corpus snapshot to the branch (commit `b1f4fdb`):
+current train/val/test splits, `stats.json`, and figures for both languages, matching the
+442-Hindi/2,028-Nepali-document numbers confirmed in section 17 — periodic real commits rather
+than one dump at the deadline, per the assignment's explicit guidance.
+
 ---
 
 ## What's left to do
@@ -481,6 +513,16 @@ Ordered by what's actually blocking:
   actively fetching from 9 distinct domains each. Re-ran `build_corpus.py` on the fresh data:
   Hindi 442 docs / 241,420 words across 8 sources, Nepali 2,028 docs / 698,403 words across 8
   sources — real, measured diversity, not just frontier diversity. 2 new tests, 193 total.
+
+- **2026-08-15, early morning**: Discovered both crawlers had died silently (session-boundary
+  issue, not a crash — section 18), relaunched them (no data lost, resumed cleanly), and flagged
+  this to the user as an operational risk: continuous multi-day crawling needs to run outside a
+  single assistant session from here. Built `scripts/reproduce.sh` (section 19) — the full
+  Phase-1 pipeline runnable end to end in minutes on a small bundled sample, no GPU or live crawl
+  needed; caught and fixed its own bug (sample docs too short to survive the heuristic filter) by
+  actually running it, not just writing it. Committed the first real (non-demo) corpus snapshot
+  to the branch: splits, stats, and figures for 442 Hindi / 2,028 Nepali documents. 193 tests
+  passing throughout. Crawlers confirmed still running and progressing after the relaunch.
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
