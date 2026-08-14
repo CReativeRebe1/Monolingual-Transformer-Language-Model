@@ -17,13 +17,13 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 2,116 docs | 1,129 docs |
-| Crawl frontier: queued (pending) | 99,776 URLs | 5,568 URLs |
-| Crawl frontier: total discovered | 101,895 URLs | 7,695 URLs |
+| Crawl frontier: fetched | 2,217 docs | 1,187 docs |
+| Crawl frontier: queued (pending) | 99,675 URLs | 5,487 URLs |
+| Crawl frontier: total discovered | 101,895 URLs | 7,715 URLs |
 | Cleaned corpus (last `build_corpus.py` run) | 130 docs, 56,247 words | 797 docs, 220,893 words |
 | Dominant source so far | www.amarujala.com (sitemap-heavy) | www.bbc.com/nepali (link-follow reaching deep) |
 
-Test suite: **177 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **182 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below).
 
 **Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
@@ -294,6 +294,22 @@ opened via `np.memmap` so a ~500M-token corpus never needs to fully load into RA
   match against direct `encode()`, correct EOS-append behavior, genuine memmap (not fully
   materialized) access, and the uint16-overflow guard. 8 tests.
 
+### 15. Google Drive upload script (commit `89b1299`)
+
+`scripts/upload_to_drive.py` — uploads large artifacts (raw/cleaned corpus, tokenizer files,
+later Phase-2/3 checkpoints) to Drive, since git must never hold them.
+
+- Wraps `rclone` rather than implementing a Google Drive OAuth flow ourselves — rclone handles
+  token refresh and resumable uploads for free, and lets whichever machine actually holds the
+  real artifacts (this dev machine, or more likely Kaggle/Colab) authenticate with its own
+  owner's Google account via a one-time `rclone config`, with no credentials ever living in this
+  repository.
+- Prints the manual shareable-link step after every successful upload (rclone can't set
+  link-sharing permissions itself), so it's never forgotten before the README is updated.
+- `rclone` is not installed on this dev machine — expected, since real uploads run wherever the
+  real corpus/checkpoints are, not here. 5 tests cover what's testable without it: path
+  resolution, error messages, shareable-link instruction text.
+
 ---
 
 ## What's left to do
@@ -323,9 +339,10 @@ Ordered by what's actually blocking:
 7. **Write `report/phase1.md`** with the real final numbers, funnel charts, tokenizer sweep
    table, dataset statistics, and the manual-vs-downloaded split — once items 1-6 are far
    enough along that the numbers are representative, not a 130-document snapshot.
-8. **Upload large artifacts to Google Drive** and fill in the README's Drive-links table — this
-   needs your Google Drive account; I can write the upload script but can't authenticate it
-   myself in this session.
+8. ~~Write the Google Drive upload script~~ — **done** (`scripts/upload_to_drive.py`, commit
+   `89b1299`). **Still needed from you**: run `rclone config` once (see the script's docstring)
+   to authorize it against your own Google account, then actually run the uploads and fill in
+   the README's Drive-links table — I cannot authenticate this myself.
 9. **Final `phase-1` push** before 19 Aug 2026, 11:59 PM.
 
 ---
@@ -333,6 +350,11 @@ Ordered by what's actually blocking:
 ## Change log
 
 *(newest first; each entry = one working session's worth of changes)*
+
+- **2026-08-14, night**: Added `scripts/upload_to_drive.py` (section 15) — rclone-based Drive
+  upload for large artifacts, with the manual one-time setup and shareable-link steps documented
+  since I cannot authenticate a Google account myself. 5 new tests, 182 total. Crawlers still
+  running continuously (Hindi 2,217 / Nepali 1,187 docs fetched at time of this entry).
 
 - **2026-08-14, night**: Added `lma/tokenizer/encode_corpus.py` (section 14) — nanoGPT-style
   `.bin`/`.idx` memmap corpus encoding, ready for Phase 2 once the tokenizer sweep is finalized.
