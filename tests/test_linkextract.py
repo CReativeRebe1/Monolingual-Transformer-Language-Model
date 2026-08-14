@@ -83,3 +83,19 @@ def test_respects_max_links_cap():
 
 def test_malformed_html_does_not_raise():
     assert extract_same_domain_links("<html><body><a href=", BASE) == []
+
+
+def test_archive_index_and_events_hub_pages_are_filtered():
+    # Regression test: amarujala.com's /news-archives, /news-archives/auto-archives, and
+    # /events hub pages have no article body of their own -- confirmed empirically to extract
+    # as pure cookie-notice boilerplate (see test_filters.py's matching regression test).
+    html = """
+    <html><body>
+        <a href="/news-archives">Archives index</a>
+        <a href="/news-archives/auto-archives">Auto archives</a>
+        <a href="/events">Events</a>
+        <a href="/uttar-pradesh/meerut/some-real-article-slug-12345">Real article</a>
+    </body></html>
+    """
+    links = extract_same_domain_links(html, BASE)
+    assert links == ["https://example.com/uttar-pradesh/meerut/some-real-article-slug-12345"]

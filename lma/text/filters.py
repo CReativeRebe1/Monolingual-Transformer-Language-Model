@@ -42,6 +42,14 @@ BOILERPLATE_PHRASES = (
     "all rights reserved",
     "subscribe to our newsletter",
     "यह वेबसाइट कुकीज़ का उपयोग करती है",  # "this website uses cookies" (Hindi)
+    # Observed directly in the crawled Hindi corpus (amarujala.com's cookie/data-collection
+    # notice, verbatim on every section/category "hub" page that has no real article body --
+    # e.g. /news-archives, /events, /kavya/*): 745 of ~950 heuristic-surviving documents in an
+    # early corpus-build run were exact duplicates of this one disclaimer. Dedup correctly
+    # collapsed them to a single copy, but the right fix is catching it here so it never
+    # displaces real crawl budget in the final kept corpus at all.
+    "हम डाटा संग्रह टूल्स",  # "we collect data via tools [like cookies]" (Hindi, amarujala.com)
+    "अमर उजाला एप इंस्टॉल कर रजिस्टर करें",  # "install the Amar Ujala app and register" (app-install nag)
 )
 
 

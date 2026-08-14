@@ -22,9 +22,15 @@ from selectolax.parser import HTMLParser
 _DENYLIST_SEGMENTS = re.compile(
     r"/(login|signin|signup|register|search|tag|tags|category|categories|author|authors|"
     r"video|videos|live|livetv|photo|photos|gallery|about|contact|privacy|terms|rss|feed|"
-    r"subscribe|newsletter|advertise|careers|jobs|sitemap)(/|$|\?)",
+    r"subscribe|newsletter|advertise|careers|jobs|sitemap|events?)(/|$|\?)",
     re.IGNORECASE,
 )
+# Substring (not exact-segment) match: news-portal "section index / archive listing" pages --
+# e.g. amarujala.com's /news-archives, /news-archives/auto-archives -- have no article body of
+# their own (confirmed empirically: they extracted as pure cookie-notice boilerplate, see
+# lma/text/filters.py's BOILERPLATE_PHRASES comment) and are worth excluding from link-following
+# even though "archives" never appears as a standalone path segment on its own.
+_ARCHIVE_INDEX_RE = re.compile(r"archives?", re.IGNORECASE)
 _ASSET_EXT_RE = re.compile(
     r"\.(jpg|jpeg|png|gif|svg|webp|css|js|pdf|zip|mp4|mp3|ico|woff2?|ttf)(\?|$)", re.IGNORECASE
 )
@@ -58,7 +64,7 @@ def extract_same_domain_links(html: str, base_url: str, max_links: int = 30) -> 
             continue  # same-domain only
         if _ASSET_EXT_RE.search(parts.path):
             continue
-        if _DENYLIST_SEGMENTS.search(parts.path):
+        if _DENYLIST_SEGMENTS.search(parts.path) or _ARCHIVE_INDEX_RE.search(parts.path):
             continue
         clean = f"{parts.scheme}://{parts.netloc}{parts.path}"  # drop query/fragment noise
         if clean in seen:

@@ -114,3 +114,18 @@ def test_strip_light_pii_redacts_email_and_phone():
 
 def test_strip_light_pii_leaves_normal_text_untouched():
     assert strip_light_pii(GOOD_HINDI_TEXT) == GOOD_HINDI_TEXT
+
+
+def test_observed_amarujala_cookie_notice_is_rejected_as_boilerplate():
+    # Regression test for a real finding during Phase-1 corpus building: this exact disclaimer
+    # (verbatim from amarujala.com's non-article "hub" pages) accounted for 745 of ~950
+    # heuristic-surviving documents in an early crawl before this phrase was added to the
+    # blocklist. It must never again pass the heuristic cascade undetected.
+    observed_text = (
+        "हम डाटा संग्रह टूल्स, जैसे की कुकीज के माध्यम से आपकी जानकारी एकत्र करते हैं "
+        "ताकि आपको बेहतर और व्यक्तिगत अनुभव प्रदान कर सकें और लक्षित विज्ञापन पेश कर सकें। "
+        "अगर आप साइन-अप करते हैं, तो हम आपका ईमेल पता, फोन नंबर और अन्य विवरण पूरी तरह "
+        "सुरक्षित तरीके से स्टोर करते हैं।"
+    )
+    verdict = evaluate(observed_text, language="hindi")
+    assert "boilerplate_phrase_present" in verdict.failed_rules
