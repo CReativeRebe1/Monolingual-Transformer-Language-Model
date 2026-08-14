@@ -389,16 +389,42 @@ fairness fix landed, and round-robin fairness only affects claiming *going forwa
 retroactively rebalance work already done. Its share will keep shrinking in relative terms as the
 other 9 domains get an equal claim priority per round from here on.
 
+### 18. Operational finding: background crawlers do not survive a session boundary
+
+Checked on the crawlers after some time had passed and found **both python processes gone**,
+with no crash in the logs — Nepali's log simply stops mid-stream (last line at 00:11:37, no
+error, no exit message). Root cause: processes launched via `nohup ... &` from this assistant's
+shell are tied to that shell/session's lifecycle in this environment; they do not reliably
+survive a boundary between one turn of work and the next, even with `disown`.
+
+**No data was lost** — this is exactly why the frontier is SQLite-backed with WAL mode and
+atomic claim/mark-done transitions (section 3): every fetch that completed before the process
+died is durably recorded, `in_progress=0` on reopen confirms the requeue-on-crash guarantee held,
+and both crawlers resumed from their exact prior state (`done` counts unchanged, `seeded_domains`
+intact) with a simple relaunch.
+
+**This changes the operational plan for the remaining Phase-1 days.** Relying on this assistant
+to keep a background crawl alive unattended for multiple days is not reliable in this
+environment. Recommended going forward: run
+`python scripts/run_crawl.py --lang hindi --max-docs 500000 --concurrency 24 --min-delay 1.5`
+(and the `nepali` equivalent) **directly in your own terminal window** (or a `screen`/`tmux`
+session, or a Kaggle/Colab notebook cell) so it runs independently of this assistant's session.
+The crawler is fully resume-safe either way — restarting it from either side never loses
+progress — but it needs to actually be *running* to make progress, and that now needs to happen
+outside a single assistant turn.
+
 ---
 
 ## What's left to do
 
 Ordered by what's actually blocking:
 
-1. **Let the crawlers keep running** — this is the critical path. They need real days of
-   wall-clock (not just this session) to approach the ~500M-token targets. Current combined
-   fetch rate: roughly 1,000-2,000 docs/hour across both languages, growing as link-following
-   discovers more distinct hosts. *Not something more code fixes — just needs time.*
+1. **Let the crawlers keep running — but see section 18: this needs to happen outside a single
+   assistant session now.** They need real days of wall-clock to approach the ~500M-token
+   targets. Current combined fetch rate: roughly 1,000-2,000 docs/hour across both languages,
+   growing as link-following discovers more distinct hosts. Run
+   `python scripts/run_crawl.py --lang hindi --max-docs 500000 --concurrency 24 --min-delay 1.5`
+   (and `--lang nepali`) in your own terminal/tmux/Kaggle notebook so it survives independently.
 2. **Watch for further crawl-quality issues** as new domains start contributing (each domain
    can have its own boilerplate patterns, like `amarujala.com`'s cookie notice did) — re-run
    `build_corpus.py` periodically and inspect `heuristic_rejection_counts` / dedup stats for
