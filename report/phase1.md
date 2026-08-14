@@ -98,46 +98,45 @@ unit-tested independently of the binary.
 
 | | Model H (Hindi) | Model L (Nepali) |
 |---|---|---|
-| Raw collected | 3,189 | 2,584 |
-| Survived language filter | 3,075 | 2,419 |
-| Survived heuristic filter | 780 | 2,275 |
-| Survived quality filter | 455 | 2,056 |
-| **Final (post-dedup)** | **442 documents** | **2,028 documents** |
-| Words | 241,420 | 698,403 |
-| Characters | 1,271,805 | 4,801,440 |
-| Bytes (UTF-8) | 3,233,823 | 12,947,748 |
+| Raw collected | 12,581 | 9,292 |
+| Survived language filter | 12,160 | 6,506 |
+| Survived heuristic filter | 5,979 | 5,259 |
+| Survived quality filter | 3,802 | 4,256 |
+| **Final (post-dedup)** | **3,546 documents** | **4,157 documents** |
+| Words | 1,981,812 | 1,622,675 |
+| Characters | 10,314,215 | 10,930,637 |
+| Bytes (UTF-8) | 26,300,540 | 29,380,009 |
 | Manual fraction | **100%** (crawled) | **100%** (crawled) |
-| Train / val / test docs | 434 / 4 / 4 | 1,988 / 20 / 20 |
-| Distinct contributing sources | 8 | 8 |
+| Train / val / test docs | 3,476 / 35 / 35 | 4,075 / 41 / 41 |
+| Distinct contributing sources | 9 | 8 |
 
-**Heuristic-cascade rejection breakdown (Hindi)**: `boilerplate_phrase_present` 940,
-`symbol_to_word_ratio_too_high` 1,162, `repeated_line_fraction_too_high` 697,
-`bullet_or_ellipsis_line_fraction_too_high` 148, `insufficient_stopword_evidence` 15,
-`too_few_words` 6, `too_short` 3. The dominant rejection reasons (symbol ratio, repeated lines,
-boilerplate phrases) are consistent with news-portal navigation chrome and cookie/app-install
-notices — exactly the class of noise the cascade is designed to catch (see `PHASE1_LOG.md` §11
-for the specific `amarujala.com` boilerplate-flooding incident this cascade was hardened against).
+**Heuristic-cascade rejection breakdown (Hindi)**: `symbol_to_word_ratio_too_high` 4,088,
+`bullet_or_ellipsis_line_fraction_too_high` 2,029, `repeated_line_fraction_too_high` 2,024,
+`boilerplate_phrase_present` 940, `insufficient_stopword_evidence` 110, `too_few_words` 62,
+`too_short` 5, `digit_char_ratio_too_high` 1, `mean_word_length_too_high` 1.
 
-**Heuristic-cascade rejection breakdown (Nepali)**: `symbol_to_word_ratio_too_high` 107,
-`bullet_or_ellipsis_line_fraction_too_high` 53, `insufficient_stopword_evidence` 21,
-`too_few_words` 9, `repeated_line_fraction_too_high` 6.
+**Heuristic-cascade rejection breakdown (Nepali)**: `symbol_to_word_ratio_too_high` 946,
+`bullet_or_ellipsis_line_fraction_too_high` 848, `insufficient_stopword_evidence` 222,
+`too_few_words` 96, `repeated_line_fraction_too_high` 53, `too_long` 1.
 
-**Deduplication**: Hindi — 6 exact duplicates, 1 near-duplicate cluster (7 documents) removed from
-455 quality-filtered documents, 442 kept. Nepali — 12 exact duplicates, 16 near-duplicate clusters
-(16 documents) removed from 2,056, 2,028 kept.
+**Deduplication**: Hindi — 158 exact duplicates, 11 near-duplicate clusters (98 documents)
+removed from 3,802 quality-filtered documents, 3,546 kept. Nepali — 77 exact duplicates, 19
+near-duplicate clusters (22 documents) removed from 4,256, 4,157 kept.
 
-**Source diversity**: Hindi spans `amarujala.com` (218), `livehindustan.com` (80),
-`navbharattimes.indiatimes.com` (85), `aajtak.in` (20), `bhaskar.com` (14), `hi.wikisource.org`
-(15), `hi.wikipedia.org` (7), `hi.wiktionary.org` (3). Nepali spans `bbc.com` (1,779),
-`ekantipur.com` (105), `onlinekhabar.com` (70), `setopati.com` (51), `ne.wikipedia.org` (15),
-`nagariknews.nagariknetwork.com` (5), `himalkhabar.com` (2), `ne.wikisource.org` (1). `bbc.com`'s
-share reflects a multi-hour head start before the round-robin fetch-fairness fix landed
-(`PHASE1_LOG.md` §17) — its relative share will keep shrinking as the crawl continues, since every
-domain now gets equal claim priority per round.
+**Source diversity**: Hindi spans `navbharattimes.indiatimes.com` (929), `livehindustan.com`
+(1,149), `amarujala.com` (356), `jagran.com` (451), `hi.wikisource.org` (257), `aajtak.in` (20),
+`hi.wikipedia.org` (133), `bhaskar.com` (217), `hi.wiktionary.org` (34). Nepali spans `bbc.com`
+(2,938), `ekantipur.com` (735), `onlinekhabar.com` (158), `setopati.com` (186), `ne.wikipedia.org`
+(131), `nagariknews.nagariknetwork.com` (5), `himalkhabar.com` (2), `ne.wikisource.org` (2).
+`bbc.com` still leads Nepali's mix — it had a multi-hour head start before the round-robin
+fetch-fairness fix landed (`PHASE1_LOG.md` §17) — but its *relative* share continues shrinking as
+the crawl runs, since every domain now gets equal claim priority per round.
 
-**Target vs. current**: both languages are far below the ~500M-token target at this snapshot — the
-crawl is ongoing (both crawlers are running continuously, `PHASE1_LOG.md` §18) and this table will
-be refreshed as it grows. If Nepali cannot reach 500M from available public + scrapable sources by
+**Target vs. current**: both languages have grown substantially since the previous snapshot
+(442/2,028 → 3,546/4,157 documents) now that both crawlers run continuously and independently in
+a persistent terminal, outside any single assistant session (`PHASE1_LOG.md` §18, §20). Both are
+still well below the ~500M-token target — the crawl is ongoing and this table will keep being
+refreshed as it grows. If Nepali cannot reach 500M from available public + scrapable sources by
 the deadline, the exact shortfall will be reported here with justification, as the assignment
 explicitly permits.
 
@@ -156,30 +155,26 @@ on held-out text.
 - Selection criterion: fertility (tokens/word) and bytes/token compression on held-out text,
   cross-checked against the embedding-parameter cost implied at the ~25M Phase-2 parameter budget.
 
-**First real sweep, current snapshot** *(figures: `figures/hindi_tokenizer_fertility_sweep.png`,
+**Second real sweep, current snapshot** *(figures: `figures/hindi_tokenizer_fertility_sweep.png`,
 `figures/nepali_tokenizer_fertility_sweep.png`)*:
 
 | | Model H (Hindi) | Model L (Nepali) |
 |---|---|---|
-| Vocab sizes that trained successfully | 8,000 only | 8,000 / 16,000 / 24,000 / 32,000 (BPE), 8,000 (Unigram) |
-| Selected algorithm / vocab | BPE / 8,000 | BPE / 24,000 |
-| Fertility (tokens/word) | 1.479 | 1.359 |
-| Chars/token | 3.385 | 5.117 |
+| Vocab sizes that trained successfully | 8,000 / 16,000 / 24,000 / 32,000 / 48,000 (BPE + Unigram, full range) | 8,000 / 16,000 / 24,000 / 32,000 / 48,000 (BPE + Unigram, full range) |
+| Selected algorithm / vocab | BPE / 16,000 | BPE / 24,000 |
+| Fertility (tokens/word) | 1.309 | 1.327 |
+| Chars/token | 3.965 | 5.175 |
 | UNK rate | 0.0% | 0.0% |
-| Vocab utilization | 6.3% | 12.2% |
+| Vocab utilization | 24.9% | 21.2% |
 
-**This is a genuinely interesting artifact of crawl accumulation order, not the intended
-resource-tier story, and is stated here plainly rather than hidden**: at this exact snapshot,
-Nepali's train split (1,988 documents) is larger than Hindi's (434 documents) simply because of
-when each language's crawl happened to reach this point, not because Nepali has more total
-available data — Hindi's overall frontier is in fact larger. Consequently Nepali's tokenizer
-sweep could reliably train up to 32,000-vocabulary BPE, while Hindi's smaller current train split
-could only reliably support 8,000 (every larger size failed with SentencePiece's own
-"vocabulary size too high" ceiling — a data-scale limitation, not a code defect). **Both
-selections above are expected to change**, likely substantially, once the sweep is re-run against
-the final, much larger corpus — this table will be refreshed at that point, and the eventual
-gap (if any remains once both corpora are near their targets) will be the real signal reported
-in §7 of the Phase-3 final report.
+Progress against the first sweep (§4, previous snapshot): at 442/2,028 documents, Hindi's smaller
+train split could only reliably train an 8,000-vocab BPE tokenizer, while Nepali's larger split
+reached 32,000. With the corpus now at 3,546/4,157 documents, **both languages train the full
+{8k, 16k, 24k, 32k, 48k} range successfully** — the earlier gap was purely a function of relative
+corpus size at that snapshot, exactly as predicted, and has already closed. **Both selections
+above are still expected to change** as the corpus keeps growing toward the ~500M-token target;
+this table will be refreshed accordingly, and the final gap (if any remains once both corpora are
+near their targets) will be the real signal reported in §7 of the Phase-3 final report.
 
 ## 5. Independence verification
 
