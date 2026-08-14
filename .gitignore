@@ -52,3 +52,4 @@ Thumbs.db
 # --- Frontier / crawl state (large sqlite dbs, kept local not in git) ---
 */data/crawl_state.sqlite3
 */data/crawl_state.sqlite3-*
+*.pid
