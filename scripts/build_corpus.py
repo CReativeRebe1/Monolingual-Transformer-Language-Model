@@ -138,8 +138,18 @@ def _train_langid_and_quality_models(language: str, lang_dir: Path):
     return langid_model, quality_scorer, threshold, hi_texts, ne_texts
 
 
-def build_corpus(language: str) -> dict:
-    lang_dir = REPO_ROOT / language
+def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path | None = None) -> dict:
+    """Builds the cleaned corpus for one language.
+
+    lang_dir defaults to REPO_ROOT/<language> (the real, live corpus) and report_dir defaults to
+    REPO_ROOT/report/figures (the real, graded figures), but both can be overridden to point at
+    an isolated directory instead -- used by scripts/reproduce.sh so a demo run never reads,
+    writes, or overwrites anything real, which matters because hindi/ and nepali/ may be
+    actively receiving new raw shards from a running crawler at the same time, and report/figures
+    holds whatever the real corpus's most recent figures are.
+    """
+    lang_dir = lang_dir if lang_dir is not None else REPO_ROOT / language
+    report_dir = report_dir if report_dir is not None else REPO_ROOT / "report" / "figures"
     fasttext_code = FASTTEXT_LANG_CODE[language]
 
     logger.info("=== building corpus for %s ===", language)
@@ -267,7 +277,7 @@ def build_corpus(language: str) -> dict:
     corpus_stats = compute_corpus_stats(doc_records)
     lengths = document_length_distribution(doc_records, unit="words")
 
-    report_dir = REPO_ROOT / "report" / "figures"
+    report_dir.mkdir(parents=True, exist_ok=True)
     plot_funnel_chart(funnel_names, funnel_counts, report_dir / f"{language}_funnel.png", language.capitalize())
     plot_length_histogram(lengths, report_dir / f"{language}_length_hist.png", language.capitalize())
     plot_domain_distribution(corpus_stats.docs_per_source, report_dir / f"{language}_domains.png", language.capitalize())
@@ -309,8 +319,19 @@ def build_corpus(language: str) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Build the cleaned corpus for one language.")
     parser.add_argument("--lang", required=True, choices=["hindi", "nepali"])
+    parser.add_argument(
+        "--lang-dir", type=Path, default=None,
+        help="Override the language directory (default: REPO_ROOT/<lang>). Used by "
+             "scripts/reproduce.sh to run against an isolated demo directory instead of the "
+             "real, possibly crawler-in-progress corpus.",
+    )
+    parser.add_argument(
+        "--report-dir", type=Path, default=None,
+        help="Override where figures are written (default: REPO_ROOT/report/figures). Used by "
+             "scripts/reproduce.sh so a demo run never overwrites the real graded figures.",
+    )
     args = parser.parse_args()
-    result = build_corpus(args.lang)
+    result = build_corpus(args.lang, lang_dir=args.lang_dir, report_dir=args.report_dir)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
