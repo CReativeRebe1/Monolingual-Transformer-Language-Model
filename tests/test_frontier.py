@@ -132,3 +132,32 @@ def test_multiple_domains_tracked_independently(db_path):
         f.mark_domain_seeded("a.com", urls_found=10)
         f.mark_domain_seeded("b.com", urls_found=20)
         assert f.seeded_domains() == {"a.com": 10, "b.com": 20}
+
+
+def test_claim_batch_is_round_robin_across_hosts(db_path):
+    # A dominant host (100 URLs) must not crowd out a minor host (3 URLs) in a single batch --
+    # this is the fix for the real bug where bbc.com's bulk-seeded URLs starved every other
+    # Nepali domain out of the fetch queue almost entirely.
+    with Frontier(db_path) as f:
+        for i in range(100):
+            f.add(f"https://dominant.com/page{i}")
+        for i in range(3):
+            f.add(f"https://minor.com/page{i}")
+
+        batch = f.claim_batch(n=10)
+        hosts_in_batch = [host for _, host, _ in batch]
+        assert hosts_in_batch.count("minor.com") == 3  # all of minor.com's URLs make it in
+        assert hosts_in_batch.count("dominant.com") == 7
+
+
+def test_claim_batch_round_robin_with_many_small_hosts(db_path):
+    with Frontier(db_path) as f:
+        for i in range(50):
+            f.add(f"https://big.com/page{i}")
+        for host in ("a.com", "b.com", "c.com"):
+            f.add(f"https://{host}/only-page")
+
+        batch = f.claim_batch(n=6)
+        hosts_in_batch = {host for _, host, _ in batch}
+        # Every small host's single URL should be claimed before big.com dominates the batch.
+        assert hosts_in_batch == {"a.com", "b.com", "c.com", "big.com"}

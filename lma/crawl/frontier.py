@@ -132,13 +132,34 @@ class Frontier:
     def claim_batch(self, n: int = 50) -> list[tuple[str, str, int]]:
         """Atomically mark up to n pending URLs 'in_progress' and return (url, host, depth).
 
-        A single UPDATE...RETURNING keeps this safe even if multiple crawler processes share
-        one frontier file (SQLite serializes writers), which matters because Hindi and Nepali
-        crawls run as two independent processes against two independent frontier DBs in
-        practice, but the same code path must also be safe if ever pointed at a shared one.
+        Selection is ROUND-ROBIN across distinct hosts, not plain insertion-order FIFO: a
+        window-ranked query takes each host's earliest-discovered pending URL first, then each
+        host's second-earliest, and so on, until n URLs are claimed. Without this, a domain
+        whose sitemap was bulk-seeded with thousands of URLs in one shot (e.g. a major news
+        portal) completely dominates every batch over domains that only ever produced a handful
+        of URLs via the link-following fallback (a sitemap-less site seeded from just its
+        homepage) -- confirmed live: bbc.com's 4,824 bulk-seeded pending URLs vs. single-digit
+        pending counts for five other Nepali domains meant 1,759 of 1,766 fetched Nepali
+        documents came from one host. Round-robin claiming keeps every active host flowing into
+        every batch, which is what the Phase-1 report's "domain distribution" statistic and
+        figure actually need to look like a real, diverse corpus rather than one dominant site.
+
+        A single UPDATE keeps this safe even if multiple crawler processes share one frontier
+        file (SQLite serializes writers), which matters because Hindi and Nepali crawls run as
+        two independent processes against two independent frontier DBs in practice, but the
+        same code path must also be safe if ever pointed at a shared one.
         """
         cur = self._conn.execute(
-            "SELECT url, host, depth FROM frontier WHERE status='pending' LIMIT ?", (n,)
+            """
+            WITH ranked AS (
+                SELECT url, host, depth,
+                       ROW_NUMBER() OVER (PARTITION BY host ORDER BY rowid) AS rn
+                FROM frontier
+                WHERE status = 'pending'
+            )
+            SELECT url, host, depth FROM ranked ORDER BY rn, host LIMIT ?
+            """,
+            (n,),
         )
         rows = cur.fetchall()
         if not rows:
