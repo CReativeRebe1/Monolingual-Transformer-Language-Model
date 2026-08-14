@@ -445,6 +445,41 @@ current train/val/test splits, `stats.json`, and figures for both languages, mat
 442-Hindi/2,028-Nepali-document numbers confirmed in section 17 — periodic real commits rather
 than one dump at the deadline, per the assignment's explicit guidance.
 
+### 20. First real tokenizer sweep + a fourth crawler-concurrency bug (commit `9417e34`)
+
+The user took over running both crawlers directly in their own terminal (resolving section 18's
+operational gap) — confirmed working: both kept climbing steadily across this session's checks
+(Hindi 13,052 → 14,208+ documents, Nepali 8,324 → 8,769+ documents).
+
+**Ran `scripts/tokenizer_sweep.py` for real** against the current corpus snapshot (442 Hindi /
+2,028 Nepali documents). Genuinely interesting finding, not assumed: Nepali's larger *current*
+train split (1,988 docs) supports BPE reliably up to 32,000 vocab, while Hindi's smaller current
+train split (434 docs) only supports 8,000 — every larger Hindi size hit SentencePiece's own
+vocabulary-size ceiling. This is an artifact of crawl accumulation order (Hindi's total frontier
+is larger; its practical corpus just hasn't caught up at this snapshot), not the intended
+resource-tier story, and is stated exactly that plainly in `report/phase1.md` §4 rather than
+glossed over. Both selections (`hindi_bpe_8000`, `nepali_bpe_24000`) are expected to change once
+the sweep re-runs against the final corpus.
+
+**Fourth crawler-related bug, found by re-running `build_corpus.py` after the user's crawlers had
+been running independently for a while**: `zlib.error: Error -3 ... invalid block type` reading a
+Hindi shard the crawler was actively appending to. `_iter_shard_records()` was already written to
+tolerate a shard ending mid-write, but only caught `(EOFError, OSError)` — which covers a clean
+truncation but not a torn DEFLATE block caught mid-flush, which zlib reports as its own
+`zlib.error`. This is a direct consequence of the crawler now being a genuinely long-lived
+concurrent process (the user's own terminal) rather than something a `build_corpus.py` run always
+outlived — a new failure mode that simply didn't exist before section 18's fix. Broadened the
+except clause to `(EOFError, OSError, zlib.error, UnicodeDecodeError)`; verified directly against
+the exact shard that crashed (now reads 118 records cleanly instead of crashing). 4 new tests,
+including one that reproduces the exact failure by flipping a byte mid-stream rather than
+truncating at the end. 197 total, 1 skipped.
+
+Also created and committed `report/phase1.md` (commit `0449898`) — the actual graded Phase-1
+deliverable (distinct from this log), covering language selection, collection methodology, the
+cleaning cascade with real rejection breakdowns, current dataset statistics, tokenizer status,
+independence verification, and reproducibility. Marked explicitly as a living document with a
+"what remains before this report is final" section.
+
 ---
 
 ## What's left to do
