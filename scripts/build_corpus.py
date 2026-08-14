@@ -93,10 +93,20 @@ def _iter_raw_records(lang_dir: Path):
 def _train_langid_and_quality_models(language: str, lang_dir: Path):
     """Pulls a small trusted Wikipedia seed and trains the char-ngram hi/ne discriminator and
     the quality-filter perplexity scorer on it. Self-contained: no separate offline training
-    step is required to run build_corpus.py from a clean checkout."""
+    step is required to run build_corpus.py from a clean checkout.
+
+    The seed pull is skip-if-exists (mirroring the contrast-language seed below) rather than
+    unconditional: build_corpus.py is meant to be re-run repeatedly as the crawl accumulates
+    more data (see PHASE1_LOG.md), and ingest() has no internal caching of its own -- every call
+    re-streams the full token budget from the Hub from scratch. An unconditional pull here meant
+    every single re-run wastefully re-downloaded ~300k tokens of Wikipedia data it already had.
+    """
     seed_dir = lang_dir / "data" / "raw" / "seed"
-    logger.info("pulling trusted Wikipedia seed for %s (budget=%d tokens)...", language, SEED_TOKEN_BUDGET)
-    ingest(language, seed_dir, token_budget_per_source=SEED_TOKEN_BUDGET, sources=["wikipedia"])
+    if not seed_dir.exists() or not any(seed_dir.glob("*.jsonl.gz")):
+        logger.info("pulling trusted Wikipedia seed for %s (budget=%d tokens)...", language, SEED_TOKEN_BUDGET)
+        ingest(language, seed_dir, token_budget_per_source=SEED_TOKEN_BUDGET, sources=["wikipedia"])
+    else:
+        logger.info("reusing existing trusted Wikipedia seed for %s", language)
 
     seed_texts = []
     for shard_path in seed_dir.glob("*.jsonl.gz"):
