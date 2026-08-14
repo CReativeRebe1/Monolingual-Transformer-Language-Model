@@ -17,16 +17,18 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 3,136 docs | 2,315 docs |
-| Crawl frontier: queued (pending) | 894,987 URLs | 6,742 URLs |
-| Crawl frontier: total discovered | 898,908 URLs | 11,273 URLs |
+| Crawl frontier: fetched | 17,398 docs | 9,826 docs |
+| Crawl frontier: queued (pending) | 892,740 URLs | 17,528 URLs |
+| Crawl frontier: total discovered | 919,590 URLs | 35,377 URLs |
 | Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **442 docs, 241,420 words, 8 sources** (committed to branch) | **2,028 docs, 698,403 words, 8 sources** (committed to branch) |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** | **4,157 docs, 1,622,675 words, 8 sources** |
+| Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **193 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **200 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
 full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
-needed (section 19).
+needed (section 19). Crawlers now run continuously and independently in the user's own terminal
+(section 18), no longer tied to this assistant's session lifetime.
 
 **Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
 ~500M-token target yet. The crawlers have been running continuously since work started and need
@@ -480,6 +482,40 @@ cleaning cascade with real rejection breakdowns, current dataset statistics, tok
 independence verification, and reproducibility. Marked explicitly as a living document with a
 "what remains before this report is final" section.
 
+### 21. Corpus growth confirmed real, one more efficiency bug fixed (commit `d84f12f`)
+
+With both crawlers now running continuously and independently (section 18/20), re-ran
+`build_corpus.py` for both languages and got a large, real jump: **3,546 Hindi documents
+(1,981,812 words) and 4,157 Nepali documents (1,622,675 words)**, up from 442/2,028. Re-ran the
+tokenizer sweep on this larger corpus: **both languages now train successfully across the full
+{8k, 16k, 24k, 32k, 48k} BPE range** (previously Hindi capped at 8k, Nepali at 32k) — the earlier
+gap was purely a function of relative corpus size at that snapshot, as predicted, and has already
+closed. Selected: Hindi `bpe/16000` (fertility 1.309), Nepali `bpe/24000` (fertility 1.327). Both
+`report/phase1.md` and the committed corpus/tokenizer artifacts were refreshed to match.
+
+**Fifth bug found while reviewing the pipeline** (not from a crash — from reading the code with
+fresh eyes now that `build_corpus.py` is being re-run repeatedly): `_train_langid_and_quality_models`
+pulled the primary language's trusted Wikipedia seed *unconditionally* on every call, while the
+contrast-language seed a few lines below already correctly checked existence first before
+pulling. `ingest()` has no internal caching — every call re-streams the full ~300k-token budget
+from the Hub from scratch — so every re-run of `build_corpus.py` was wasting a real network call
+it didn't need. Fixed with the same skip-if-exists guard (checking actual shard content, not just
+directory existence, so an empty `seed/` dir still triggers a real pull). 3 new tests. 200 total,
+1 skipped.
+
+**Checked crawl health**: failure reasons for both languages are entirely the normal, expected
+long tail of web crawling — `http_404` (stale sitemap URLs), `ConnectError`/`timeout`/`http_502`
+(transient network), `http_403` (bot-blocking pages), `disallowed_by_robots` (correct compliance).
+Nothing systemic to fix.
+
+**Disk space risk, flagged but not something to silently work around**: the system drive is at
+**95% used, only ~18GB free**. This project's own footprint so far is small (~50MB raw shards
+combined, ~350MB frontier databases — mostly Hindi's, from ~920k discovered URLs), nowhere near
+explaining 95% usage on a 353GB drive, so this is a pre-existing condition on the machine, not
+something this crawl caused. But continued growth over the remaining days is real and plausible,
+and 18GB free is not a large safety margin. Worth the user's attention; not something I can or
+should resolve by deleting files that aren't mine.
+
 ---
 
 ## What's left to do
@@ -558,6 +594,17 @@ Ordered by what's actually blocking:
   actually running it, not just writing it. Committed the first real (non-demo) corpus snapshot
   to the branch: splits, stats, and figures for 442 Hindi / 2,028 Nepali documents. 193 tests
   passing throughout. Crawlers confirmed still running and progressing after the relaunch.
+
+- **2026-08-15**: User took over running both crawlers directly and persistently in their own
+  terminal — confirmed working, real sustained growth (Hindi 13k→17k+, Nepali 8k→9.8k+ documents
+  fetched over this session). Wrote `report/phase1.md` (the actual graded deliverable), ran the
+  tokenizer sweep for real twice (section 20-21) — both languages now train the full {8k...48k}
+  BPE range, up from a much narrower range at the smaller earlier snapshot, confirming the gap
+  really was just about corpus size. Found and fixed two more real bugs (sections 20-21): a
+  shard-corruption crash from the crawler now being a genuinely concurrent long-lived process,
+  and `build_corpus.py` wastefully re-downloading its trusted seed on every run. Flagged a real
+  disk-space risk (95% used, ~18GB free system-wide) without touching files that aren't mine.
+  200 tests passing.
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
