@@ -1,0 +1,53 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+*.ipynb_checkpoints/
+
+# --- Large artifacts: Drive, never git (spec requirement) ---
+# Raw / intermediate corpora
+*/data/raw/**
+*/data/shards/**
+*/data/interim/**
+*.jsonl.gz
+*.jsonl.zst
+*.warc
+*.warc.gz
+
+# Encoded training corpora (memmap bin/idx — large, regenerable from tokenizer + splits)
+*.bin
+*.idx
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Downloaded external corpora / caches
+data_cache/
+.cache/
+hf_cache/
+
+# fastText pretrained LID model (downloaded utility, not a project artifact)
+lid.176*.bin
+
+# OCR intermediate scans
+*/data/ocr_raw/**
+
+# --- Logs / experiment tracking ---
+wandb/
+*.log
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Frontier / crawl state (large sqlite dbs, kept local not in git) ---
+*/data/crawl_state.sqlite3
+*/data/crawl_state.sqlite3-*
