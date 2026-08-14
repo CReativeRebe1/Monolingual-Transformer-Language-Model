@@ -1,0 +1,48 @@
+{
+  "language": "hindi",
+  "status": "ok",
+  "funnel": {
+    "collected": 3189,
+    "language_filtered": 3075,
+    "heuristic_filtered": 780,
+    "quality_filtered": 455,
+    "deduplicated": 442
+  },
+  "heuristic_rejection_counts": {
+    "boilerplate_phrase_present": 940,
+    "symbol_to_word_ratio_too_high": 1162,
+    "repeated_line_fraction_too_high": 697,
+    "bullet_or_ellipsis_line_fraction_too_high": 148,
+    "too_few_words": 6,
+    "too_short": 3,
+    "insufficient_stopword_evidence": 15
+  },
+  "dedup_stats": {
+    "input_count": 455,
+    "exact_duplicates_removed": 6,
+    "near_duplicate_clusters": 1,
+    "near_duplicates_removed": 7,
+    "kept_count": 442
+  },
+  "corpus": {
+    "n_documents": 442,
+    "n_words": 241420,
+    "n_chars": 1271805,
+    "n_bytes": 3233823,
+    "docs_per_source": {
+      "www.amarujala.com": 218,
+      "www.livehindustan.com": 80,
+      "bhaskar.com": 14,
+      "navbharattimes.indiatimes.com": 85,
+      "www.aajtak.in": 20,
+      "hi.wikisource.org": 15,
+      "hi.wikipedia.org": 7,
+      "hi.wiktionary.org": 3
+    }
+  },
+  "splits": {
+    "train": 434,
+    "val": 4,
+    "test": 4
+  }
+}
