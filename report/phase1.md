@@ -143,26 +143,43 @@ explicitly permits.
 
 ## 4. Tokenizer construction
 
-**Status**: tokenizer training and analysis code is built and tested (`lma/tokenizer/`,
-10 passing tests covering exact roundtrip on training text, lossless roundtrip on unseen text via
-byte-fallback, 0% UNK rate, and provably distinct Hindi/Nepali vocabularies), and
-`scripts/tokenizer_sweep.py` (BPE + Unigram × {8k, 16k, 24k, 32k, 48k} per language, selecting by
-a fertility elbow on held-out text) is built and ready. **The sweep has not yet been run for real
-selection** — attempting it against the current snapshot's train split correctly and informatively
-fails (`"Vocabulary size too high (48000). Please set it to a value <= 1950"`), since a few
-hundred documents cannot support a vocabulary in the tens of thousands. This is a data-scale
-limitation, not a code defect; the sweep will be re-run and this section populated with the real
-selected vocabulary sizes, fertility numbers, and cross-language tokenization examples once the
-corpus is large enough — planned for shortly before the Phase-1 deadline, once crawl accumulation
-has run its course.
+Tokenizer training and analysis code is built and tested (`lma/tokenizer/`, 10 passing tests
+covering exact roundtrip on training text, lossless roundtrip on unseen text via byte-fallback,
+0% UNK rate, and provably distinct Hindi/Nepali vocabularies). `scripts/tokenizer_sweep.py`
+trains BPE and Unigram at {8k, 16k, 24k, 32k, 48k} per language and selects by a fertility elbow
+on held-out text.
 
-**Design decisions already fixed, independent of corpus size**:
+**Design decisions, fixed independent of corpus size**:
 - SentencePiece BPE and Unigram both trained per language; vocabularies never shared.
 - `character_coverage=0.9995`, `byte_fallback=True` — chosen specifically so the reported UNK rate
-  is exactly 0% *by construction*, not by a lucky vocabulary; this will be stated explicitly
-  alongside the final UNK-rate table rather than presented as an unexplained result.
+  is exactly 0% *by construction*, not by a lucky vocabulary.
 - Selection criterion: fertility (tokens/word) and bytes/token compression on held-out text,
   cross-checked against the embedding-parameter cost implied at the ~25M Phase-2 parameter budget.
+
+**First real sweep, current snapshot** *(figures: `figures/hindi_tokenizer_fertility_sweep.png`,
+`figures/nepali_tokenizer_fertility_sweep.png`)*:
+
+| | Model H (Hindi) | Model L (Nepali) |
+|---|---|---|
+| Vocab sizes that trained successfully | 8,000 only | 8,000 / 16,000 / 24,000 / 32,000 (BPE), 8,000 (Unigram) |
+| Selected algorithm / vocab | BPE / 8,000 | BPE / 24,000 |
+| Fertility (tokens/word) | 1.479 | 1.359 |
+| Chars/token | 3.385 | 5.117 |
+| UNK rate | 0.0% | 0.0% |
+| Vocab utilization | 6.3% | 12.2% |
+
+**This is a genuinely interesting artifact of crawl accumulation order, not the intended
+resource-tier story, and is stated here plainly rather than hidden**: at this exact snapshot,
+Nepali's train split (1,988 documents) is larger than Hindi's (434 documents) simply because of
+when each language's crawl happened to reach this point, not because Nepali has more total
+available data — Hindi's overall frontier is in fact larger. Consequently Nepali's tokenizer
+sweep could reliably train up to 32,000-vocabulary BPE, while Hindi's smaller current train split
+could only reliably support 8,000 (every larger size failed with SentencePiece's own
+"vocabulary size too high" ceiling — a data-scale limitation, not a code defect). **Both
+selections above are expected to change**, likely substantially, once the sweep is re-run against
+the final, much larger corpus — this table will be refreshed at that point, and the eventual
+gap (if any remains once both corpora are near their targets) will be the real signal reported
+in §7 of the Phase-3 final report.
 
 ## 5. Independence verification
 
