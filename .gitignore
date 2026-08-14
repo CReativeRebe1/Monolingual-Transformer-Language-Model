@@ -56,3 +56,7 @@ Thumbs.db
 
 # --- scripts/reproduce.sh output: regenerable by re-running the script, never committed ---
 scripts/sample_data/demo_run/
+
+# --- Intermediate tokenizer_sweep.py candidates (regenerable; only the selected model/vocab
+# pair + sweep_results.json are committed) ---
+*/tokenizer/sweep/

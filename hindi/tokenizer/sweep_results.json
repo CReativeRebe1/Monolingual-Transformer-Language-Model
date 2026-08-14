@@ -1,0 +1,20 @@
+{
+  "language": "hindi",
+  "used_train_as_val": false,
+  "sweep_results": [
+    {
+      "algorithm": "bpe",
+      "vocab_size": 8000,
+      "fertility": 1.479048697621744,
+      "chars_per_token": 3.385145482388974,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.063375
+    }
+  ],
+  "selected": {
+    "algorithm": "bpe",
+    "vocab_size": 8000,
+    "fertility": 1.479048697621744
+  },
+  "final_model_path": "hindi\\tokenizer\\hindi_bpe_8000.model"
+}

@@ -1,0 +1,52 @@
+{
+  "language": "nepali",
+  "used_train_as_val": false,
+  "sweep_results": [
+    {
+      "algorithm": "bpe",
+      "vocab_size": 8000,
+      "fertility": 1.5164514145141452,
+      "chars_per_token": 4.585116090439015,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.325625
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 16000,
+      "fertility": 1.4014452644526445,
+      "chars_per_token": 4.9613823368074605,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.1775625
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 24000,
+      "fertility": 1.3587023370233702,
+      "chars_per_token": 5.1174606767002375,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.122
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 32000,
+      "fertility": 1.3376383763837638,
+      "chars_per_token": 5.198045977011494,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.09359375
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 8000,
+      "fertility": 1.5390528905289054,
+      "chars_per_token": 4.517782217782218,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.296625
+    }
+  ],
+  "selected": {
+    "algorithm": "bpe",
+    "vocab_size": 24000,
+    "fertility": 1.3587023370233702
+  },
+  "final_model_path": "nepali\\tokenizer\\nepali_bpe_24000.model"
+}
