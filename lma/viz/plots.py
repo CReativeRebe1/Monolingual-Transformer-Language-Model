@@ -12,8 +12,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib
+
+# Force the non-interactive Agg backend before pyplot is ever imported. This module only ever
+# saves figures to disk (report/figures/) -- it never displays a window -- but without this,
+# matplotlib may auto-select an interactive backend (e.g. TkAgg) depending on what happens to be
+# importable in the environment, which then fails outright on a headless machine/CI runner
+# without a working Tk installation. Setting the backend explicitly makes plot generation
+# environment-independent, exactly like the rest of this pipeline's scripts.
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
 
 def _save(fig, out_path: Path) -> None:
