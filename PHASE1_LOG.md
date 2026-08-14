@@ -354,6 +354,30 @@ stays bounded near the shared 40-fetch budget instead of ballooning toward 80+. 
 — each restart before a domain finishes its (now-bounded) seeding walk re-attempts that domain's
 seeding from scratch, adding real but avoidable overhead. Let them run continuously.
 
+### 17. `claim_batch` FIFO bias fixed to round-robin across hosts (commit `b7f0316`)
+
+Found by re-running `build_corpus.py` on the freshly-seeded Nepali frontier to check the new
+domains' contribution: **1,759 of 1,766 fetched Nepali documents came from `www.bbc.com` alone**,
+despite all 10 configured domains now being seeded (section 16). `claim_batch()`'s plain
+`SELECT ... LIMIT n` returns rows in insertion order in practice; `bbc.com`'s sitemap bulk-seeded
+4,824+ URLs in one shot while every sitemap-less domain (seeded only via link-following) produced
+a handful each — insertion-order FIFO meant `bbc.com`'s huge early batch got claimed first, every
+single batch, indefinitely.
+
+**Fix**: `claim_batch` now uses a window-ranked query (`ROW_NUMBER() OVER (PARTITION BY host
+ORDER BY rowid)`), taking every host's earliest-discovered pending URL first, then every host's
+second, and so on — true round-robin fairness regardless of how lopsided pending counts are. This
+directly serves the report's domain-distribution figure: a corpus that is 99.6% one source
+undermines "diverse manually-collected corpus."
+
+2 new tests (a dominant host does not crowd out a minor host within one batch; several small
+hosts are all represented before a large host dominates). 193 total, 1 skipped.
+
+This fix lives in code executed on every batch (not just at crawler startup like the seeding
+fixes), so it required a restart to take effect — judged safe this time since the seeding logic
+is now itself restart-safe and bounded (sections 16), unlike earlier restarts that interrupted an
+in-progress unbounded seeding walk.
+
 ---
 
 ## What's left to do
