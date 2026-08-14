@@ -53,3 +53,6 @@ Thumbs.db
 */data/crawl_state.sqlite3
 */data/crawl_state.sqlite3-*
 *.pid
+
+# --- scripts/reproduce.sh output: regenerable by re-running the script, never committed ---
+scripts/sample_data/demo_run/
