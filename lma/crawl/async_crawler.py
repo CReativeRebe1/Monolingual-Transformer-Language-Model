@@ -105,8 +105,17 @@ async def _seed_frontier_from_domains(
         sitemap_candidates = await discover_sitemap_urls(client, domain)
         found_any = False
         total_seeded_for_domain = 0
+        # One budget SHARED across every sitemap candidate for this domain, not a fresh budget
+        # per candidate. A domain's robots.txt can declare several distinct sitemap URLs (news
+        # sitemap, general sitemap, image sitemap, ...) on top of the 4 common-path candidates
+        # sitemap.py always tries; without a shared budget, each candidate that turns out to be
+        # a large index gets its own full max_sitemaps_total allowance, and the true per-domain
+        # cost is candidates_count * max_sitemaps_total -- exactly what caused amarujala.com's
+        # frontier to balloon past 200k URLs from a single domain in one seeding pass, blocking
+        # every other domain (and all actual fetching) behind it for many minutes.
+        domain_budget = [40]
         for sm_url in sitemap_candidates:
-            urls = await fetch_urls_from_sitemap(client, sm_url)
+            urls = await fetch_urls_from_sitemap(client, sm_url, _budget=domain_budget)
             if required_substring is not None:
                 before = len(urls)
                 urls = [u for u in urls if required_substring in u]
