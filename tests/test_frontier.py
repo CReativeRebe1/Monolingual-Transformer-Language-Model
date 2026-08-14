@@ -100,3 +100,35 @@ def test_wal_mode_enabled(db_path):
     mode = conn.execute("PRAGMA journal_mode;").fetchone()[0]
     conn.close()
     assert mode.lower() == "wal"
+
+
+# --- Per-domain seeding tracking (see _SCHEMA's seeded_domains comment) ---
+
+def test_domain_not_seeded_by_default(db_path):
+    with Frontier(db_path) as f:
+        assert f.is_domain_seeded("example.com") is False
+
+
+def test_mark_domain_seeded_persists(db_path):
+    with Frontier(db_path) as f:
+        f.mark_domain_seeded("example.com", urls_found=42)
+        assert f.is_domain_seeded("example.com") is True
+        assert f.seeded_domains() == {"example.com": 42}
+
+
+def test_seeded_domains_survive_reopen(db_path):
+    # The core bug this table fixes: a crawler restart must remember which domains were
+    # already seeded, not just whether the frontier as a whole happens to be non-empty.
+    with Frontier(db_path) as f:
+        f.mark_domain_seeded("amarujala.com", urls_found=48000)
+
+    with Frontier(db_path) as f:
+        assert f.is_domain_seeded("amarujala.com") is True
+        assert f.is_domain_seeded("jagran.com") is False
+
+
+def test_multiple_domains_tracked_independently(db_path):
+    with Frontier(db_path) as f:
+        f.mark_domain_seeded("a.com", urls_found=10)
+        f.mark_domain_seeded("b.com", urls_found=20)
+        assert f.seeded_domains() == {"a.com": 10, "b.com": 20}

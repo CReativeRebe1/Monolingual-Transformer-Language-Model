@@ -93,9 +93,18 @@ async def _seed_frontier_from_domains(
     """
     url_filters = url_filters or {}
     for domain in domains:
+        if frontier.is_domain_seeded(domain):
+            # Per-domain tracking (not "is the frontier empty") is what makes this safe to call
+            # on every crawler startup: a restart after domain 1 of 8 finished seeding correctly
+            # resumes seeding domains 2-8, rather than skipping seeding entirely because the
+            # frontier already has domain 1's URLs in it. See _SCHEMA's seeded_domains comment.
+            logger.info("domain %s already seeded; skipping", domain)
+            continue
+
         required_substring = url_filters.get(domain)
         sitemap_candidates = await discover_sitemap_urls(client, domain)
         found_any = False
+        total_seeded_for_domain = 0
         for sm_url in sitemap_candidates:
             urls = await fetch_urls_from_sitemap(client, sm_url)
             if required_substring is not None:
@@ -109,19 +118,22 @@ async def _seed_frontier_from_domains(
                 added = frontier.add_many(urls, depth=1)
                 logger.info("seeded %d urls (%d new) from %s", len(urls), added, sm_url)
                 found_any = True
+                total_seeded_for_domain += added
         if not found_any:
             # Fall back to the bare homepage so the frontier is not empty for this domain.
             # Generic link-following from here is deliberately NOT implemented (sitemap-first
             # policy keeps us on-target and polite; see module docstring).
             seed_url = f"https://{domain}/"
             if required_substring is None or required_substring in seed_url:
-                frontier.add(seed_url, depth=0)
+                if frontier.add(seed_url, depth=0):
+                    total_seeded_for_domain += 1
                 logger.warning("no sitemap found for %s; seeded homepage only", domain)
             else:
                 logger.warning(
                     "no sitemap found for %s and homepage does not match filter %r; skipping",
                     domain, required_substring,
                 )
+        frontier.mark_domain_seeded(domain, total_seeded_for_domain)
 
 
 async def _fetch_one(
@@ -166,11 +178,13 @@ async def run_crawl(
         politeness = PolitenessManager(client, default_min_delay=min_delay)
         with Frontier(frontier_db) as frontier:
             stats = frontier.stats()
-            if stats.total == 0:
-                logger.info("empty frontier; discovering sitemaps for %d domains", len(domains))
-                await _seed_frontier_from_domains(client, frontier, domains, url_filters=url_filters)
-            else:
-                logger.info("resuming frontier: %s", stats)
+            logger.info("frontier at startup: %s", stats)
+            # Always attempt seeding, for every run: _seed_frontier_from_domains skips any
+            # domain already marked seeded (see its docstring for why this must be per-domain,
+            # not gated on "is the whole frontier empty" -- that check silently starved every
+            # domain past the first one across crawler restarts, a real bug caught by noticing
+            # the Hindi frontier was 100% one domain after several restarts).
+            await _seed_frontier_from_domains(client, frontier, domains, url_filters=url_filters)
 
             writer = ShardWriter(out_dir)
             fetched_this_run = 0

@@ -52,6 +52,20 @@ CREATE TABLE IF NOT EXISTS frontier (
 );
 CREATE INDEX IF NOT EXISTS idx_frontier_status ON frontier(status);
 CREATE INDEX IF NOT EXISTS idx_frontier_host ON frontier(host, status);
+
+-- Tracks which SEED DOMAINS have completed sitemap-discovery seeding at least once. This is
+-- deliberately separate from "is the frontier non-empty": a naive "only seed if frontier is
+-- empty" check means that once the FIRST domain in a multi-domain seed list contributes any
+-- URL, every later restart of the crawler (which happens often during iterative development,
+-- and will happen again whenever a Kaggle/Colab session is interrupted) skips seeding entirely
+-- -- silently starving every domain later in the list that had not been reached yet. Tracking
+-- completion per domain means a restart always finishes seeding whatever domains are left,
+-- while never wastefully re-walking an already-seeded domain's sitemap.
+CREATE TABLE IF NOT EXISTS seeded_domains (
+    domain      TEXT PRIMARY KEY,
+    seeded_at   TEXT NOT NULL,
+    urls_found  INTEGER NOT NULL DEFAULT 0
+);
 """
 
 
@@ -193,6 +207,25 @@ class Frontier:
             "SELECT content_sha256 FROM frontier WHERE content_sha256 IS NOT NULL"
         ).fetchall()
         return {r[0] for r in rows}
+
+    # --- per-domain seeding tracking (see _SCHEMA's seeded_domains comment for why this
+    # exists as its own table rather than inferring "already seeded" from frontier contents) ---
+
+    def is_domain_seeded(self, domain: str) -> bool:
+        cur = self._conn.execute("SELECT 1 FROM seeded_domains WHERE domain=?", (domain,))
+        return cur.fetchone() is not None
+
+    def mark_domain_seeded(self, domain: str, urls_found: int) -> None:
+        self._conn.execute(
+            "INSERT OR REPLACE INTO seeded_domains (domain, seeded_at, urls_found) "
+            "VALUES (?, ?, ?)",
+            (domain, _now_iso(), urls_found),
+        )
+
+    def seeded_domains(self) -> dict[str, int]:
+        """{domain: urls_found_at_seed_time} for every domain seeded so far."""
+        rows = self._conn.execute("SELECT domain, urls_found FROM seeded_domains").fetchall()
+        return dict(rows)
 
 
 @contextmanager
