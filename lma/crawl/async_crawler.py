@@ -76,12 +76,33 @@ class ShardWriter:
             self._fh.close()
 
 
-async def _seed_frontier_from_domains(client: httpx.AsyncClient, frontier: Frontier, domains: list[str]):
+async def _seed_frontier_from_domains(
+    client: httpx.AsyncClient,
+    frontier: Frontier,
+    domains: list[str],
+    url_filters: dict[str, str] | None = None,
+):
+    """Discover sitemap URLs per domain and add them to the frontier.
+
+    url_filters: optional {domain: required_substring}. Some domains (bbc.com in particular)
+    share one sitemap tree across every language edition of the site; without a filter, sitemap
+    discovery would seed the frontier mostly with off-language URLs from that shared index. See
+    hindi/data/seed_domains.py and nepali/data/seed_domains.py for the concrete values.
+    """
+    url_filters = url_filters or {}
     for domain in domains:
+        required_substring = url_filters.get(domain)
         sitemap_candidates = await discover_sitemap_urls(client, domain)
         found_any = False
         for sm_url in sitemap_candidates:
             urls = await fetch_urls_from_sitemap(client, sm_url)
+            if required_substring is not None:
+                before = len(urls)
+                urls = [u for u in urls if required_substring in u]
+                logger.info(
+                    "filtered %s by substring %r: %d -> %d urls",
+                    sm_url, required_substring, before, len(urls),
+                )
             if urls:
                 added = frontier.add_many(urls, depth=1)
                 logger.info("seeded %d urls (%d new) from %s", len(urls), added, sm_url)
@@ -90,8 +111,15 @@ async def _seed_frontier_from_domains(client: httpx.AsyncClient, frontier: Front
             # Fall back to the bare homepage so the frontier is not empty for this domain.
             # Generic link-following from here is deliberately NOT implemented (sitemap-first
             # policy keeps us on-target and polite; see module docstring).
-            frontier.add(f"https://{domain}/", depth=0)
-            logger.warning("no sitemap found for %s; seeded homepage only", domain)
+            seed_url = f"https://{domain}/"
+            if required_substring is None or required_substring in seed_url:
+                frontier.add(seed_url, depth=0)
+                logger.warning("no sitemap found for %s; seeded homepage only", domain)
+            else:
+                logger.warning(
+                    "no sitemap found for %s and homepage does not match filter %r; skipping",
+                    domain, required_substring,
+                )
 
 
 async def _fetch_one(
@@ -127,6 +155,7 @@ async def run_crawl(
     concurrency: int = 8,
     batch_size: int = 50,
     min_delay: float = 1.0,
+    url_filters: dict[str, str] | None = None,
 ) -> None:
     """Main entry point. Safe to interrupt and rerun; the frontier makes progress durable."""
     headers = {"User-Agent": USER_AGENT}
@@ -137,7 +166,7 @@ async def run_crawl(
             stats = frontier.stats()
             if stats.total == 0:
                 logger.info("empty frontier; discovering sitemaps for %d domains", len(domains))
-                await _seed_frontier_from_domains(client, frontier, domains)
+                await _seed_frontier_from_domains(client, frontier, domains, url_filters=url_filters)
             else:
                 logger.info("resuming frontier: %s", stats)
 

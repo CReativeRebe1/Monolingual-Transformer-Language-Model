@@ -8,10 +8,17 @@ which the Phase-1 report discusses under "domain distribution".
 
 robots.txt is honoured per-domain at crawl time (lma/crawl/robots.py) regardless of what is
 listed here; a domain that disallows crawling simply yields nothing and is noted in the report.
+
+DOMAIN_URL_FILTERS: some domains (bbc.com in particular) expose one sitemap tree shared across
+every language edition of the site. Without a filter, sitemap discovery would seed the frontier
+mostly with non-Hindi URLs from that same global index, wasting crawl budget and rate-limit
+politeness allowance on pages that a downstream language-ID filter would just discard anyway.
+The value is a URL substring that a leaf URL must contain to be kept; domains not listed here are
+already Hindi-primary in their entirety and need no filtering.
 """
 
 NEWS = [
-    "www.bbc.com",          # BBC Hindi is served under /hindi paths on this domain
+    "www.bbc.com",          # BBC Hindi is served under /hindi/ paths on this shared-sitemap domain
     "www.amarujala.com",
     "www.jagran.com",
     "navbharattimes.indiatimes.com",
@@ -33,3 +40,7 @@ GOVERNMENT = [
 ]
 
 ALL_DOMAINS = NEWS + ENCYCLOPEDIC_LITERARY + GOVERNMENT
+
+DOMAIN_URL_FILTERS = {
+    "www.bbc.com": "/hindi/",
+}

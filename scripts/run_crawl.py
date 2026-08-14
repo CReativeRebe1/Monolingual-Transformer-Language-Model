@@ -46,6 +46,7 @@ def main():
 
     seed_module = importlib.import_module(f"{args.lang}.data.seed_domains")
     domains = seed_module.ALL_DOMAINS
+    url_filters = getattr(seed_module, "DOMAIN_URL_FILTERS", {})
 
     frontier_db = data_dir / "crawl_state.sqlite3"
     out_dir = data_dir / "raw" / "crawled"
@@ -64,6 +65,7 @@ def main():
             concurrency=args.concurrency,
             batch_size=args.batch_size,
             min_delay=args.min_delay,
+            url_filters=url_filters,
         )
     )
 
