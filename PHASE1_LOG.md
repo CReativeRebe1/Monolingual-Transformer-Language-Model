@@ -17,14 +17,16 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 2,217 docs | 1,187 docs |
-| Crawl frontier: queued (pending) | 99,675 URLs | 5,487 URLs |
-| Crawl frontier: total discovered | 101,895 URLs | 7,715 URLs |
-| Cleaned corpus (last `build_corpus.py` run) | 130 docs, 56,247 words | 797 docs, 220,893 words |
-| Dominant source so far | www.amarujala.com (sitemap-heavy) | www.bbc.com/nepali (link-follow reaching deep) |
+| Crawl frontier: fetched | 2,411 docs | 1,506 docs |
+| Crawl frontier: queued (pending) | 555,949 URLs | 5,155 URLs |
+| Crawl frontier: total discovered | 558,363 URLs | 7,967 URLs |
+| Domains fully seeded | 3 of 13 so far (amarujala, jagran, navbharattimes) — climbing now that the seeding bugs are fixed | **10 of 10** — all configured Nepali domains seeded |
+| Cleaned corpus (last `build_corpus.py` run, pre-fix) | 130 docs, 56,247 words | 797 docs, 220,893 words |
 
-Test suite: **182 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
-not installed on this dev machine — see the OCR section below).
+Test suite: **191 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+not installed on this dev machine — see the OCR section below). Cleaned-corpus numbers above
+predate the section-16 crawler fixes and will jump once `build_corpus.py` is re-run against the
+now-much-larger, much-more-diverse frontier.
 
 **Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
 ~500M-token target yet. The crawlers have been running continuously since work started and need
@@ -310,6 +312,48 @@ later Phase-2/3 checkpoints) to Drive, since git must never hold them.
   real corpus/checkpoints are, not here. 5 tests cover what's testable without it: path
   resolution, error messages, shareable-link instruction text.
 
+### 16. Two major crawler bugs found and fixed by watching a live restart (commits `e72cacd`, `0104273`)
+
+Restarting the crawlers to pick up the seeding fix (below) surfaced a **second**, related bug
+immediately — both are documented together since they were found in the same investigation.
+
+**Bug A — restarts silently starved every domain but the first.** After ~3.5 hours and several
+thousand fetched Hindi documents, the frontier was checked per-host for the first time: **100%
+`www.amarujala.com`, zero URLs from any of the other 7 Hindi news/encyclopedic/government
+domains.** Root cause: `run_crawl()` only called the sitemap-seeding step when
+`frontier.stats().total == 0`. Once the first domain in the list contributed any URL (on the very
+first run), every later restart — and there were several, while fixing the bbc.com budget and
+link-following issues — saw a non-empty frontier and skipped seeding entirely, permanently
+starving every domain after the first. **Fix**: a new `seeded_domains` table in the frontier
+tracks completion per domain, not globally; `_seed_frontier_from_domains()` now always runs but
+skips any domain already marked seeded. Same "resume, don't restart" principle the URL-level
+frontier already used, applied one level up.
+
+**Bug B — the sitemap budget reset per candidate, not per domain.** Restarting to pick up Bug A's
+fix, the Hindi frontier immediately ballooned to 500,000+ URLs while still stuck seeding
+`amarujala.com` alone for many minutes, blocking every other domain (and all real fetching)
+behind it. Root cause: a domain's sitemap *candidates* (its robots.txt-declared sitemap(s) plus
+`sitemap.py`'s 4 common-path guesses) each called `fetch_urls_from_sitemap()` with no shared
+budget, so each candidate that turned out to be a large index got its **own** fresh
+`max_sitemaps_total=40` allowance — true per-domain cost could be `candidates_count × 40`
+instead of a bounded ~40. **Fix**: one budget list created per domain in
+`_seed_frontier_from_domains()`, passed to every candidate's `fetch_urls_from_sitemap()` call.
+
+**Confirmed converging correctly after both fixes, watched live without further interruption**:
+`amarujala.com` finished seeding bounded at 79,861 URLs and the crawler moved on —
+`jagran.com` (128 URLs) and `navbharattimes.indiatimes.com` (1,564 URLs) seeded next. Nepali's
+frontier reached **all 10 configured domains seeded** (previously only 6 had ever been reached).
+
+9 new tests reproduce both exact bug scenarios against `httpx.MockTransport` (no real network):
+already-seeded domain makes zero requests on restart; an unseeded domain still gets seeded even
+when another domain already has frontier URLs; a domain with two large-index sitemap candidates
+stays bounded near the shared 40-fetch budget instead of ballooning toward 80+. 191 total tests,
+1 skipped.
+
+**Lesson for the remaining Phase-1 days**: do not kill and restart the crawlers casually anymore
+— each restart before a domain finishes its (now-bounded) seeding walk re-attempts that domain's
+seeding from scratch, adding real but avoidable overhead. Let them run continuously.
+
 ---
 
 ## What's left to do
@@ -360,6 +404,14 @@ Ordered by what's actually blocking:
   `.bin`/`.idx` memmap corpus encoding, ready for Phase 2 once the tokenizer sweep is finalized.
   8 new tests, 177 total. Crawlers still running continuously in the background (Hindi 2,116 /
   Nepali 1,129 docs fetched at time of this entry, both still climbing).
+
+- **2026-08-14, late night**: Found and fixed two more real crawler bugs (section 16) by
+  watching a live restart: restarts silently starved every domain but the first (frontier was
+  100% one domain after 3.5 hours), and the sitemap budget reset per-candidate instead of
+  per-domain (frontier ballooned to 500k+ URLs stuck on one domain). Both confirmed fixed live:
+  Nepali now has all 10 configured domains seeded (was 6), Hindi is climbing past its first
+  domain for the first time. 9 new tests, 191 total. **Lesson recorded**: stop restarting the
+  crawlers casually — let them run continuously from here.
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
