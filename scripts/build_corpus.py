@@ -30,8 +30,9 @@ sys.path.insert(0, str(REPO_ROOT))
 from lma.crawl.downloaded_corpus import ingest  # noqa: E402
 from lma.dedup.decontaminate import ContaminationIndex, filter_contaminated  # noqa: E402
 from lma.dedup.pipeline import deduplicate_documents  # noqa: E402
-from lma.text.filters import FilterConfig, evaluate, strip_light_pii  # noqa: E402
-from lma.text.langid import CharNgramLangID, FastTextLangID, confusion_matrix  # noqa: E402
+from lma.text.filters import FilterConfig  # noqa: E402
+from lma.text.parallel import clean_documents  # noqa: E402
+from lma.text.langid import CharNgramLangID, confusion_matrix  # noqa: E402
 from lma.text.normalize import normalize  # noqa: E402
 from lma.text.quality import QualityScorer, choose_threshold  # noqa: E402
 from lma.text.stats import DocumentRecord, PipelineFunnel, compute_corpus_stats, document_length_distribution  # noqa: E402
@@ -154,16 +155,6 @@ def _train_models(language: str, lang_dir: Path):
     return langid_model, quality_scorer, threshold, hi_texts, ne_texts
 
 
-def redact_pii(records: list[dict]) -> list[dict]:
-    """Applies lma/text/filters.py's strip_light_pii to every record's text, in place semantics
-    (returns the same list of dicts with "text" replaced). Pulled out as its own function for
-    the same reason as decontaminate: no dependency on build_corpus()'s
-    network-bound steps, so it is unit-testable with tiny synthetic records."""
-    for r in records:
-        r["text"] = strip_light_pii(r["text"])
-    return records
-
-
 def decontaminate(
     train_split: list[dict], val_split: list[dict], test_split: list[dict], n: int = 13
 ) -> tuple[list[dict], int, "ContaminationIndex"]:
@@ -188,7 +179,8 @@ def decontaminate(
     return clean_train_split, len(train_split) - len(clean_train_split), index
 
 
-def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path | None = None) -> dict:
+def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path | None = None,
+                 workers: int | None = None) -> dict:
     """Builds the cleaned corpus for one language.
 
     lang_dir defaults to REPO_ROOT/<language> (the real, live corpus) and report_dir defaults to
@@ -214,69 +206,26 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
         logger.warning("no raw records found for %s yet; crawl/OCR/download must run first", language)
         return {"language": language, "status": "no_data", "funnel": {}}
 
-    logger.info("normalizing text...")
-    for r in raw_records:
-        r["text"] = normalize(r["text"])
-    # drop anything that normalized down to nothing
-    raw_records = [r for r in raw_records if r["text"]]
-
     logger.info("training/loading language-ID and quality models from a trusted seed...")
     langid_model, quality_scorer, quality_threshold, hi_seed, ne_seed = _train_models(
         language, lang_dir
     )
 
-    fasttext_lid = FastTextLangID()
-
-    logger.info("stage 2: language filtering...")
-    lang_filtered = []
-    for r in raw_records:
-        ft_lang, ft_conf = fasttext_lid.predict(r["text"])
-        if ft_lang != fasttext_code or ft_conf < 0.5:
-            continue
-        if langid_model is not None:
-            result = langid_model.predict(r["text"])
-            if result.label != fasttext_code:
-                continue
-        lang_filtered.append(r)
-    funnel_names.append("language_filtered")
-    funnel_counts.append(len(lang_filtered))
-    logger.info("%d / %d survived language filtering", len(lang_filtered), len(raw_records))
-
-    logger.info("stage 3: heuristic filtering...")
-    heuristic_filtered = []
-    filter_config = FilterConfig()
-    rejection_counts: dict[str, int] = {}
-    for r in lang_filtered:
-        verdict = evaluate(r["text"], language=language, config=filter_config)
-        if verdict.passed:
-            heuristic_filtered.append(r)
-        else:
-            for rule in verdict.failed_rules:
-                rejection_counts[rule] = rejection_counts.get(rule, 0) + 1
-    funnel_names.append("heuristic_filtered")
-    funnel_counts.append(len(heuristic_filtered))
-    logger.info("%d / %d survived heuristic filtering", len(heuristic_filtered), len(lang_filtered))
-
-    logger.info("stage 4: learned quality filtering...")
-    if quality_scorer is not None and quality_threshold is not None:
-        quality_filtered = [
-            r for r in heuristic_filtered if quality_scorer.perplexity(r["text"]) <= quality_threshold
-        ]
-    else:
-        logger.warning("no quality scorer available; skipping stage 4")
-        quality_filtered = heuristic_filtered
-    funnel_names.append("quality_filtered")
-    funnel_counts.append(len(quality_filtered))
-    logger.info("%d / %d survived quality filtering", len(quality_filtered), len(heuristic_filtered))
-
-    # PII redaction: built (lma/text/filters.py's strip_light_pii) but -- same "built and never
-    # called" pattern as decontamination and the manual-vs-downloaded plots -- never actually
-    # wired in. Applied here, exactly where its own docstring says it must run: AFTER heuristic
-    # filtering (so the redaction placeholders "[EMAIL]"/"[PHONE]" cannot distort the
-    # length/digit-ratio statistics those rules depend on) and BEFORE dedup/splitting (so no
-    # committed split file, and no eventual model trained on this corpus, ever reproduces a real
-    # email address or phone number verbatim from a crawled source).
-    quality_filtered = redact_pii(quality_filtered)
+    # Stages 1-4 (normalize -> language-ID -> heuristics -> quality -> PII redaction) run fused
+    # across all cores; see lma/text/parallel.py for why they are fused rather than run as four
+    # separate parallel passes. This is the dominant cost of a corpus build at real scale.
+    quality_filtered, survived, rejection_counts = clean_documents(
+        raw_records, language, fasttext_code, langid_model, quality_scorer, quality_threshold,
+        filter_config=FilterConfig(), workers=workers,
+    )
+    for stage in ("language_filtered", "heuristic_filtered", "quality_filtered"):
+        funnel_names.append(stage)
+        funnel_counts.append(survived[stage])
+    logger.info(
+        "survived: language=%d heuristic=%d quality=%d (from %d raw)",
+        survived["language_filtered"], survived["heuristic_filtered"],
+        survived["quality_filtered"], len(raw_records),
+    )
 
     logger.info("stage 5: deduplication...")
     doc_ids = [
@@ -411,7 +360,8 @@ def main():
              "scripts/reproduce.sh so a demo run never overwrites the real graded figures.",
     )
     args = parser.parse_args()
-    result = build_corpus(args.lang, lang_dir=args.lang_dir, report_dir=args.report_dir)
+    result = build_corpus(args.lang, lang_dir=args.lang_dir, report_dir=args.report_dir,
+                          workers=args.workers)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

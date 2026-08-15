@@ -54,11 +54,17 @@ LITERARY_CULTURAL = [
     "www.sahityasangraha.com",
 ]
 
+# Education: deep, crawler-friendly Nepali-language content, and a register
+# (curricula, institutional prose) absent from the news-heavy list above.
+EDUCATION = [
+    "edusanjal.com",
+]
+
 # No government domains: nepal.gov.np and moe.gov.np were both tried and both time out from
 # here (ConnectTimeout, verified directly -- see the module docstring's reachability note).
 # Listing unreachable domains would only waste seeding time on every crawler startup.
 
-ALL_DOMAINS = NEWS + LITERARY_CULTURAL
+ALL_DOMAINS = NEWS + LITERARY_CULTURAL + EDUCATION
 
 DOMAIN_URL_FILTERS = {
     "www.bbc.com": "/nepali/",
