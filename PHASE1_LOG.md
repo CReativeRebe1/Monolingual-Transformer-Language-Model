@@ -17,14 +17,14 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 64,568 docs | 33,651 docs |
-| Crawl frontier: queued (pending) | 826,263 URLs | 13,590 URLs |
-| Crawl frontier: total discovered | 920,878 URLs | 62,975 URLs |
+| Crawl frontier: fetched | 66,568 docs | 34,166 docs |
+| Crawl frontier: queued (pending) | 824,276 URLs | 12,917 URLs |
+| Crawl frontier: total discovered | 920,895 URLs | 62,975 URLs |
 | Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23's decontamination fix — see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23-24's fixes — a fresh run is next, see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
 | Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **227 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **244 total (243 passed, 1 skipped)** (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
 full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
 needed (section 19). Crawlers now run continuously and independently in the user's own terminal
@@ -591,6 +591,46 @@ val/test drops nothing, and the built `ContaminationIndex` is returned for inspe
 `decontamination_stats.train_documents_dropped` counts will appear the next time the pipeline is
 actually run against the live corpus.
 
+### 24. Systematic audit: three more "built but never called" gaps (commits `d3917ea`, `e6eb4b3`, `0825faa`)
+
+Section 23's decontamination fix turned out not to be a one-off: it fit a pattern worth checking
+for systematically. Listed every function/class defined under `lma/` and grepped `scripts/` for
+which ones are actually ever imported — three more real gaps surfaced, all found by reading code,
+none by running the pipeline.
+
+1. **Manual-vs-downloaded token split and the Zipf plot** (`d3917ea`). `lma/viz/plots.py`'s
+   `plot_manual_vs_downloaded` and `plot_zipf` were both fully implemented (and individually
+   guideline-compliant — title/xlabel/ylabel/legend) but never called from either orchestration
+   script. Root cause: computing a real per-document token count needs an actual trained
+   tokenizer, which doesn't exist until `tokenizer_sweep.py` selects one — `build_corpus.py` runs
+   strictly earlier and has nothing to encode with. Added
+   `compute_final_corpus_token_stats(lang_dir, tokenizer)` to `tokenizer_sweep.py`, called right
+   after the final tokenizer is chosen: reads each split's `manifest.jsonl` + `.txt` file pair in
+   lockstep (written together, line-for-line, by `build_corpus.py`), encodes every document (full
+   corpus, not a sample — this backs a headline number, not an estimate) to get real `n_tokens`,
+   and aggregates via the existing `lma/text/stats.py` `compute_corpus_stats()`. 5 new tests using
+   a small real trained tokenizer.
+
+2. **PII redaction** (`e6eb4b3`). `lma/text/filters.py`'s `strip_light_pii` (redacts emails and
+   10-digit-shaped phone numbers) was unit-tested in isolation but never invoked from
+   `build_corpus.py` — a real privacy concern for a corpus that gets committed to a GitHub
+   Classroom repo and later trained into a model. Wired in exactly where the function's own
+   docstring says it must run: after heuristic filtering, before dedup/splitting. Extracted into
+   `redact_pii(records)`, same no-network-dependency pattern as `decontaminate_train_split`.
+   6 new tests.
+
+3. **Cross-language tokenization example table** (`0825faa`). `lma/tokenizer/analyze.py`'s
+   `side_by_side_examples()` — its own docstring says it exists for exactly this — had no caller
+   anywhere, despite the plan explicitly requiring "~10 side-by-side tokenization examples of the
+   same Devanagari sentence under both tokenizers." Needs both languages' tokenizers at once
+   (`tokenizer_sweep.py` operates one language at a time by design), so it's a new script:
+   `scripts/tokenizer_comparison.py` loads both selected tokenizers, samples 5 real sentences from
+   each language's own held-out val split, tokenizes all 10 under both tokenizers, and writes
+   `report/tables/tokenizer_comparison_examples.json`. 5 new tests using small real tokenizers.
+
+244 tests passing (243 + 1 skipped) at the end of this stretch — corrected here since the
+`0825faa` commit message itself miscounted this as 248.
+
 ---
 
 ## What's left to do
@@ -698,6 +738,13 @@ Ordered by what's actually blocking:
   second-order bug it surfaced (corpus stats were computed pre-decontamination, over-counting).
   6 new tests, `report/phase1.md` updated to document the stage. 227 tests passing. Crawlers
   continued climbing throughout (Hindi 60,100→64,568, Nepali 32,496→33,651 documents).
+
+- **2026-08-15, night**: Systematically audited every `lma/` function against what `scripts/`
+  actually calls (section 24), finding and fixing three more real "built but never wired in"
+  gaps: manual-vs-downloaded token stats + Zipf plot, PII redaction, and the cross-language
+  tokenization example table (`scripts/tokenizer_comparison.py`, new). 16 new tests across the
+  three fixes. 244 tests total (243 passed, 1 skipped). Crawlers kept climbing throughout,
+  checked only via lightweight reads (Hindi 64,568→66,568, Nepali 33,651→34,166 documents).
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
