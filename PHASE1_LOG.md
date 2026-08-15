@@ -734,6 +734,48 @@ changes, so they still use the old 13/10 domain lists -- and Nepali's pending qu
 domains. Restarting is safe and loses nothing (SQLite frontier, section 3), and the per-domain
 `seeded_domains` tracking (section 16) means only the *newly added* domains get seeded on restart.
 
+### 28. Wiki dump, parallelism, and one thing deliberately not built
+
+**Wikipedia dump parser (`lma/crawl/wiki_dump.py`).** Streams `*-pages-articles.xml.bz2` with
+`bz2.open` + `iterparse` (never decompressed to disk -- the Hindi dump is ~1GB compressed and
+several GB expanded), strips wikitext with `mwparserfromhell`, and runs the stripping across a
+process pool. `elem.clear()` after each page matters: without it iterparse silently retains the
+whole tree and memory grows to full dump size. Downloads are resumable by HTTP Range, so a drop
+900MB into a 1GB fetch does not restart.
+
+**A real bug the tests caught.** Section filtering (dropping "References"/"External links"
+apparatus) originally ran *after* `strip_code()`. That silently did nothing: `strip_code()`
+removes the `==` heading markers, so headings become ordinary prose lines and are no longer
+identifiable. Reference sections and their bare URL lists were surviving into the output. Fixed
+by filtering sections at the wikitext level via `get_sections()`, before stripping.
+
+**Parallel corpus cleaning (`lma/text/parallel.py`).** normalize -> language-ID -> heuristics ->
+quality -> PII redaction now run fused in one worker call per document, across all cores. Fusing
+matters more than the parallelism: four separate parallel passes would push each document across
+the process boundary four times, and pickling text dominates the actual filtering cost. Only
+survivors return their text; rejects return a stage label and rule names.
+
+Measured on 2,411 real crawled Hindi documents: **523 docs/s at 1 worker -> 855 docs/s at 15**,
+identical output at both (correctness). That is 1.6x, not 15x -- at this corpus size Windows
+spawn-mode pool startup dominates, and the ratio improves with scale. Worth stating plainly:
+**cleaning was never the bottleneck.** 855 docs/s clears 100k documents in two minutes; the
+constraint is crawl acquisition, which is network- and politeness-bound, not CPU-bound. The
+parallelism is worth having for the eventual full-corpus runs, but it is not what unblocks the
+token target -- the Wikipedia dump and the wider domain list are.
+
+The benchmark also independently confirmed the section-26 JSON-metadata fix: 1,301 of those
+2,411 documents were rejected by the new `starts_with_json_metadata` rule.
+
+**Deliberately not built: CDN 403 bypass.** The suggestion was to use `curl_cffi` browser TLS
+impersonation to get past Cloudflare/Akamai blocks on `news18`, `ndtv`, `india.gov.in`,
+`pib.gov.in`, `myrepublica`. It was tested and it does work (5 of 6 domains returned 200 instead
+of 403). It was not adopted: those 403s are an anti-bot control the site operators deliberately
+deployed, and defeating it by forging a browser's TLS fingerprint circumvents that control --
+made worse by the fact that those sites' `robots.txt` is itself 403-blocked, so their actual
+crawling policy cannot be read to check compliance. The practical case points the same way: those
+five domains are marginal next to Hindi Wikipedia's ~160k articles, which arrive through a
+sanctioned bulk-export path built for exactly this purpose.
+
 ---
 
 ## What's left to do
