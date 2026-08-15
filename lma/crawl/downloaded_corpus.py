@@ -5,8 +5,8 @@ are never fully downloaded to disk -- only the token budget actually needed is m
 
 This is explicitly the "downloaded" side of the manual-vs-downloaded split the Phase-1 report
 must report: every document ingested here is tagged source_type="downloaded" in its output
-record, in contrast to the crawler (lma/crawl/async_crawler.py) and OCR pipeline
-(lma/ocr/pdf_ocr.py), whose output records are tagged source_type="manual". Both write the same
+record, in contrast to the crawler (lma/crawl/async_crawler.py), whose output records are
+tagged source_type="manual". Both write the same
 JSONL.gz shard schema so the downstream cleaning cascade (lang-id -> heuristic filters -> quality
 filter -> dedup) treats all three sources uniformly regardless of provenance.
 

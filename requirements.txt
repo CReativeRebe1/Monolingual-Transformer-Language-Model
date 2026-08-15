@@ -17,10 +17,6 @@ fasttext-wheel>=0.9.2
 indic-nlp-library>=0.92
 zstandard>=0.23
 
-# OCR (manual-collection component)
-pytesseract>=0.3.10
-PyMuPDF>=1.24
-
 # Dedup
 datasketch>=1.6
 
