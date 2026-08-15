@@ -17,15 +17,15 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 87,813 docs | 41,457 docs |
-| Crawl frontier: queued (pending) | 803,204 URLs | 5,192 URLs (shrinking — see note below) |
-| Crawl frontier: total discovered | 921,099 URLs | 62,975 URLs |
+| Crawl frontier: fetched | 91,131 docs | 42,545 docs |
+| Crawl frontier: queued (pending) | 799,938 URLs | 4,063 URLs (shrinking — see note below) |
+| Crawl frontier: total discovered | 921,159 URLs | 62,975 URLs |
 | Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23-25's fixes — a fresh run is next, see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23-26's fixes, including a real quality bug — a fresh run is next, see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
 | Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **250 total (249 passed, 1 skipped)**. **Watch item**: Nepali's pending queue has
-dropped to ~5,200 (from 62,975 total discovered) — it may be approaching the ceiling of what its
+Test suite: **255 total (254 passed, 1 skipped)**. **Watch item**: Nepali's pending queue has
+dropped to ~4,000 (from 62,975 total discovered) — it may be approaching the ceiling of what its
 current 10 seeded domains' sitemaps + link-following can discover. Not an error, just something
 to keep an eye on; if it plateaus, expanding the Nepali seed domain list would be the next lever. (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
@@ -664,6 +664,34 @@ PII redaction, the tokenizer comparison table, the token-length histogram) plus 
 robustness fix (the OCR language-pack check). Test count grew from 227 at the start of §23 to
 249 now, 1 skipped throughout.
 
+### 26. Real corpus-quality bug found by directly inspecting raw text (commit `19bb16c`)
+
+Asked directly whether the crawl was "just collecting links" — answering that properly meant
+actually reading real extracted text from raw shards, not just quoting counts. That inspection
+(prompted by the question, not by running the pipeline) surfaced a genuine bug the counts alone
+never would have shown:
+
+**25.1% of a 10,273-record sample of raw Hindi documents, and 7.0% of the branch's
+already-committed train split (243 of 3,476 documents), had JSON metadata leaking into the
+extracted article text.** Root cause: `amarujala.com`'s premium-content template extracts (via
+`trafilatura`) to a JSON metadata blob (`_id`/`slug`/`title_hn`/`category`) followed by a
+repeated headline, "विज्ञापन" (advertisement), and a **second, previously-unblocklisted**
+app-nag variant ("खबरें लगातार पढ़ने के लिए अमर उजाला एप डाउनलोड करें" — "download the app to
+keep reading") — these are paywall stub pages with no real article body at all, not genuine
+articles that merely have some noise prepended.
+
+**Fixed two ways**: added the new app-nag phrase to `BOILERPLATE_PHRASES` (alongside the first
+variant caught back in §11); and added a new, independent heuristic rule,
+`_starts_with_json_metadata()` — real Devanagari (or English) prose essentially never
+legitimately begins with an ASCII `{`, making "does the document's text start with one" a
+high-precision, near-zero-false-positive signal for this specific extraction failure, catching
+cases even where the nag-phrase wording might vary further. 6 new tests, including two direct
+regressions using the *exact* text observed in real fetched records.
+
+**This had already reached the graded, committed corpus** (the 7.0% figure above). It will be
+retroactively cleaned the next time `scripts/build_corpus.py` actually runs — not executed in
+this session, consistent with not competing with the live crawlers for I/O.
+
 ---
 
 ## What's left to do
@@ -786,6 +814,14 @@ Ordered by what's actually blocking:
   in total across sections 23-25. 249 tests passing. Crawlers continued climbing throughout
   (Hindi 78,247→87,813, Nepali 38,182→41,457 documents); noted Nepali's pending queue shrinking
   toward its current discovery ceiling as a watch item, not yet an action item.
+
+- **2026-08-15, prompted by a direct question**: Asked point-blank whether the crawl was "just
+  collecting links." Answering properly meant inspecting real extracted text, which surfaced a
+  genuine bug the counts alone had hidden (section 26): 25% of raw Hindi records, and 7% of the
+  already-committed corpus, had JSON metadata leaking into extracted text from a second,
+  previously-unblocklisted amarujala.com paywall-stub variant. Fixed with a new phrase and a new
+  high-precision heuristic rule; 6 new tests using the exact real observed text. 254 tests
+  passing. Crawlers continued (Hindi 87,813→91,131, Nepali 41,457→42,545 documents).
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
