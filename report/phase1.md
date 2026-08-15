@@ -35,11 +35,14 @@ size.
 
 | | Model H (Hindi) | Model L (Nepali) |
 |---|---|---|
-| **Manual — crawled** (own async crawler) | amarujala.com, jagran.com, navbharattimes.indiatimes.com, bhaskar.com, livehindustan.com, aajtak.in, abplive.com, hi.wikipedia.org, hi.wikisource.org, hi.wiktionary.org, india.gov.in, pib.gov.in, bbc.com/hindi | ekantipur.com, onlinekhabar.com, setopati.com, ratopati.com, nagariknews.nagariknetwork.com, himalkhabar.com, ne.wikipedia.org, ne.wikisource.org, nepal.gov.np, bbc.com/nepali |
-| **Manual — OCR** | Public-domain Hindi books/PDFs (pipeline built; see §2.4) | Public-domain Nepali books/PDFs (pipeline built; see §2.4) |
-| **Downloaded** (planned) | Hindi Wikipedia (confirmed working), IndicCorp v2, OSCAR/CulturaX (pending HF terms acceptance) | Nepali Wikipedia (confirmed working), IndicCorp v2, OSCAR/CulturaX (pending HF terms acceptance) |
+| **Manual — crawled** (own async crawler) | 31 domains: news (amarujala, jagran, navbharattimes, bhaskar, livehindustan, aajtak, abplive, patrika, naidunia, jansatta, tv9hindi, indiatv, …), literary/cultural (hindisamay, kavitakosh, gadyakosh, anubhuti-hindi, bharatdiscovery, hindwi, rekhta), science/government (ignca.gov.in, mygov.in), bbc.com/hindi | 26 domains: news (ekantipur, onlinekhabar, setopati, ratopati, nagariknews, himalkhabar, gorkhapatra, ujyaaloonline, nepalkhabar, thahakhabar, baahrakhari, annapurnapost, nepalnews, …), literary (sahityasangraha), bbc.com/nepali |
+| **Downloaded** | Wikipedia via the Wikimedia dump (`scripts/run_wiki.py`, confirmed working), IndicCorp v2, OSCAR/CulturaX (pending HF terms acceptance) | same |
 
-All 13 Hindi domains and all 10 Nepali domains are fully seeded and actively contributing (see
+The seed lists were widened substantially (13 -> 31 Hindi, 10 -> 26 Nepali) once it became clear
+that per-host politeness makes the *number of live domains*, not concurrency, the binding
+throughput constraint. Every domain was probed for reachability before inclusion; roughly a
+quarter of an initial candidate list were dead hostnames, CDN bot-blocks, or timeouts and were
+dropped. All listed domains are seeded and contributing (see
 `PHASE1_LOG.md` §16–17 for the crawler fixes that made this true — earlier snapshots had a single
 dominant domain due to two separate bugs, both found and fixed by watching the pipeline run
 against live data, not assumed correct).
@@ -90,16 +93,27 @@ resume-safety details, and three real bugs found and fixed by running this again
 Devanagari-specific Unicode normalization (NFC composition, nukta consistency, danda
 normalization, ZWJ/ZWNJ cleanup) runs before every stage; idempotency is enforced by test.
 
-### 2.4 OCR pipeline (built, not yet run at scale)
+### 2.4 Manual collection is crawl-only (no OCR)
 
-PyMuPDF renders PDF pages at 300 DPI; Tesseract (`hin`/`nep` language packs) performs OCR with a
-per-page confidence floor; a post-correction pass fixes Tesseract's most common Devanagari failure
-mode (a stray space splitting a consonant from its following matra) before the shared normalizer
-runs. The `tesseract` binary is not installed on the primary dev machine — this is a known,
-documented gap; OCR at real scale runs on the Kaggle/Colab compute this project already targets
-for pretraining, where `apt-get install tesseract-ocr tesseract-ocr-hin tesseract-ocr-nep` is a
-one-line fix. Every stage before the OCR call itself (PDF rendering, post-correction rules) is
-unit-tested independently of the binary.
+The assignment counts *either* "OCR from books/PDFs" *or* "scraping + cleaning pages you gather
+yourself" as manual collection. This project uses only the latter. An OCR pipeline (PyMuPDF
+rendering + Tesseract + Devanagari post-correction) was built and unit-tested earlier in Phase 1,
+but was removed: reaching the ≥20% manual floor at ~500M-token scale requires tens of millions of
+manual tokens, which page-scale OCR cannot realistically supply within the phase deadline, while
+the crawler supplies them directly. Keeping a second, unused collection path would have meant
+carrying its dependencies (`pytesseract`, `PyMuPDF`) and its tests for no contribution to the
+corpus. Manual tokens therefore come entirely from the crawl, which is fully spec-compliant.
+
+### 2.5 Wikipedia via dump, not crawl
+
+Wikipedia is ingested with `scripts/run_wiki.py` from the Wikimedia dump rather than crawled.
+The MediaWiki API looks like the faster route but is not: for whole-article plain-text extracts
+it silently caps `exlimit` at 1 — verified live against `hi.wikipedia.org`, which returned
+*"exlimit was too large for a whole article extracts request, lowered to 1"* — making an API walk
+one article per round-trip, no better than crawling the HTML. The dump is already plain text and
+streams in bulk. These records are tagged `source_type="downloaded"`, not manual: a bulk export
+offered by the site is not "pages we gathered ourselves", so the ≥20% manual claim rests only on
+the genuine crawl.
 
 ## 3. Dataset statistics (current snapshot)
 
@@ -212,7 +226,6 @@ trains; the corpus encodes to `.bin`/`.idx`.
 2. Pull downloaded sources (Wikipedia at minimum; IndicCorp v2 and OSCAR/CulturaX pending
    `huggingface-cli login` acceptance of the latter two's terms), sized against the final manual
    total to keep the ≥20% manual floor comfortably satisfied.
-3. Run OCR at scale on Kaggle/Colab (where `tesseract` is installable).
 4. Re-run `scripts/tokenizer_sweep.py` on the final corpus and populate §4 with real vocab-size
    selection, fertility tables, token-frequency statistics, and cross-language tokenization
    examples.
