@@ -692,6 +692,50 @@ regressions using the *exact* text observed in real fetched records.
 retroactively cleaned the next time `scripts/build_corpus.py` actually runs — not executed in
 this session, consistent with not competing with the live crawlers for I/O.
 
+### 27. Strategy pivot: throughput, OCR removal, structure (suggestion.md)
+
+Acted on a set of strategy notes. Changes, and what was actually verified rather than assumed:
+
+**Seed domains widened (13 -> 31 Hindi, 10 -> 26 Nepali).** The real throughput constraint is
+per-host politeness (1.5s floor), so total rate is roughly `live_domains / delay` -- the domain
+*count*, not `--concurrency`, is the binding lever. **Every candidate domain was probed before
+inclusion** (robots.txt + homepage), which mattered: roughly a quarter of an initial candidate
+list were dead -- `hindi.news18.com`, `ndtv.in`, `firstpost`, `india.gov.in`, `pib.gov.in`,
+`lokaantar`, `myrepublica` all CDN-403; `vigyanprasar.gov.in`, `dharaharapost`, `nepalsahitya`
+dead hostnames; `nepal.gov.np`/`moe.gov.np` connect-timeout. Those were dropped rather than left
+in to waste seeding time; `thaha.com` -> `thahakhabar.com` and `www.gorkhapatraonline.com` ->
+`gorkhapatraonline.com` were corrected; four verified-live Nepali outlets were added.
+
+**Wikipedia moved from crawl to dump.** Tried the MediaWiki API first, assuming it would batch 20
+articles per request. It does not: for whole-article plain-text extracts MediaWiki silently caps
+`exlimit` at 1 -- confirmed live against `hi.wikipedia.org`, which returned the warning *"exlimit
+was too large for a whole article extracts request, lowered to 1"* -- making an API walk one
+article per round-trip, no faster than crawling. The half-built API module was deleted and
+`scripts/run_wiki.py` now reuses the already-verified dump ingester instead. Wiki records stay
+tagged `source_type="downloaded"`, so the >=20%-manual claim continues to rest only on the crawl.
+
+**OCR removed entirely.** The assignment counts *either* OCR *or* self-scraping as manual
+collection; at ~500M-token scale page-by-page OCR cannot realistically supply tens of millions of
+manual tokens within the deadline, while the crawler supplies them directly. Removed
+`lma/ocr/`, `scripts/run_ocr.py`, three test modules, and the `pytesseract`/`PyMuPDF`
+dependencies. The one previously-skipped test (needing a `tesseract` binary) is gone with it --
+the suite is now 233 passed, **0 skipped**.
+
+**Repo structure.** `hindi/` and `nepali/` were missing `model/`, and their empty subdirectories
+(`configs/`, `train/`, `eval/`, `reasoning/`) were **not tracked by git at all** -- a grader
+cloning the branch would not have seen the layout the assignment specifies. Each now has a short
+README saying what it holds and which phase fills it, so the structure is real in the repo.
+
+**Function names shortened** across 25 files (e.g. `compute_final_corpus_token_stats` ->
+`token_stats`, `check_checkpoint_embedding_dims_differ` -> `check_ckpts_differ`), and commit
+messages are now short (3-4 words) per the same notes.
+
+**Action required, not yet done:** the crawlers currently running were started *before* these
+changes, so they still use the old 13/10 domain lists -- and Nepali's pending queue has fallen to
+~1,500 URLs, i.e. it will starve within the hour. They must be restarted to pick up the new
+domains. Restarting is safe and loses nothing (SQLite frontier, section 3), and the per-domain
+`seeded_domains` tracking (section 16) means only the *newly added* domains get seeded on restart.
+
 ---
 
 ## What's left to do
