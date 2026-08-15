@@ -27,9 +27,9 @@ from lma.crawl.async_crawler import run_crawl  # noqa: E402
 def main():
     parser = argparse.ArgumentParser(description="Run the manual-collection crawl for one language.")
     parser.add_argument("--lang", required=True, choices=["hindi", "nepali"])
-    parser.add_argument("--max-docs", type=int, default=200_000)
-    parser.add_argument("--concurrency", type=int, default=8)
-    parser.add_argument("--batch-size", type=int, default=50)
+    parser.add_argument("--max-docs", type=int, default=1_000_000)
+    parser.add_argument("--concurrency", type=int, default=64)
+    parser.add_argument("--batch-size", type=int, default=400)
     parser.add_argument("--min-delay", type=float, default=1.0, help="floor seconds between requests to the same host")
     args = parser.parse_args()
 
