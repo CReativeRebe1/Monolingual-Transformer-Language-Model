@@ -26,14 +26,25 @@ included in `report/`.
 ## Repository layout
 
 ```
+README.md       reproduction steps + Google Drive links + independence statement
 lma/            shared code library (crawl, text-cleaning, dedup, tokenizer, model, train, eval, viz)
-hindi/          Model H artifacts: configs, data manifests, tokenizer, training/eval entry points
-nepali/         Model L artifacts: same structure, entirely separate
-notebooks/      Kaggle/Colab-runnable notebooks (data → tokenizer → pretrain → eval → finetune)
-scripts/        reproduce.sh, verify_independence.py, upload_to_drive.py
-tests/          pytest compliance suite (masking, checkpoint resume, tokenizer roundtrip, dedup, ...)
+hindi/          Model H (Hindi) -- self-contained artifacts, each subdir has its own README:
+  data/           seed_domains.py, splits/ (train/val/test + manifests), stats.json
+  tokenizer/      SentencePiece model + vocab + sweep_results.json
+  model/          per-language model config and exact parameter count      (Phase 2)
+  train/          pretraining entry point, logs, loss curves               (Phase 2)
+  eval/           PPL/BPB, BLEU/chrF/ROUGE-L, attention analysis           (Phase 2)
+  reasoning/      synthetic reasoning data generator + finetuning          (Phase 3)
+  configs/        run configuration files
+nepali/         Model L (Nepali) -- identical structure, entirely separate artifacts
+scripts/        run_crawl, run_wiki, build_corpus, tokenizer_sweep, verify_independence, reproduce.sh
+tests/          pytest suite (filters, dedup, tokenizer roundtrip, crawler resume, ...)
 report/         phase1.md / phase2.md / phase3.md + figures/ + tables/  (everything graded lives here)
 ```
+
+The two language directories share *code* (`lma/`) but no *artifacts*: separate corpora,
+tokenizers, vocabularies, and (from Phase 2) weights. `scripts/verify_independence.py` checks
+this mechanically.
 
 ## Reproduction steps
 
