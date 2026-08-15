@@ -129,3 +129,53 @@ def test_observed_amarujala_cookie_notice_is_rejected_as_boilerplate():
     )
     verdict = evaluate(observed_text, language="hindi")
     assert "boilerplate_phrase_present" in verdict.failed_rules
+
+
+def test_observed_amarujala_app_nag_variant_is_rejected_as_boilerplate():
+    # A SECOND, differently-worded amarujala.com paywall/app-nag variant, found by directly
+    # inspecting raw fetched records (prompted by a user question about whether real content was
+    # being collected at all) rather than by running the pipeline: premium-content pages extract
+    # to only this nag line plus a JSON metadata blob and a repeated headline, no real article
+    # body. It must be rejected, matching the first variant already in the blocklist.
+    observed_text = (
+        "बेरहम गर्मी और उमस से सावन का स्वागत\n"
+        "Allahabad\n"
+        "विज्ञापन\n"
+        "खबरें लगातार पढ़ने के लिए अमर उजाला एप डाउनलोड करें\n"
+        "या वेबसाइट पर पढ़ना जारी रखने के लिए वीडियो विज्ञापन देखें\n"
+        "अगर आपके पास प्रीमियम मेंबरशिप है तो"
+    )
+    verdict = evaluate(observed_text, language="hindi")
+    assert "boilerplate_phrase_present" in verdict.failed_rules
+
+
+def test_observed_amarujala_json_metadata_prefix_is_rejected():
+    # Regression test for a real finding: 25% of raw fetched Hindi documents, and 7% of an
+    # ALREADY-COMMITTED train split, had this exact pattern -- trafilatura extracting
+    # amarujala.com's embedded article-metadata JSON as literal leading text instead of markup.
+    observed_text = (
+        '{"_id":"18705","slug":"Allahabad-18705-8","type":"story","status":"publish",'
+        '"title_hn":"बेरहम गर्मी और उमस से सावन का स्वागत","category":{"title":"City & states",'
+        '"title_hn":"शहर और राज्य","slug":"city-and-states"}}\n'
+        "    बेरहम गर्मी और उमस से सावन का स्वागत\n"
+        "    Allahabad"
+    )
+    verdict = evaluate(observed_text, language="hindi")
+    assert "starts_with_json_metadata" in verdict.failed_rules
+
+
+def test_starts_with_json_metadata_does_not_flag_normal_text():
+    verdict = evaluate(GOOD_HINDI_TEXT, language="hindi")
+    assert "starts_with_json_metadata" not in verdict.failed_rules
+
+
+def test_starts_with_json_metadata_ignores_leading_whitespace():
+    from lma.text.filters import _starts_with_json_metadata
+    assert _starts_with_json_metadata('   \n\t{"a": 1}') is True
+    assert _starts_with_json_metadata(GOOD_HINDI_TEXT) is False
+
+
+def test_starts_with_json_metadata_requires_brace_at_the_very_start():
+    from lma.text.filters import _starts_with_json_metadata
+    # A document that merely MENTIONS a brace somewhere is not what this rule targets.
+    assert _starts_with_json_metadata("यह एक लेख है जिसमें { यह चिह्न } भी है।") is False
