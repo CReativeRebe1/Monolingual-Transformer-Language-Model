@@ -80,7 +80,7 @@ def _iter_shard_records(shard_path: Path):
 def _iter_raw_records(lang_dir: Path):
     """Yields every raw record across crawler + OCR + downloaded shards for one language."""
     raw_dir = lang_dir / "data" / "raw"
-    for subdir_name in ("crawled", "wiki", "downloaded"):
+    for subdir_name in ("crawled", "fast", "wiki", "downloaded"):
         subdir = raw_dir / subdir_name
         if not subdir.exists():
             continue

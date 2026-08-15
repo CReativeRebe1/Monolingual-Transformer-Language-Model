@@ -29,3 +29,7 @@ seaborn>=0.13
 
 # Testing
 pytest>=8.0
+
+# High-throughput crawler
+aiohttp>=3.9
+mwparserfromhell>=0.6
