@@ -47,8 +47,31 @@ NEWS = [
     "www.nepalpage.com",
     "www.pardafas.com",
     "newsofnepal.com",
+    # Added from a user-supplied candidate list; probed individually (robots.txt + homepage,
+    # >2KB real body) before inclusion. "farakdhar.com" and "ukaalo.com" from the same list
+    # were dropped -- both 403 (bot-blocked), same class of failure as lokaantar.com and
+    # myrepublica.nagariknetwork.com noted below.
+    "bizmandu.com",
+    "deshsanchar.com",
+    "www.dainiknepal.com",
+    "www.drishtinews.com",
+    "ehimalayatimes.com",
+    "www.hamrokhelkud.com",
+    "kendrabindu.com",
+    "khabarhub.com",
+    "makalukhabar.com",
+    "nepallive.com",
+    "nepalpress.com",
+    "nepalsamaya.com",
+    "www.news24nepal.com",
+    "rajdhanidaily.com",
+    "shilapatra.com",
     "www.bbc.com",
 ]
+
+# Confirmed dead/blocked, do not re-add without re-probing: www.lokaantar.com (403),
+# myrepublica.nagariknetwork.com (403), farakdhar.com (403), ukaalo.com (403),
+# nepal.gov.np / moe.gov.np (connect timeout).
 
 LITERARY_CULTURAL = [
     "www.sahityasangraha.com",
