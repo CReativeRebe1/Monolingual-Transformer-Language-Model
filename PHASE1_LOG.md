@@ -17,14 +17,17 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 66,568 docs | 34,166 docs |
-| Crawl frontier: queued (pending) | 824,276 URLs | 12,917 URLs |
-| Crawl frontier: total discovered | 920,895 URLs | 62,975 URLs |
+| Crawl frontier: fetched | 87,813 docs | 41,457 docs |
+| Crawl frontier: queued (pending) | 803,204 URLs | 5,192 URLs (shrinking — see note below) |
+| Crawl frontier: total discovered | 921,099 URLs | 62,975 URLs |
 | Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23-24's fixes — a fresh run is next, see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23-25's fixes — a fresh run is next, see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
 | Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **244 total (243 passed, 1 skipped)** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **250 total (249 passed, 1 skipped)**. **Watch item**: Nepali's pending queue has
+dropped to ~5,200 (from 62,975 total discovered) — it may be approaching the ceiling of what its
+current 10 seeded domains' sitemaps + link-following can discover. Not an error, just something
+to keep an eye on; if it plateaus, expanding the Nepali seed domain list would be the next lever. (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
 full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
 needed (section 19). Crawlers now run continuously and independently in the user's own terminal
@@ -631,6 +634,36 @@ none by running the pipeline.
 244 tests passing (243 + 1 skipped) at the end of this stretch — corrected here since the
 `0825faa` commit message itself miscounted this as 248.
 
+### 25. Audit completed: two more fixes, two confirmed non-issues (commits `73069b9`, `20392ea`)
+
+Finished the systematic pass started in §24.
+
+5. **Token piece-length distribution** (`73069b9`). `token_length_distribution()` had the same
+   gap; wired into `tokenizer_sweep.py` next to the Zipf plot it was written to support, reusing
+   `plot_length_histogram` rather than adding a new plot function. Its `{length: count}` Counter
+   needed expanding into a flat list first — pulled that into its own `_flatten_length_counts()`
+   specifically because swapping length and count in the expansion is an easy, silent mistake
+   that would still produce a plausible-looking (wrong) histogram. 4 new tests.
+6. **OCR language-pack pre-flight check** (`20392ea`). `available_ocr_languages()` was only ever
+   referenced from its own unit test. `run_ocr.py` previously only checked the tesseract *binary*
+   existed, not that the specific `hin`/`nep` language pack was installed — a gap that would have
+   surfaced as a confusing failure deep inside `pytesseract` on whatever PDF got OCR'd first,
+   instead of a clear upfront message. Fixed. 2 new tests.
+
+**Two remaining candidates checked and confirmed NOT gaps**: `load_encoded_split`,
+`document_slice`, and `plot_training_loss_curve` are legitimately Phase-2 scope (no training loop
+exists yet to call them) — correctly out of scope, not oversights. `open_frontier()` is genuinely
+dead code, not a "should be wired in" case: `Frontier` already implements its own
+`__enter__`/`__exit__`, and every real caller already uses `with Frontier(path) as f:` directly.
+Left alone — removing unused code wasn't what "build the rest of Phase 1" asked for, and it isn't
+causing any harm.
+
+**Audit tally, sections 23-25**: 6 real "built but never called" gaps found and fixed by reading
+code rather than running it (decontamination, manual-vs-downloaded token stats, the Zipf plot,
+PII redaction, the tokenizer comparison table, the token-length histogram) plus one pre-flight
+robustness fix (the OCR language-pack check). Test count grew from 227 at the start of §23 to
+249 now, 1 skipped throughout.
+
 ---
 
 ## What's left to do
@@ -745,6 +778,14 @@ Ordered by what's actually blocking:
   tokenization example table (`scripts/tokenizer_comparison.py`, new). 16 new tests across the
   three fixes. 244 tests total (243 passed, 1 skipped). Crawlers kept climbing throughout,
   checked only via lightweight reads (Hindi 64,568→66,568, Nepali 33,651→34,166 documents).
+
+- **2026-08-15, still going**: Finished the systematic built-but-unwired audit (section 25):
+  token piece-length distribution and an OCR language-pack pre-flight check, plus confirmed two
+  remaining candidates (`load_encoded_split`/`document_slice`/`plot_training_loss_curve` are
+  correctly Phase-2 scope; `open_frontier` is genuinely dead code, not a gap). 6 real gaps fixed
+  in total across sections 23-25. 249 tests passing. Crawlers continued climbing throughout
+  (Hindi 78,247→87,813, Nepali 38,182→41,457 documents); noted Nepali's pending queue shrinking
+  toward its current discovery ceiling as a watch item, not yet an action item.
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
