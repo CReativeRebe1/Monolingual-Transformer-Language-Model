@@ -28,6 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from lma.crawl.downloaded_corpus import ingest  # noqa: E402
+from lma.dedup.decontaminate import ContaminationIndex, filter_contaminated  # noqa: E402
 from lma.dedup.pipeline import deduplicate_documents  # noqa: E402
 from lma.text.filters import FilterConfig, evaluate  # noqa: E402
 from lma.text.langid import CharNgramLangID, FastTextLangID, confusion_matrix  # noqa: E402
@@ -153,6 +154,30 @@ def _train_langid_and_quality_models(language: str, lang_dir: Path):
     return langid_model, quality_scorer, threshold, hi_texts, ne_texts
 
 
+def decontaminate_train_split(
+    train_split: list[dict], val_split: list[dict], test_split: list[dict], n: int = 13
+) -> tuple[list[dict], int, "ContaminationIndex"]:
+    """Drops any train document that shares an n-word n-gram with val or test.
+
+    Without this, a near-duplicate of a held-out document embedded inside a longer training
+    document (which whole-document dedup, lma/dedup/minhash.py, would not catch -- it operates
+    on whole-document similarity, not substring containment) can leak into training, inflating
+    Phase-2's intrinsic LM metrics (perplexity, BPB) on val/test. Pulled out as its own function,
+    separate from build_corpus()'s network-dependent seed-pulling steps, specifically so it can
+    be unit-tested with tiny synthetic documents without needing a live Wikipedia pull.
+
+    Returns (clean_train_split, n_dropped, the_contamination_index_used).
+    """
+    index = ContaminationIndex(n=n)
+    index.add_reference_texts([r["text"] for r in val_split])
+    index.add_reference_texts([r["text"] for r in test_split])
+    train_texts = [r["text"] for r in train_split]
+    _, contaminated_indices = filter_contaminated(train_texts, index)
+    contaminated_set = set(contaminated_indices)
+    clean_train_split = [r for i, r in enumerate(train_split) if i not in contaminated_set]
+    return clean_train_split, len(train_split) - len(clean_train_split), index
+
+
 def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path | None = None) -> dict:
     """Builds the cleaned corpus for one language.
 
@@ -267,6 +292,16 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
     test_split = shuffled[n_val : n_val + n_test]
     train_split = shuffled[n_val + n_test :]
 
+    logger.info("decontaminating train against val/test (13-gram overlap)...")
+    n_train_before_decontam = len(train_split)
+    train_split, n_decontaminated, decontam_index = decontaminate_train_split(train_split, val_split, test_split)
+    funnel_names.append("decontaminated")
+    funnel_counts.append(len(train_split) + len(val_split) + len(test_split))
+    logger.info(
+        "decontamination: dropped %d/%d train documents that 13-gram-overlapped val/test",
+        n_decontaminated, n_train_before_decontam,
+    )
+
     splits_dir = lang_dir / "data" / "splits"
     splits_dir.mkdir(parents=True, exist_ok=True)
     for split_name, split_records in (("train", train_split), ("val", val_split), ("test", test_split)):
@@ -285,9 +320,14 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
     logger.info("splits: train=%d val=%d test=%d", len(train_split), len(val_split), len(test_split))
 
     logger.info("computing corpus statistics and figures...")
+    # Built from the FINAL split (post-decontamination), not `deduped` -- deduped still includes
+    # the train documents that decontamination just dropped for leaking val/test content, so
+    # using it here would over-count the reported corpus size relative to what actually ends up
+    # in the committed splits.
+    final_documents = train_split + val_split + test_split
     doc_records = [
         DocumentRecord(text=r["text"], source_type=r.get("source_type", "manual"), host=r.get("host") or "unknown")
-        for r in deduped
+        for r in final_documents
     ]
     corpus_stats = compute_corpus_stats(doc_records)
     lengths = document_length_distribution(doc_records, unit="words")
@@ -314,6 +354,12 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
             "near_duplicate_clusters": dedup_stats.near_duplicate_clusters,
             "near_duplicates_removed": dedup_stats.near_duplicates_removed,
             "kept_count": dedup_stats.kept_count,
+        },
+        "decontamination_stats": {
+            "reference_ngrams_indexed": len(decontam_index),
+            "train_documents_before": n_train_before_decontam,
+            "train_documents_dropped": n_decontaminated,
+            "train_documents_after": len(train_split),
         },
         "corpus": {
             "n_documents": corpus_stats.n_documents,
