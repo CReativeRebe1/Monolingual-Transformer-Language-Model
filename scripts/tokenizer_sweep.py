@@ -42,7 +42,7 @@ ALGORITHMS = ("bpe", "unigram")
 ELBOW_IMPROVEMENT_THRESHOLD = 0.03  # stop growing vocab once fertility improves <3% per step
 
 
-def _flatten_length_counts(length_counts) -> list[int]:
+def _flatten_counts(length_counts) -> list[int]:
     """Expands a {length: count} Counter into a flat list of individual lengths, suitable for
     plot_length_histogram (which expects one entry per observation, not pre-aggregated counts).
     Pulled out as its own function purely so the expansion logic itself -- easy to get backwards
@@ -66,7 +66,7 @@ def _elbow_vocab_size(sweep_by_vocab: dict[int, float]) -> int:
     return sizes[-1]  # fertility kept improving meaningfully all the way to the largest size
 
 
-def compute_final_corpus_token_stats(lang_dir: Path, tokenizer: Tokenizer):
+def token_stats(lang_dir: Path, tokenizer: Tokenizer):
     """After the final tokenizer is selected, encodes every split document to get real n_tokens
     per document, split by source_type -- the assignment's explicitly required "manual vs.
     downloaded token split" statistic (report/phase1.md section 2.1/3).
@@ -207,7 +207,7 @@ def run_sweep(language: str) -> dict:
     # place for them: the final tokenizer needed to convert documents to real token counts only
     # exists from this point on in the pipeline.
     final_tokenizer = Tokenizer(dst_model)
-    final_corpus_stats = compute_final_corpus_token_stats(lang_dir, final_tokenizer)
+    final_corpus_stats = token_stats(lang_dir, final_tokenizer)
     if final_corpus_stats.manual_fraction is not None:
         plot_manual_vs_downloaded(
             final_corpus_stats.manual_tokens, final_corpus_stats.downloaded_tokens,
@@ -223,7 +223,7 @@ def run_sweep(language: str) -> dict:
     # a generic list of ints with a unit label, so no duplicated plotting logic is needed.
     piece_length_counts = token_length_distribution(final_tokenizer, val_texts)
     if piece_length_counts:
-        piece_lengths_flat = _flatten_length_counts(piece_length_counts)
+        piece_lengths_flat = _flatten_counts(piece_length_counts)
         plot_length_histogram(
             piece_lengths_flat, fig_dir / f"{language}_token_piece_length_hist.png",
             language.capitalize(), unit="characters per token piece",

@@ -44,7 +44,7 @@ def test_empty_text_has_infinite_perplexity():
 def test_fit_perplexity_distribution_returns_one_value_per_text():
     scorer = QualityScorer(n=4)
     scorer.fit(TRUSTED_HINDI)
-    ppls = scorer.fit_perplexity_distribution(TRUSTED_HINDI[:2])
+    ppls = scorer.fit_ppl_dist(TRUSTED_HINDI[:2])
     assert len(ppls) == 2
     assert all(p > 0 for p in ppls)
 

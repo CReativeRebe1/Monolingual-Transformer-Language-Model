@@ -91,7 +91,7 @@ def _iter_raw_records(lang_dir: Path):
         yield from _iter_shard_records(shard_path)
 
 
-def _train_langid_and_quality_models(language: str, lang_dir: Path):
+def _train_models(language: str, lang_dir: Path):
     """Pulls a small trusted Wikipedia seed and trains the char-ngram hi/ne discriminator and
     the quality-filter perplexity scorer on it. Self-contained: no separate offline training
     step is required to run build_corpus.py from a clean checkout.
@@ -146,7 +146,7 @@ def _train_langid_and_quality_models(language: str, lang_dir: Path):
     quality_scorer = QualityScorer(n=4)
     if seed_texts:
         quality_scorer.fit(seed_texts)
-        threshold = choose_threshold(quality_scorer.fit_perplexity_distribution(seed_texts), percentile=99.0)
+        threshold = choose_threshold(quality_scorer.fit_ppl_dist(seed_texts), percentile=99.0)
     else:
         quality_scorer = None
         threshold = None
@@ -157,14 +157,14 @@ def _train_langid_and_quality_models(language: str, lang_dir: Path):
 def redact_pii(records: list[dict]) -> list[dict]:
     """Applies lma/text/filters.py's strip_light_pii to every record's text, in place semantics
     (returns the same list of dicts with "text" replaced). Pulled out as its own function for
-    the same reason as decontaminate_train_split: no dependency on build_corpus()'s
+    the same reason as decontaminate: no dependency on build_corpus()'s
     network-bound steps, so it is unit-testable with tiny synthetic records."""
     for r in records:
         r["text"] = strip_light_pii(r["text"])
     return records
 
 
-def decontaminate_train_split(
+def decontaminate(
     train_split: list[dict], val_split: list[dict], test_split: list[dict], n: int = 13
 ) -> tuple[list[dict], int, "ContaminationIndex"]:
     """Drops any train document that shares an n-word n-gram with val or test.
@@ -221,7 +221,7 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
     raw_records = [r for r in raw_records if r["text"]]
 
     logger.info("training/loading language-ID and quality models from a trusted seed...")
-    langid_model, quality_scorer, quality_threshold, hi_seed, ne_seed = _train_langid_and_quality_models(
+    langid_model, quality_scorer, quality_threshold, hi_seed, ne_seed = _train_models(
         language, lang_dir
     )
 
@@ -313,7 +313,7 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
 
     logger.info("decontaminating train against val/test (13-gram overlap)...")
     n_train_before_decontam = len(train_split)
-    train_split, n_decontaminated, decontam_index = decontaminate_train_split(train_split, val_split, test_split)
+    train_split, n_decontaminated, decontam_index = decontaminate(train_split, val_split, test_split)
     funnel_names.append("decontaminated")
     funnel_counts.append(len(train_split) + len(val_split) + len(test_split))
     logger.info(

@@ -1,4 +1,4 @@
-"""Tests for scripts/build_corpus.py's decontaminate_train_split -- a real gap found by
+"""Tests for scripts/build_corpus.py's decontaminate -- a real gap found by
 reviewing (not running) the pipeline: build_corpus.py's own module docstring described the
 pipeline as "dedup -> decontaminate -> split", and lma/dedup/decontaminate.py was fully built and
 unit-tested in isolation, but nothing in build_corpus.py actually called it. The document-level
@@ -6,7 +6,7 @@ unit-tested in isolation, but nothing in build_corpus.py actually called it. The
 document (embedded inside a longer training document, which whole-document dedup would not catch)
 could leak from train into val/test, which would inflate Phase-2's perplexity/BPB metrics.
 
-Pulled decontaminate_train_split() out as its own pure function (no network dependency, unlike
+Pulled decontaminate() out as its own pure function (no network dependency, unlike
 the rest of build_corpus()) specifically so this could be tested with tiny synthetic documents.
 """
 from pathlib import Path
@@ -38,7 +38,7 @@ def test_train_document_sharing_13grams_with_val_is_dropped():
     val = [_doc(LEAKED_PASSAGE)]
     test = []
 
-    clean_train, n_dropped, index = module.decontaminate_train_split(train, val, test)
+    clean_train, n_dropped, index = module.decontaminate(train, val, test)
 
     assert n_dropped == 1
     assert len(clean_train) == 1
@@ -51,7 +51,7 @@ def test_train_document_sharing_13grams_with_test_is_dropped():
     val = []
     test = [_doc(LEAKED_PASSAGE)]
 
-    clean_train, n_dropped, _ = module.decontaminate_train_split(train, val, test)
+    clean_train, n_dropped, _ = module.decontaminate(train, val, test)
 
     assert n_dropped == 1
     assert clean_train == []
@@ -63,7 +63,7 @@ def test_clean_train_documents_are_never_dropped():
     val = [_doc("a held out validation document with its own completely separate wording and phrasing")]
     test = [_doc("a held out test document with yet another completely separate set of words entirely")]
 
-    clean_train, n_dropped, _ = module.decontaminate_train_split(train, val, test)
+    clean_train, n_dropped, _ = module.decontaminate(train, val, test)
 
     assert n_dropped == 0
     assert len(clean_train) == len(train)
@@ -77,7 +77,7 @@ def test_short_documents_below_ngram_window_are_never_flagged():
     val = [_doc("short document")]  # identical, but both far under 13 words
     test = []
 
-    clean_train, n_dropped, _ = module.decontaminate_train_split(train, val, test)
+    clean_train, n_dropped, _ = module.decontaminate(train, val, test)
 
     assert n_dropped == 0
     assert len(clean_train) == 1
@@ -87,7 +87,7 @@ def test_empty_val_and_test_drops_nothing():
     module = _load_module()
     train = [_doc(LEAKED_PASSAGE), _doc("something else entirely unrelated and different in every way possible")]
 
-    clean_train, n_dropped, index = module.decontaminate_train_split(train, [], [])
+    clean_train, n_dropped, index = module.decontaminate(train, [], [])
 
     assert n_dropped == 0
     assert len(clean_train) == 2
@@ -97,5 +97,5 @@ def test_empty_val_and_test_drops_nothing():
 def test_returns_the_contamination_index_used():
     module = _load_module()
     val = [_doc(LEAKED_PASSAGE)]
-    _, _, index = module.decontaminate_train_split([], val, [])
+    _, _, index = module.decontaminate([], val, [])
     assert len(index) > 0  # the 13-gram(s) from the val document were indexed

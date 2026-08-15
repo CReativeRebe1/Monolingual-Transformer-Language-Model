@@ -23,7 +23,7 @@ def _sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def check_no_shared_source_code_paths() -> tuple[bool, str]:
+def check_no_shared_paths() -> tuple[bool, str]:
     """Neither language's config/scripts should reference the other language's directory."""
     problems = []
     for lang, other in (("hindi", "nepali"), ("nepali", "hindi")):
@@ -46,7 +46,7 @@ def check_no_shared_source_code_paths() -> tuple[bool, str]:
     return ok, detail
 
 
-def check_no_document_overlap() -> tuple[bool, str]:
+def check_no_overlap() -> tuple[bool, str]:
     """Zero content_sha256 intersection between the two languages' cleaned corpora."""
     hi_hashes = _collect_split_hashes("hindi")
     ne_hashes = _collect_split_hashes("nepali")
@@ -81,7 +81,7 @@ def _collect_split_hashes(language: str) -> set[str] | None:
     return hashes if found_any else None
 
 
-def check_tokenizer_files_differ() -> tuple[bool, str]:
+def check_toks_differ() -> tuple[bool, str]:
     """Hindi and Nepali tokenizer .model files must not be byte-identical, and their trained
     vocabularies (piece sets) must differ -- the mechanical proof behind "separate vocab per
     model"."""
@@ -112,7 +112,7 @@ def check_tokenizer_files_differ() -> tuple[bool, str]:
     return True, detail
 
 
-def check_checkpoint_embedding_dims_differ() -> tuple[bool, str]:
+def check_ckpts_differ() -> tuple[bool, str]:
     """Phase-2/3 check: pretrained/finetuned checkpoints must have distinct embedding dims
     (since vocab sizes differ) and must never be byte-identical or share a state_dict hash."""
     hi_ckpts = list((REPO_ROOT / "hindi" / "train").glob("**/*.pt")) if (REPO_ROOT / "hindi" / "train").exists() else []
@@ -128,10 +128,10 @@ def check_checkpoint_embedding_dims_differ() -> tuple[bool, str]:
 
 
 CHECKS = [
-    ("No cross-language path references in code/configs", check_no_shared_source_code_paths),
-    ("Zero document overlap between corpora", check_no_document_overlap),
-    ("Tokenizer files and vocabularies differ", check_tokenizer_files_differ),
-    ("Checkpoint files differ (Phase 2+)", check_checkpoint_embedding_dims_differ),
+    ("No cross-language path references in code/configs", check_no_shared_paths),
+    ("Zero document overlap between corpora", check_no_overlap),
+    ("Tokenizer files and vocabularies differ", check_toks_differ),
+    ("Checkpoint files differ (Phase 2+)", check_ckpts_differ),
 ]
 
 

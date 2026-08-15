@@ -35,14 +35,14 @@ def test_check_rclone_available_raises_clear_error_when_absent(tmp_path, monkeyp
     module = _load_module(monkeypatch, tmp_path)
     monkeypatch.setattr(module.shutil, "which", lambda _: None)
     with pytest.raises(RuntimeError, match="rclone is not installed"):
-        module._check_rclone_available()
+        module._check_rclone()
 
 
 def test_get_shareable_link_instructions_mentions_readme():
     spec = importlib.util.spec_from_file_location("upload_to_drive", SCRIPT_PATH)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    instructions = module.get_shareable_link_instructions("gdrive:CL3410_LMA_Project/hindi/raw")
+    instructions = module.share_link_help("gdrive:CL3410_LMA_Project/hindi/raw")
     assert "README.md" in instructions
     assert "Anyone with the link" in instructions
     assert "CL3410_LMA_Project/hindi/raw" in instructions

@@ -30,7 +30,7 @@ def test_no_document_overlap_passes_when_disjoint(tmp_path, monkeypatch):
     module = _load_module(monkeypatch, tmp_path)
     _write_manifest(tmp_path / "hindi" / "data" / "splits", "train", ["hash_a", "hash_b"])
     _write_manifest(tmp_path / "nepali" / "data" / "splits", "train", ["hash_c", "hash_d"])
-    ok, detail = module.check_no_document_overlap()
+    ok, detail = module.check_no_overlap()
     assert ok is True
     assert "overlap=0" in detail
 
@@ -39,21 +39,21 @@ def test_no_document_overlap_fails_when_shared_hash_present(tmp_path, monkeypatc
     module = _load_module(monkeypatch, tmp_path)
     _write_manifest(tmp_path / "hindi" / "data" / "splits", "train", ["hash_a", "shared_hash"])
     _write_manifest(tmp_path / "nepali" / "data" / "splits", "train", ["hash_c", "shared_hash"])
-    ok, detail = module.check_no_document_overlap()
+    ok, detail = module.check_no_overlap()
     assert ok is False
     assert "overlap=1" in detail
 
 
 def test_no_document_overlap_skips_gracefully_when_no_manifests(tmp_path, monkeypatch):
     module = _load_module(monkeypatch, tmp_path)
-    ok, detail = module.check_no_document_overlap()
+    ok, detail = module.check_no_overlap()
     assert ok is True
     assert "skipped" in detail
 
 
 def test_tokenizer_files_differ_skips_when_no_models(tmp_path, monkeypatch):
     module = _load_module(monkeypatch, tmp_path)
-    ok, detail = module.check_tokenizer_files_differ()
+    ok, detail = module.check_toks_differ()
     assert ok is True
     assert "skipped" in detail
 
@@ -67,7 +67,7 @@ def test_tokenizer_files_differ_fails_on_identical_bytes(tmp_path, monkeypatch):
     identical_bytes = b"not a real sentencepiece model, just identical bytes for the test"
     (hi_dir / "hi.model").write_bytes(identical_bytes)
     (ne_dir / "ne.model").write_bytes(identical_bytes)
-    ok, detail = module.check_tokenizer_files_differ()
+    ok, detail = module.check_toks_differ()
     assert ok is False
     assert "BYTE-IDENTICAL" in detail
 

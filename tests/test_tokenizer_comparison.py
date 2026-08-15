@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from lma.tokenizer.train_sp import TokenizerTrainConfig, train_tokenizer_from_texts
+from lma.tokenizer.train_sp import TokenizerTrainConfig, train_from_texts
 
 MODULE_PATH = Path(__file__).resolve().parent.parent / "scripts" / "tokenizer_comparison.py"
 
@@ -41,7 +41,7 @@ def _setup_language(repo_root: Path, language: str, corpus: list[str]):
     lang_dir = repo_root / language
     tok_dir = lang_dir / "tokenizer"
     config = TokenizerTrainConfig(algorithm="bpe", vocab_size=350, character_coverage=1.0)
-    model_path, _ = train_tokenizer_from_texts(corpus, tok_dir / f"{language}_bpe_350", config)
+    model_path, _ = train_from_texts(corpus, tok_dir / f"{language}_bpe_350", config)
 
     sweep_results = {
         "language": language,
@@ -62,7 +62,7 @@ def test_generate_comparison_table_produces_examples_from_both_languages(tmp_pat
     _setup_language(tmp_path, "hindi", HINDI_CORPUS)
     _setup_language(tmp_path, "nepali", NEPALI_CORPUS)
 
-    result = module.generate_comparison_table()
+    result = module.build_table()
 
     assert len(result["examples"]) == 10  # 5 Hindi + 5 Nepali, per N_EXAMPLES_PER_LANGUAGE
     texts = [ex["text"] for ex in result["examples"]]
@@ -76,7 +76,7 @@ def test_every_example_has_both_tokenizations(tmp_path, monkeypatch):
     _setup_language(tmp_path, "hindi", HINDI_CORPUS)
     _setup_language(tmp_path, "nepali", NEPALI_CORPUS)
 
-    result = module.generate_comparison_table()
+    result = module.build_table()
 
     for ex in result["examples"]:
         assert ex["hindi_tokenizer_pieces"]
@@ -91,7 +91,7 @@ def test_writes_output_file(tmp_path, monkeypatch):
     _setup_language(tmp_path, "hindi", HINDI_CORPUS)
     _setup_language(tmp_path, "nepali", NEPALI_CORPUS)
 
-    module.generate_comparison_table()
+    module.build_table()
 
     out_path = tmp_path / "report" / "tables" / "tokenizer_comparison_examples.json"
     assert out_path.exists()
@@ -105,7 +105,7 @@ def test_missing_tokenizer_raises_clear_error(tmp_path, monkeypatch):
     _setup_language(tmp_path, "nepali", NEPALI_CORPUS)  # hindi deliberately not set up
 
     with pytest.raises(FileNotFoundError, match="hindi"):
-        module.generate_comparison_table()
+        module.build_table()
 
 
 def test_falls_back_to_train_when_val_is_empty(tmp_path, monkeypatch):
@@ -115,6 +115,6 @@ def test_falls_back_to_train_when_val_is_empty(tmp_path, monkeypatch):
     _setup_language(tmp_path, "nepali", NEPALI_CORPUS)
     (tmp_path / "hindi" / "data" / "splits" / "val.txt").write_text("", encoding="utf-8")  # empty val
 
-    result = module.generate_comparison_table()
+    result = module.build_table()
 
     assert len(result["examples"]) == 10  # still got 5 Hindi examples, from train fallback

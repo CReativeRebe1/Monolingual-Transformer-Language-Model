@@ -103,14 +103,14 @@ def _digit_char_ratio(text: str) -> float:
     return digits / len(text)
 
 
-def _bullet_or_ellipsis_line_fraction(lines: list[str]) -> float:
+def _bullet_line_frac(lines: list[str]) -> float:
     if not lines:
         return 0.0
     hits = sum(1 for ln in lines if _BULLET_OR_ELLIPSIS_LINE_RE.match(ln))
     return hits / len(lines)
 
 
-def _repeated_line_fraction(lines: list[str]) -> float:
+def _repeated_line_frac(lines: list[str]) -> float:
     """Fraction of non-blank lines that are exact duplicates of another line in the document.
 
     Catches template/navigation debris that survived extraction as repeated short lines (e.g. a
@@ -127,11 +127,11 @@ def _repeated_line_fraction(lines: list[str]) -> float:
     return repeated / len(non_blank)
 
 
-def _has_boilerplate_phrase(text: str) -> bool:
+def _has_boilerplate(text: str) -> bool:
     return any(phrase in text for phrase in BOILERPLATE_PHRASES)
 
 
-def _starts_with_json_metadata(text: str) -> bool:
+def _is_json_prefix(text: str) -> bool:
     """True if the document's text begins with a raw '{' -- a specific, high-precision signal
     for a known trafilatura extraction failure mode on amarujala.com's premium-content template:
     the page embeds article metadata (id/slug/title/category) as a JSON object ahead of the
@@ -183,15 +183,15 @@ def evaluate(text: str, *, language: str, config: FilterConfig | None = None) ->
         failed.append("digit_char_ratio_too_high")
 
     lines = text.split("\n")
-    if _bullet_or_ellipsis_line_fraction(lines) > config.max_bullet_or_ellipsis_line_fraction:
+    if _bullet_line_frac(lines) > config.max_bullet_or_ellipsis_line_fraction:
         failed.append("bullet_or_ellipsis_line_fraction_too_high")
-    if _repeated_line_fraction(lines) > config.max_repeated_line_fraction:
+    if _repeated_line_frac(lines) > config.max_repeated_line_fraction:
         failed.append("repeated_line_fraction_too_high")
 
-    if _has_boilerplate_phrase(text):
+    if _has_boilerplate(text):
         failed.append("boilerplate_phrase_present")
 
-    if _starts_with_json_metadata(text):
+    if _is_json_prefix(text):
         failed.append("starts_with_json_metadata")
 
     if config.require_stopword_hit:

@@ -1,4 +1,4 @@
-"""Tests for scripts/build_corpus.py's _train_langid_and_quality_models -- specifically that the
+"""Tests for scripts/build_corpus.py's _train_models -- specifically that the
 trusted Wikipedia seed pull is skip-if-exists, not unconditional.
 
 build_corpus.py is meant to be re-run repeatedly as the crawl accumulates more data (confirmed in
@@ -43,7 +43,7 @@ def test_skips_ingest_when_seed_already_exists(tmp_path, monkeypatch):
     calls = []
     monkeypatch.setattr(module, "ingest", lambda *a, **k: calls.append(a))
 
-    module._train_langid_and_quality_models("hindi", lang_dir)
+    module._train_models("hindi", lang_dir)
 
     assert calls == [], f"ingest() should not have been called; existing seed should be reused, got {calls}"
 
@@ -61,7 +61,7 @@ def test_pulls_ingest_when_seed_missing(tmp_path, monkeypatch):
 
     monkeypatch.setattr(module, "ingest", fake_ingest)
 
-    module._train_langid_and_quality_models("hindi", lang_dir)
+    module._train_models("hindi", lang_dir)
 
     assert "hindi" in calls  # primary language pulled since no seed existed
     assert "nepali" in calls  # contrast language also pulled since it didn't exist either
@@ -86,6 +86,6 @@ def test_empty_seed_dir_is_treated_as_missing(tmp_path, monkeypatch):
 
     monkeypatch.setattr(module, "ingest", fake_ingest)
 
-    module._train_langid_and_quality_models("hindi", lang_dir)
+    module._train_models("hindi", lang_dir)
 
     assert "hindi" in calls

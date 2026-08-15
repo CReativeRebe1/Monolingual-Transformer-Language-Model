@@ -36,7 +36,7 @@ _ASSET_EXT_RE = re.compile(
 )
 
 
-def extract_same_domain_links(html: str, base_url: str, max_links: int = 30) -> list[str]:
+def extract_links(html: str, base_url: str, max_links: int = 30) -> list[str]:
     """Return up to max_links same-domain, article-shaped absolute URLs found in the page.
 
     Deliberately conservative: this is a fallback for sites without a working sitemap, not a

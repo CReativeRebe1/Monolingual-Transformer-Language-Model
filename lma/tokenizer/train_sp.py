@@ -66,7 +66,7 @@ def train_tokenizer(
     return out_prefix.with_suffix(".model"), out_prefix.with_suffix(".vocab")
 
 
-def train_tokenizer_from_texts(
+def train_from_texts(
     texts: list[str], out_prefix: Path, config: TokenizerTrainConfig
 ) -> tuple[Path, Path]:
     """Convenience wrapper for training directly from an in-memory list of documents (used in

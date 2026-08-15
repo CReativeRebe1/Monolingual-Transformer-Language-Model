@@ -170,12 +170,12 @@ def test_starts_with_json_metadata_does_not_flag_normal_text():
 
 
 def test_starts_with_json_metadata_ignores_leading_whitespace():
-    from lma.text.filters import _starts_with_json_metadata
-    assert _starts_with_json_metadata('   \n\t{"a": 1}') is True
-    assert _starts_with_json_metadata(GOOD_HINDI_TEXT) is False
+    from lma.text.filters import _is_json_prefix
+    assert _is_json_prefix('   \n\t{"a": 1}') is True
+    assert _is_json_prefix(GOOD_HINDI_TEXT) is False
 
 
 def test_starts_with_json_metadata_requires_brace_at_the_very_start():
-    from lma.text.filters import _starts_with_json_metadata
+    from lma.text.filters import _is_json_prefix
     # A document that merely MENTIONS a brace somewhere is not what this rule targets.
-    assert _starts_with_json_metadata("यह एक लेख है जिसमें { यह चिह्न } भी है।") is False
+    assert _is_json_prefix("यह एक लेख है जिसमें { यह चिह्न } भी है।") is False

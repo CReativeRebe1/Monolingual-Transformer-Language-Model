@@ -12,7 +12,7 @@ from lma.tokenizer.analyze import (
     token_frequency_table,
     token_length_distribution,
 )
-from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_tokenizer_from_texts
+from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_from_texts
 
 HINDI_CORPUS = [
     "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में बताता है।",
@@ -37,7 +37,7 @@ NEPALI_CORPUS = [
 def hindi_tokenizer(tmp_path_factory):
     out_dir = tmp_path_factory.mktemp("hindi_tok")
     config = TokenizerTrainConfig(algorithm="bpe", vocab_size=350, character_coverage=1.0)
-    model_path, vocab_path = train_tokenizer_from_texts(
+    model_path, vocab_path = train_from_texts(
         HINDI_CORPUS, out_dir / "hindi_bpe", config
     )
     return Tokenizer(model_path)
@@ -47,7 +47,7 @@ def hindi_tokenizer(tmp_path_factory):
 def nepali_tokenizer(tmp_path_factory):
     out_dir = tmp_path_factory.mktemp("nepali_tok")
     config = TokenizerTrainConfig(algorithm="unigram", vocab_size=350, character_coverage=1.0)
-    model_path, vocab_path = train_tokenizer_from_texts(
+    model_path, vocab_path = train_from_texts(
         NEPALI_CORPUS, out_dir / "nepali_unigram", config
     )
     return Tokenizer(model_path)
@@ -55,7 +55,7 @@ def nepali_tokenizer(tmp_path_factory):
 
 def test_trained_model_and_vocab_files_exist(tmp_path):
     config = TokenizerTrainConfig(algorithm="bpe", vocab_size=350, character_coverage=1.0)
-    model_path, vocab_path = train_tokenizer_from_texts(HINDI_CORPUS, tmp_path / "t", config)
+    model_path, vocab_path = train_from_texts(HINDI_CORPUS, tmp_path / "t", config)
     assert model_path.exists()
     assert vocab_path.exists()
 

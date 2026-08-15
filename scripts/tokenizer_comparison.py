@@ -62,7 +62,7 @@ def _sample_sentences(language: str, n: int) -> list[str]:
     return lines[:n]
 
 
-def generate_comparison_table() -> dict:
+def build_table() -> dict:
     hindi_tokenizer = _load_final_tokenizer("hindi")
     nepali_tokenizer = _load_final_tokenizer("nepali")
 
@@ -100,7 +100,7 @@ def generate_comparison_table() -> dict:
 
 
 def main():
-    result = generate_comparison_table()
+    result = build_table()
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

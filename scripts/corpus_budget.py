@@ -23,7 +23,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from lma.text.corpus_budget import recommend_downloaded_pull  # noqa: E402
+from lma.text.corpus_budget import recommend_pull  # noqa: E402
 
 
 def main():
@@ -55,7 +55,7 @@ def main():
     fertility = args.fertility if args.fertility is not None else 1.0
     manual_tokens = int(manual_words * fertility)
 
-    rec = recommend_downloaded_pull(manual_tokens, target_total_tokens=args.target_total_tokens)
+    rec = recommend_pull(manual_tokens, target_total_tokens=args.target_total_tokens)
 
     print(json.dumps({
         "language": args.lang,

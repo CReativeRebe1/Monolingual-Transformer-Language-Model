@@ -28,7 +28,7 @@ _FASTTEXT_LID_URL = "https://dl.fbaipublicfiles.com/fasttext/supervised-models/l
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "lma" / "fasttext"
 
 
-def ensure_fasttext_lid_model(cache_dir: Path | None = None) -> Path:
+def ensure_lid_model(cache_dir: Path | None = None) -> Path:
     """Download fastText's lid.176 (quantized .ftz, ~900KB) into a local cache if not present.
 
     Not a "pretrained language model" in the sense the assignment forbids (no text generation
@@ -57,7 +57,7 @@ class FastTextLangID:
     def __init__(self, model_path: Path | None = None):
         import fasttext
 
-        self.model_path = model_path or ensure_fasttext_lid_model()
+        self.model_path = model_path or ensure_lid_model()
         # fastText's C++ loader prints a benign warning to stderr about the label prefix; not
         # our code's concern, and does not affect predictions.
         self._model = fasttext.load_model(str(self.model_path))

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from lma.tokenizer.encode_corpus import document_slice, encode_split, load_encoded_split
-from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_tokenizer_from_texts
+from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_from_texts
 
 CORPUS = [
     "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में बताता है।",
@@ -17,7 +17,7 @@ CORPUS = [
 def tokenizer(tmp_path_factory):
     out_dir = tmp_path_factory.mktemp("tok")
     config = TokenizerTrainConfig(algorithm="bpe", vocab_size=350, character_coverage=1.0)
-    model_path, _ = train_tokenizer_from_texts(CORPUS, out_dir / "t", config)
+    model_path, _ = train_from_texts(CORPUS, out_dir / "t", config)
     return Tokenizer(model_path)
 
 

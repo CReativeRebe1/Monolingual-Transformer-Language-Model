@@ -45,7 +45,7 @@ WHAT_TO_PATH = {
 }
 
 
-def _check_rclone_available() -> None:
+def _check_rclone() -> None:
     if shutil.which("rclone") is None:
         raise RuntimeError(
             "rclone is not installed or not on PATH. Install it "
@@ -55,7 +55,7 @@ def _check_rclone_available() -> None:
         )
 
 
-def _check_remote_configured() -> None:
+def _check_remote() -> None:
     result = subprocess.run(
         ["rclone", "listremotes"], capture_output=True, text=True, check=False
     )
@@ -78,8 +78,8 @@ def upload(language: str, what: str, dry_run: bool = False) -> str:
 
     drive_path = f"{DRIVE_REMOTE}:{DRIVE_BASE_FOLDER}/{language}/{what}"
 
-    _check_rclone_available()
-    _check_remote_configured()
+    _check_rclone()
+    _check_remote()
 
     cmd = [
         "rclone", "copy", str(local_path), drive_path,
@@ -93,7 +93,7 @@ def upload(language: str, what: str, dry_run: bool = False) -> str:
     return drive_path
 
 
-def get_shareable_link_instructions(drive_path: str) -> str:
+def share_link_help(drive_path: str) -> str:
     """rclone itself does not create shareable links (that needs the Drive API/UI); this
     returns the manual step, printed after every successful upload so it is never forgotten."""
     folder_name = drive_path.split(":", 1)[1]
@@ -121,7 +121,7 @@ def main():
 
     if not args.dry_run:
         print()
-        print(get_shareable_link_instructions(drive_path))
+        print(share_link_help(drive_path))
 
 
 if __name__ == "__main__":

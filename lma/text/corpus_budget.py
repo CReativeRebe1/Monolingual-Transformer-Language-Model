@@ -35,7 +35,7 @@ class DownloadedBudgetRecommendation:
     limited_by: str  # "manual_floor" | "target_total" | "already_at_target"
 
 
-def max_downloaded_tokens_for_floor(
+def max_downloaded(
     manual_tokens: int,
     min_manual_fraction: float = DEFAULT_MIN_MANUAL_FRACTION,
     safety_margin: float = DEFAULT_SAFETY_MARGIN,
@@ -57,7 +57,7 @@ def max_downloaded_tokens_for_floor(
     return int(manual_tokens * (1 - target_fraction) / target_fraction)
 
 
-def recommend_downloaded_pull(
+def recommend_pull(
     manual_tokens: int,
     target_total_tokens: int = DEFAULT_TARGET_TOTAL_TOKENS,
     min_manual_fraction: float = DEFAULT_MIN_MANUAL_FRACTION,
@@ -81,7 +81,7 @@ def recommend_downloaded_pull(
             limited_by="already_at_target",
         )
 
-    floor_limited_downloaded = max_downloaded_tokens_for_floor(
+    floor_limited_downloaded = max_downloaded(
         manual_tokens, min_manual_fraction=min_manual_fraction, safety_margin=safety_margin
     )
     target_limited_downloaded = target_total_tokens - manual_tokens

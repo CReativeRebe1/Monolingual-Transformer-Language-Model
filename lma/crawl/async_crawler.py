@@ -26,7 +26,7 @@ import httpx
 
 from lma.crawl.extractors import extract
 from lma.crawl.frontier import Frontier
-from lma.crawl.linkextract import extract_same_domain_links
+from lma.crawl.linkextract import extract_links
 from lma.crawl.robots import USER_AGENT, PolitenessManager
 from lma.crawl.sitemap import discover_sitemap_urls, fetch_urls_from_sitemap
 
@@ -237,7 +237,7 @@ async def run_crawl(
                     # page (whether or not it counted as a document) contributes links up to the
                     # depth cap, so BFS naturally reaches deeper into a site's archive over time.
                     if depth < MAX_LINK_FOLLOW_DEPTH:
-                        links = extract_same_domain_links(html, url)
+                        links = extract_links(html, url)
                         frontier.add_many(links, depth=depth + 1)
 
             try:

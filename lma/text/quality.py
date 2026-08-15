@@ -76,7 +76,7 @@ class QualityScorer:
         mean_nll = log_prob_sum / len(grams)
         return math.exp(mean_nll)
 
-    def fit_perplexity_distribution(self, texts: list[str]) -> list[float]:
+    def fit_ppl_dist(self, texts: list[str]) -> list[float]:
         """Perplexities of a batch of (typically held-out, trusted-domain) texts -- used to pick
         a keep/drop threshold empirically (e.g. the 95th/99th percentile) rather than guessing
         one, and to draw the perplexity-distribution figure in the Phase-1 report."""
