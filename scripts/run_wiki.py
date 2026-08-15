@@ -36,11 +36,20 @@ def download(url: str, dest: Path) -> Path:
     Resumable by HTTP Range: these archives are ~1GB for Hindi, and a connection drop 900MB in
     should not mean starting over. A complete file is left alone entirely, so re-running this
     script never re-downloads.
+
+    The descriptive User-Agent is required, not decorative: Wikimedia's User-Agent policy
+    (https://meta.wikimedia.org/wiki/User-Agent_policy) blocks requests carrying a generic
+    library UA, so `dumps.wikimedia.org` returns 403 to a default `python-httpx/...` header and
+    200 to an identifying one. Sending the same UA the crawler uses is simply complying with the
+    policy they ask bulk consumers to follow.
     """
     import httpx
 
+    from lma.crawl.robots import USER_AGENT
+
+    headers_base = {"User-Agent": USER_AGENT}
     dest.parent.mkdir(parents=True, exist_ok=True)
-    with httpx.Client(follow_redirects=True, timeout=60.0) as client:
+    with httpx.Client(follow_redirects=True, timeout=60.0, headers=headers_base) as client:
         total = int(client.head(url).headers.get("content-length", 0))
         have = dest.stat().st_size if dest.exists() else 0
         if total and have == total:
