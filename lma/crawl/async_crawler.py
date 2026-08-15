@@ -215,6 +215,17 @@ async def run_crawl(
                                 **asdict(doc),
                                 "host": urlsplit(url).netloc,
                                 "fetched_at": datetime.now(timezone.utc).isoformat(),
+                                # Explicit, not implicit: build_corpus.py's manual-vs-downloaded
+                                # split (a number the report leans on directly, ">=20% manual"
+                                # per the assignment) previously depended on every crawled/OCR
+                                # record simply lacking a "source_type" key and build_corpus.py's
+                                # r.get("source_type", "manual") fallback silently supplying the
+                                # right answer. Correct by coincidence, not by design -- any
+                                # future change to that default would have silently mis-tagged
+                                # every crawled document. Tagged explicitly here instead, exactly
+                                # as lma/crawl/downloaded_corpus.py already does for its own
+                                # "downloaded" records.
+                                "source_type": "manual",
                             }
                         )
                         frontier.mark_done(url, status, doc.content_sha256)

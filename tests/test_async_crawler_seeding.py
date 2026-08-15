@@ -128,3 +128,59 @@ async def test_sitemap_budget_is_shared_across_a_domains_multiple_candidates(tmp
     # candidates must stay bounded near 40, not balloon toward 2 x 40 (one per candidate) or
     # worse. Generous upper bound to allow for the two initial index fetches themselves.
     assert len(sitemap_requests) <= 45, f"expected a shared, bounded budget; got {len(sitemap_requests)} requests"
+
+
+@pytest.mark.anyio
+async def test_run_crawl_tags_written_records_source_type_manual(tmp_path, monkeypatch):
+    # The manual-vs-downloaded split (report/phase1.md's headline ">=20% manual" claim) depends
+    # on every crawled record being explicitly tagged source_type="manual" -- previously this
+    # only worked by coincidence, via build_corpus.py's r.get("source_type", "manual") fallback
+    # applying to records that simply lacked the key. This test exercises the real write path
+    # (run_crawl -> fetch -> extract -> ShardWriter.write) end to end against a mocked transport,
+    # not just the isolated dict-construction logic, so it would catch a regression anywhere in
+    # that chain.
+    import gzip
+    import json
+
+    from lma.crawl import async_crawler as module
+
+    ns = "http://www.sitemaps.org/schemas/sitemap/0.9"
+    sitemap_xml = f'<?xml version="1.0"?><urlset xmlns="{ns}"><url><loc>https://a.com/article-1</loc></url></urlset>'.encode()
+    article_html = (
+        b"<html><head><title>Test Article</title></head><body><article>"
+        b"<p>" + ("This is a real paragraph of article text. " * 20).encode() + b"</p>"
+        b"</article></body></html>"
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path == "/robots.txt":
+            return httpx.Response(200, content=b"")
+        if path == "/sitemap.xml":
+            return httpx.Response(200, content=sitemap_xml)
+        if path == "/article-1":
+            return httpx.Response(200, content=article_html, headers={"content-type": "text/html"})
+        return httpx.Response(404)
+
+    transport = httpx.MockTransport(handler)
+    real_async_client = httpx.AsyncClient
+
+    def fake_async_client(*args, **kwargs):
+        kwargs["transport"] = transport
+        return real_async_client(*args, **kwargs)
+
+    monkeypatch.setattr(module.httpx, "AsyncClient", fake_async_client)
+
+    frontier_db = tmp_path / "frontier.sqlite3"
+    out_dir = tmp_path / "shards"
+    await module.run_crawl(["a.com"], frontier_db, out_dir, max_docs=1, concurrency=2, min_delay=0.01)
+
+    shard_paths = list(out_dir.glob("shard_*.jsonl.gz"))
+    assert shard_paths, "expected at least one shard to have been written"
+    records = []
+    for p in shard_paths:
+        with gzip.open(p, "rt", encoding="utf-8") as f:
+            records.extend(json.loads(line) for line in f)
+
+    assert len(records) >= 1
+    assert all(r["source_type"] == "manual" for r in records)
