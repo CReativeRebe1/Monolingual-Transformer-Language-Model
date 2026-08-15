@@ -11,10 +11,9 @@ caps at well under 1 doc/s no matter how high --concurrency goes. Total crawl th
 therefore roughly (number of live domains) / (per-host delay), so the domain COUNT here is the
 primary throughput lever, not concurrency. This list is deliberately wide for that reason.
 
-Wikipedia/Wikisource/Wiktionary are deliberately NOT crawled here: MediaWiki sites are far
-faster to ingest via their API/dumps (lma/crawl/wiki_api.py) than by walking HTML page-by-page
-under a politeness delay, and crawling them wastes budget better spent on sources that have no
-bulk-export path.
+Wikipedia is deliberately NOT crawled here: the Wikimedia dump (scripts/run_wiki.py) delivers
+the same articles as bulk plain text far faster than walking HTML page-by-page under a politeness
+delay, so crawl budget is better spent on sources that have no bulk-export path.
 
 robots.txt is honoured per-domain at crawl time regardless of what is listed here; a domain that
 disallows crawling, or does not resolve, simply yields nothing and is noted in the report.

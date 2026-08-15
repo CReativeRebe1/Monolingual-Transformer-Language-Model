@@ -13,8 +13,8 @@ crawler falls back to same-domain link-following for them; that fallback discove
 slowly per domain, which makes breadth across many domains matter more here than it does for
 Hindi.
 
-Wikipedia/Wikisource are ingested via the MediaWiki API (lma/crawl/wiki_api.py) rather than
-crawled, for the same reason as Hindi.
+Wikipedia is ingested from the Wikimedia dump (scripts/run_wiki.py) rather than crawled,
+for the same reason as Hindi.
 
 Reachability: every domain listed here was probed directly (robots.txt + homepage) before being
 added -- roughly a quarter of an initial candidate list turned out to be dead hostnames, CDN
