@@ -25,9 +25,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from lma.tokenizer.analyze import evaluate_tokenizer  # noqa: E402
+from lma.text.stats import DocumentRecord, compute_corpus_stats  # noqa: E402
+from lma.tokenizer.analyze import evaluate_tokenizer, token_frequency_table  # noqa: E402
 from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_tokenizer  # noqa: E402
-from lma.viz.plots import plot_fertility_vs_vocab_size  # noqa: E402
+from lma.viz.plots import plot_fertility_vs_vocab_size, plot_manual_vs_downloaded, plot_zipf  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("lma.tokenizer_sweep")
@@ -51,6 +52,45 @@ def _elbow_vocab_size(sweep_by_vocab: dict[int, float]) -> int:
         if improvement < ELBOW_IMPROVEMENT_THRESHOLD:
             return sizes[i - 1]
     return sizes[-1]  # fertility kept improving meaningfully all the way to the largest size
+
+
+def compute_final_corpus_token_stats(lang_dir: Path, tokenizer: Tokenizer):
+    """After the final tokenizer is selected, encodes every split document to get real n_tokens
+    per document, split by source_type -- the assignment's explicitly required "manual vs.
+    downloaded token split" statistic (report/phase1.md section 2.1/3).
+
+    Full-corpus encoding, not a sample: this needs to be the TRUE token count backing a headline
+    reported number, not an estimate, and SentencePiece encoding is fast enough (thousands of
+    docs/sec) that this stays cheap relative to the sweep's own tokenizer-training cost.
+
+    Reads the manifest.jsonl + .txt file pairs build_corpus.py writes for each split, in lockstep
+    (they are written from the same ordered list of records, line-for-line) rather than
+    re-deriving source_type from scratch, since that provenance only exists in the manifest.
+    """
+    splits_dir = lang_dir / "data" / "splits"
+    records = []
+    for split_name in ("train", "val", "test"):
+        manifest_path = splits_dir / f"{split_name}.manifest.jsonl"
+        text_path = splits_dir / f"{split_name}.txt"
+        if not manifest_path.exists() or not text_path.exists():
+            continue
+        manifest_lines = manifest_path.read_text(encoding="utf-8").splitlines()
+        text_lines = text_path.read_text(encoding="utf-8").splitlines()
+        if len(manifest_lines) != len(text_lines):
+            raise ValueError(
+                f"{split_name}: manifest has {len(manifest_lines)} lines but text has "
+                f"{len(text_lines)} lines -- these are written together by build_corpus.py and "
+                f"must stay in lockstep; a mismatch means one file was edited independently."
+            )
+        for manifest_line, text_line in zip(manifest_lines, text_lines):
+            meta = json.loads(manifest_line)
+            records.append(DocumentRecord(
+                text=text_line,
+                source_type=meta.get("source_type", "manual"),
+                host=meta.get("host") or "unknown",
+                n_tokens=len(tokenizer.encode(text_line)),
+            ))
+    return compute_corpus_stats(records)
 
 
 def run_sweep(language: str) -> dict:
@@ -149,12 +189,35 @@ def run_sweep(language: str) -> dict:
         fig_dir / f"{language}_tokenizer_fertility_sweep.png",
     )
 
+    # Manual-vs-downloaded token split and the Zipf plot: both were already built
+    # (lma/viz/plots.py) but never actually wired into either orchestration script -- the same
+    # "built but not called" gap decontamination had (see PHASE1_LOG.md). This is the natural
+    # place for them: the final tokenizer needed to convert documents to real token counts only
+    # exists from this point on in the pipeline.
+    final_tokenizer = Tokenizer(dst_model)
+    final_corpus_stats = compute_final_corpus_token_stats(lang_dir, final_tokenizer)
+    if final_corpus_stats.manual_fraction is not None:
+        plot_manual_vs_downloaded(
+            final_corpus_stats.manual_tokens, final_corpus_stats.downloaded_tokens,
+            fig_dir / f"{language}_manual_vs_downloaded.png", language.capitalize(),
+        )
+    freq_table = token_frequency_table(final_tokenizer, val_texts, top_k=1_000_000)
+    if freq_table:
+        plot_zipf([count for _, count in freq_table], fig_dir / f"{language}_zipf.png", language.capitalize())
+
     output = {
         "language": language,
         "used_train_as_val": used_train_as_val,
         "sweep_results": results,
         "selected": {"algorithm": best_algo, "vocab_size": best_vocab_size, "fertility": best_fertility},
         "final_model_path": str(dst_model.relative_to(REPO_ROOT)),
+        "final_corpus_token_stats": {
+            "n_documents": final_corpus_stats.n_documents,
+            "n_tokens": final_corpus_stats.n_tokens,
+            "manual_tokens": final_corpus_stats.manual_tokens,
+            "downloaded_tokens": final_corpus_stats.downloaded_tokens,
+            "manual_fraction": final_corpus_stats.manual_fraction,
+        },
     }
     results_path = final_dir / "sweep_results.json"
     results_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
