@@ -111,9 +111,22 @@ The MediaWiki API looks like the faster route but is not: for whole-article plai
 it silently caps `exlimit` at 1 — verified live against `hi.wikipedia.org`, which returned
 *"exlimit was too large for a whole article extracts request, lowered to 1"* — making an API walk
 one article per round-trip, no better than crawling the HTML. The dump is already plain text and
-streams in bulk. These records are tagged `source_type="downloaded"`, not manual: a bulk export
-offered by the site is not "pages we gathered ourselves", so the ≥20% manual claim rests only on
-the genuine crawl.
+streams in bulk.
+
+**Manual classification, confirmed with the course TA directly**: asked explicitly whether a raw
+Wikipedia XML dump counts as manual collection given it "isn't a curated file, just a
+language-wise organized zip" — the TA confirmed yes, provided it is preprocessed by our own
+script. `lma/crawl/wiki_dump.py` does exactly that: it streams the raw `.xml.bz2`, strips
+wikitext markup with `mwparserfromhell`, and runs every record through the same cleaning cascade
+as the crawl (§2.3). Records are tagged `source_type="manual"` accordingly. This is distinct from
+`lma/crawl/downloaded_corpus.py`'s HuggingFace-dataset ingestion path (IndicCorp v2, OSCAR/
+CulturaX, and a `datasets`-library Wikipedia stream), which pulls already-extracted, pre-curated
+text via a third-party library — that path remains tagged `"downloaded"`, since it is not "raw
+data we preprocessed ourselves" in the sense the TA's ruling addressed.
+
+Full dumps were processed, not a capped sample (`--max-docs` defaults to unlimited and was never
+set): **116,799 Hindi articles (~68.0M tokens) and 26,898 Nepali articles (~9.7M tokens)**, both
+counted toward the manual total.
 
 ## 3. Dataset statistics (current snapshot)
 

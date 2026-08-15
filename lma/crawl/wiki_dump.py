@@ -97,10 +97,13 @@ def _process(args: tuple[str, str, str]) -> dict | None:
         "content_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
         "host": site,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
-        # "downloaded", not "manual": a dump is a bulk export the site publishes for this exact
-        # purpose, not pages we discovered and scraped ourselves. The >=20%-manual requirement
-        # stays resting solely on the crawl.
-        "source_type": "downloaded",
+        # "manual", per course TA ruling (asked directly): a raw Wikipedia XML dump is not a
+        # curated/pre-cleaned corpus file -- it is language-organized raw data that we ourselves
+        # parse, strip wikitext markup from, and filter (this module + the shared cleaning
+        # cascade), which the TA confirmed counts as manual collection when preprocessed by our
+        # own script. This is a deliberate reversal of this module's earlier "downloaded" tag;
+        # see PHASE1_LOG.md for the date/reasoning of the change.
+        "source_type": "manual",
     }
 
 

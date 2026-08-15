@@ -91,7 +91,7 @@ def test_parse_dump_writes_records_via_pool(tmp_path):
     assert n == 5
     assert len(written) == 5
     for rec in written:
-        assert rec["source_type"] == "downloaded"
+        assert rec["source_type"] == "manual"  # TA-confirmed: dumps preprocessed by our script count
         assert rec["host"] == "hi.wikipedia.org"
         assert rec["url"].startswith("https://hi.wikipedia.org/wiki/")
         assert "[[" not in rec["text"]
