@@ -2,19 +2,27 @@
 Seed domains for the Hindi (Model H) manual-collection crawl.
 
 Selection criteria: (1) Hindi-primary content, (2) deep, sitemap-exposed archives so a handful
-of domains yield a large volume of article URLs, (3) source-type diversity (news, encyclopedic,
-literary, government) so the corpus is not dominated by one register or one outlet's house style,
-which the Phase-1 report discusses under "domain distribution".
+of domains yield a large volume of article URLs, (3) source-type diversity (news, literary,
+cultural, science, government) so the corpus is not dominated by one register or one outlet's
+house style, which the Phase-1 report discusses under "domain distribution".
 
-robots.txt is honoured per-domain at crawl time (lma/crawl/robots.py) regardless of what is
-listed here; a domain that disallows crawling simply yields nothing and is noted in the report.
+Throughput note: per-host politeness (1.5s floor, lma/crawl/robots.py) means a single domain
+caps at well under 1 doc/s no matter how high --concurrency goes. Total crawl throughput is
+therefore roughly (number of live domains) / (per-host delay), so the domain COUNT here is the
+primary throughput lever, not concurrency. This list is deliberately wide for that reason.
+
+Wikipedia/Wikisource/Wiktionary are deliberately NOT crawled here: MediaWiki sites are far
+faster to ingest via their API/dumps (lma/crawl/wiki_api.py) than by walking HTML page-by-page
+under a politeness delay, and crawling them wastes budget better spent on sources that have no
+bulk-export path.
+
+robots.txt is honoured per-domain at crawl time regardless of what is listed here; a domain that
+disallows crawling, or does not resolve, simply yields nothing and is noted in the report.
 
 DOMAIN_URL_FILTERS: some domains (bbc.com in particular) expose one sitemap tree shared across
-every language edition of the site. Without a filter, sitemap discovery would seed the frontier
-mostly with non-Hindi URLs from that same global index, wasting crawl budget and rate-limit
-politeness allowance on pages that a downstream language-ID filter would just discard anyway.
-The value is a URL substring that a leaf URL must contain to be kept; domains not listed here are
-already Hindi-primary in their entirety and need no filtering.
+every language edition. Without a filter, sitemap discovery would seed the frontier mostly with
+non-Hindi URLs from that global index, wasting crawl budget and politeness allowance on pages a
+downstream language-ID filter would just discard.
 """
 
 NEWS = [
@@ -25,26 +33,55 @@ NEWS = [
     "www.livehindustan.com",
     "www.aajtak.in",
     "www.abplive.com",
+    "hindi.news18.com",
+    "zeenews.india.com",
+    "www.patrika.com",
+    "www.naidunia.com",
+    "hindi.oneindia.com",
+    "www.jansatta.com",
+    "www.prabhasakshi.com",
+    "www.punjabkesari.in",
+    "ndtv.in",
+    "www.tv9hindi.com",
+    "www.indiatv.in",
+    "hindi.moneycontrol.com",
+    "hindi.firstpost.com",
+    "www.haribhoomi.com",
+    "www.newsnationtv.com",
+    "www.dainiktribuneonline.com",
     # bbc.com last: its sitemap is a single global archive index shared across every language
     # edition, sharded into 100+ dated sub-sitemaps -- by far the slowest domain to seed from
     # (see lma/crawl/sitemap.py's max_sitemaps_total budget). Seeding it last means every
     # faster, higher-yield domain is already flowing into the frontier before crawl time is
     # spent walking BBC's archive.
-    "www.bbc.com",          # BBC Hindi is served under /hindi/ paths on this shared-sitemap domain
+    "www.bbc.com",
 ]
 
-ENCYCLOPEDIC_LITERARY = [
-    "hi.wikipedia.org",
-    "hi.wikisource.org",
-    "hi.wiktionary.org",
+# Literary / cultural / science: deliberately weighted alongside news so the corpus is not
+# ~100% contemporary journalese. These carry older, richer, more varied vocabulary (poetry,
+# prose fiction, criticism, popular science) that news archives simply do not contain, which
+# directly affects tokenizer fertility and downstream LM quality.
+LITERARY_CULTURAL = [
+    "www.hindisamay.com",
+    "www.gadyakosh.org",
+    "www.kavitakosh.org",
+    "www.anubhuti-hindi.org",
+    "www.bharatdiscovery.org",
+    "www.hindwi.org",
+    "www.pustak.org",
+    "www.rekhta.org",
 ]
 
-GOVERNMENT = [
+GOVERNMENT_SCIENCE = [
     "www.india.gov.in",
     "pib.gov.in",
+    "vigyanprasar.gov.in",
+    "ignca.gov.in",
+    "www.mygov.in",
+    "hindi.pib.gov.in",
 ]
 
-ALL_DOMAINS = NEWS + ENCYCLOPEDIC_LITERARY + GOVERNMENT
+ALL_DOMAINS = NEWS + LITERARY_CULTURAL + GOVERNMENT_SCIENCE
 
 DOMAIN_URL_FILTERS = {
     "www.bbc.com": "/hindi/",
