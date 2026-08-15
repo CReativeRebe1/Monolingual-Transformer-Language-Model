@@ -30,7 +30,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from lma.crawl.downloaded_corpus import ingest  # noqa: E402
 from lma.dedup.decontaminate import ContaminationIndex, filter_contaminated  # noqa: E402
 from lma.dedup.pipeline import deduplicate_documents  # noqa: E402
-from lma.text.filters import FilterConfig, evaluate  # noqa: E402
+from lma.text.filters import FilterConfig, evaluate, strip_light_pii  # noqa: E402
 from lma.text.langid import CharNgramLangID, FastTextLangID, confusion_matrix  # noqa: E402
 from lma.text.normalize import normalize  # noqa: E402
 from lma.text.quality import QualityScorer, choose_threshold  # noqa: E402
@@ -154,6 +154,16 @@ def _train_langid_and_quality_models(language: str, lang_dir: Path):
     return langid_model, quality_scorer, threshold, hi_texts, ne_texts
 
 
+def redact_pii(records: list[dict]) -> list[dict]:
+    """Applies lma/text/filters.py's strip_light_pii to every record's text, in place semantics
+    (returns the same list of dicts with "text" replaced). Pulled out as its own function for
+    the same reason as decontaminate_train_split: no dependency on build_corpus()'s
+    network-bound steps, so it is unit-testable with tiny synthetic records."""
+    for r in records:
+        r["text"] = strip_light_pii(r["text"])
+    return records
+
+
 def decontaminate_train_split(
     train_split: list[dict], val_split: list[dict], test_split: list[dict], n: int = 13
 ) -> tuple[list[dict], int, "ContaminationIndex"]:
@@ -258,6 +268,15 @@ def build_corpus(language: str, lang_dir: Path | None = None, report_dir: Path |
     funnel_names.append("quality_filtered")
     funnel_counts.append(len(quality_filtered))
     logger.info("%d / %d survived quality filtering", len(quality_filtered), len(heuristic_filtered))
+
+    # PII redaction: built (lma/text/filters.py's strip_light_pii) but -- same "built and never
+    # called" pattern as decontamination and the manual-vs-downloaded plots -- never actually
+    # wired in. Applied here, exactly where its own docstring says it must run: AFTER heuristic
+    # filtering (so the redaction placeholders "[EMAIL]"/"[PHONE]" cannot distort the
+    # length/digit-ratio statistics those rules depend on) and BEFORE dedup/splitting (so no
+    # committed split file, and no eventual model trained on this corpus, ever reproduces a real
+    # email address or phone number verbatim from a crawled source).
+    quality_filtered = redact_pii(quality_filtered)
 
     logger.info("stage 5: deduplication...")
     doc_ids = [
