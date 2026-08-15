@@ -26,9 +26,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from lma.text.stats import DocumentRecord, compute_corpus_stats  # noqa: E402
-from lma.tokenizer.analyze import evaluate_tokenizer, token_frequency_table  # noqa: E402
+from lma.tokenizer.analyze import (  # noqa: E402
+    evaluate_tokenizer, token_frequency_table, token_length_distribution,
+)
 from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_tokenizer  # noqa: E402
-from lma.viz.plots import plot_fertility_vs_vocab_size, plot_manual_vs_downloaded, plot_zipf  # noqa: E402
+from lma.viz.plots import (  # noqa: E402
+    plot_fertility_vs_vocab_size, plot_length_histogram, plot_manual_vs_downloaded, plot_zipf,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("lma.tokenizer_sweep")
@@ -36,6 +40,14 @@ logger = logging.getLogger("lma.tokenizer_sweep")
 VOCAB_SIZES = (8_000, 16_000, 24_000, 32_000, 48_000)
 ALGORITHMS = ("bpe", "unigram")
 ELBOW_IMPROVEMENT_THRESHOLD = 0.03  # stop growing vocab once fertility improves <3% per step
+
+
+def _flatten_length_counts(length_counts) -> list[int]:
+    """Expands a {length: count} Counter into a flat list of individual lengths, suitable for
+    plot_length_histogram (which expects one entry per observation, not pre-aggregated counts).
+    Pulled out as its own function purely so the expansion logic itself -- easy to get backwards
+    (e.g. count repeated by length instead of length repeated by count) -- is directly testable."""
+    return [length for length, count in length_counts.items() for _ in range(count)]
 
 
 def _elbow_vocab_size(sweep_by_vocab: dict[int, float]) -> int:
@@ -204,6 +216,18 @@ def run_sweep(language: str) -> dict:
     freq_table = token_frequency_table(final_tokenizer, val_texts, top_k=1_000_000)
     if freq_table:
         plot_zipf([count for _, count in freq_table], fig_dir / f"{language}_zipf.png", language.capitalize())
+
+    # Token piece-length distribution: lma/tokenizer/analyze.py's token_length_distribution had
+    # the same "built, never called" gap as the functions above. Reuses plot_length_histogram
+    # (already used for document lengths) rather than a new plot function -- it already accepts
+    # a generic list of ints with a unit label, so no duplicated plotting logic is needed.
+    piece_length_counts = token_length_distribution(final_tokenizer, val_texts)
+    if piece_length_counts:
+        piece_lengths_flat = _flatten_length_counts(piece_length_counts)
+        plot_length_histogram(
+            piece_lengths_flat, fig_dir / f"{language}_token_piece_length_hist.png",
+            language.capitalize(), unit="characters per token piece",
+        )
 
     output = {
         "language": language,
