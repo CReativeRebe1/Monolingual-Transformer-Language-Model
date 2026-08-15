@@ -17,26 +17,24 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 91,131 docs | 42,545 docs |
-| Crawl frontier: queued (pending) | 799,938 URLs | 4,063 URLs (shrinking — see note below) |
-| Crawl frontier: total discovered | 921,159 URLs | 62,975 URLs |
-| Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23-26's fixes, including a real quality bug — a fresh run is next, see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
+| Crawl frontier: fetched | 123,011 docs | 49,140 docs |
+| Crawl frontier: queued (pending) | 767,564 URLs | **1,517 URLs — starving, restart needed** |
+| Seed domains configured | 31 (was 13) | 26 (was 10) |
+| Seed domains the *running* crawler knows | 13 (started before the widening) | 10 (ditto) |
+| Raw tokens collected (pre-cleaning est.) | ~30M | ~20M |
+| Cleaned corpus (last committed build) | 3,546 docs, 1.98M words | 4,157 docs, 1.62M words |
 | Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **255 total (254 passed, 1 skipped)**. **Watch item**: Nepali's pending queue has
-dropped to ~4,000 (from 62,975 total discovered) — it may be approaching the ceiling of what its
-current 10 seeded domains' sitemaps + link-following can discover. Not an error, just something
-to keep an eye on; if it plateaus, expanding the Nepali seed domain list would be the next lever. (the skip is an OCR test that needs the `tesseract` binary,
-not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
-full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
-needed (section 19). Crawlers now run continuously and independently in the user's own terminal
-(section 18), no longer tied to this assistant's session lifetime.
+Test suite: **233 passed, 0 skipped** (the one skip disappeared with the OCR removal, §27).
 
-**Read this number honestly:** the cleaned corpora above (130 / 797 docs) are nowhere near the
-~500M-token target yet. The crawlers have been running continuously since work started and need
-to keep running across the remaining days of Phase 1 (deadline 19 Aug) to get there. Every
-number in this log is a snapshot, not a final claim.
+**Action required:** the running crawlers predate the domain widening (§27), so they are still
+working the old 13/10 domain lists — and Nepali's pending queue is down to ~1,500 URLs, i.e. it
+starves within the hour. Restart both to pick up the new domains; nothing is lost (SQLite
+frontier, §3) and only the newly-added domains get re-seeded (§16).
+
+The cleaned-corpus row above also predates §23-26's fixes (decontamination wiring, PII redaction,
+and a real JSON-metadata quality bug affecting 7% of the committed split), so it will change
+materially on the next `build_corpus.py` run.
 
 ---
 
