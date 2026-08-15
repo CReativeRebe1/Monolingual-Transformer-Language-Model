@@ -23,6 +23,11 @@ DOMAIN_URL_FILTERS: some domains (bbc.com in particular) expose one sitemap tree
 every language edition. Without a filter, sitemap discovery would seed the frontier mostly with
 non-Hindi URLs from that global index, wasting crawl budget and politeness allowance on pages a
 downstream language-ID filter would just discard.
+
+Reachability: every domain listed here was probed directly (robots.txt + homepage) before being
+added -- roughly a quarter of an initial candidate list turned out to be dead hostnames, CDN
+bot-blocks (403 on robots.txt), or connect timeouts, and those were removed rather than left in
+to waste seeding time on every crawler startup. Re-probe if the list is extended.
 """
 
 NEWS = [
@@ -33,7 +38,6 @@ NEWS = [
     "www.livehindustan.com",
     "www.aajtak.in",
     "www.abplive.com",
-    "hindi.news18.com",
     "zeenews.india.com",
     "www.patrika.com",
     "www.naidunia.com",
@@ -41,11 +45,9 @@ NEWS = [
     "www.jansatta.com",
     "www.prabhasakshi.com",
     "www.punjabkesari.in",
-    "ndtv.in",
     "www.tv9hindi.com",
     "www.indiatv.in",
     "hindi.moneycontrol.com",
-    "hindi.firstpost.com",
     "www.haribhoomi.com",
     "www.newsnationtv.com",
     "www.dainiktribuneonline.com",
@@ -73,12 +75,8 @@ LITERARY_CULTURAL = [
 ]
 
 GOVERNMENT_SCIENCE = [
-    "www.india.gov.in",
-    "pib.gov.in",
-    "vigyanprasar.gov.in",
     "ignca.gov.in",
     "www.mygov.in",
-    "hindi.pib.gov.in",
 ]
 
 ALL_DOMAINS = NEWS + LITERARY_CULTURAL + GOVERNMENT_SCIENCE

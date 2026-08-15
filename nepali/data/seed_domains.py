@@ -15,6 +15,11 @@ Hindi.
 
 Wikipedia/Wikisource are ingested via the MediaWiki API (lma/crawl/wiki_api.py) rather than
 crawled, for the same reason as Hindi.
+
+Reachability: every domain listed here was probed directly (robots.txt + homepage) before being
+added -- roughly a quarter of an initial candidate list turned out to be dead hostnames, CDN
+bot-blocks (403 on robots.txt), or connect timeouts, and those were removed rather than left in
+to waste seeding time on every crawler startup. Re-probe if the list is extended.
 """
 
 NEWS = [
@@ -24,14 +29,12 @@ NEWS = [
     "ratopati.com",
     "www.nagariknews.nagariknetwork.com",
     "www.himalkhabar.com",
-    "www.gorkhapatraonline.com",
+    "gorkhapatraonline.com",
     "www.ujyaaloonline.com",
     "www.nepalkhabar.com",
-    "www.dharaharapost.com",
-    "www.thaha.com",
+    "www.thahakhabar.com",
     "www.baahrakhari.com",
     "www.annapurnapost.com",
-    "www.lokaantar.com",
     "www.hamrakura.com",
     "www.imagekhabar.com",
     "www.nepalnews.com",
@@ -40,21 +43,22 @@ NEWS = [
     "www.reportersnepal.com",
     "swasthyakhabar.com",
     "www.techpana.com",
+    "www.nepalisamachar.com",
+    "www.nepalpage.com",
+    "www.pardafas.com",
+    "newsofnepal.com",
     "www.bbc.com",
 ]
 
 LITERARY_CULTURAL = [
     "www.sahityasangraha.com",
-    "www.nepalsahitya.com",
-    "www.myrepublica.nagariknetwork.com",
 ]
 
-GOVERNMENT = [
-    "www.nepal.gov.np",
-    "moe.gov.np",
-]
+# No government domains: nepal.gov.np and moe.gov.np were both tried and both time out from
+# here (ConnectTimeout, verified directly -- see the module docstring's reachability note).
+# Listing unreachable domains would only waste seeding time on every crawler startup.
 
-ALL_DOMAINS = NEWS + LITERARY_CULTURAL + GOVERNMENT
+ALL_DOMAINS = NEWS + LITERARY_CULTURAL
 
 DOMAIN_URL_FILTERS = {
     "www.bbc.com": "/nepali/",
