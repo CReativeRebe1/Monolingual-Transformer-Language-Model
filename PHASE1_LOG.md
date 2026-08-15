@@ -17,14 +17,14 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 60,100 docs | 32,496 docs |
-| Crawl frontier: queued (pending) | 830,689 URLs | 15,105 URLs |
-| Crawl frontier: total discovered | 920,825 URLs | 62,880 URLs |
+| Crawl frontier: fetched | 64,568 docs | 33,651 docs |
+| Crawl frontier: queued (pending) | 826,263 URLs | 13,590 URLs |
+| Crawl frontier: total discovered | 920,878 URLs | 62,975 URLs |
 | Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (not yet re-run at this fetch count — see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (predates §23's decontamination fix — see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
 | Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **221 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **227 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
 full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
 needed (section 19). Crawlers now run continuously and independently in the user's own terminal
@@ -558,6 +558,39 @@ produces a resulting manual fraction below the true 20% floor.
 background the whole time (Hindi 17,398 → 60,100 documents, Nepali 9,826 → 32,496 documents,
 checked only via quick read-only frontier-stats queries).
 
+### 23. Decontamination was fully built but never actually called (commit `c03292f`)
+
+**Sixth real gap, found by re-reading `build_corpus.py` rather than running it**: its own module
+docstring describes the pipeline as "dedup → decontaminate → split", and
+`lma/dedup/decontaminate.py`'s 13-word n-gram contamination detector was fully built and
+unit-tested in isolation back in §6 (39 tests across the dedup modules) — but `build_corpus.py`
+never actually imported or called it. The document-level 98/1/1 split was a plain random shuffle
+with no check that a near-duplicate of a held-out val/test passage — embedded inside a longer,
+otherwise-distinct training document, which whole-document MinHash dedup (§6) cannot catch at
+all — could leak from train into val/test. Left unfixed, this would have inflated Phase-2's
+perplexity/BPB on the held-out sets, with no way for a reader to tell a genuinely-good score from
+one padded by memorized leakage.
+
+Extracted the fix into its own pure function, `decontaminate_train_split(train, val, test, n=13)`
+— deliberately with no dependency on `build_corpus()`'s network-bound seed-pulling steps, so it
+could be unit-tested with tiny synthetic documents rather than requiring a real pipeline run
+(this session is intentionally not running `build_corpus.py` against the live corpus while the
+crawlers work — see §22). Wired in right after the split.
+
+**Caught a second-order bug this surfaced**: the final `corpus_stats`/figures were being computed
+from `deduped` (the *pre*-decontamination document list), which would have over-counted the
+reported corpus size relative to what actually ends up in the committed splits once
+decontamination drops some train documents. Fixed to compute from `train_split + val_split +
+test_split` (the true final set) instead. Added a `"decontaminated"` funnel stage and a
+`decontamination_stats` block to the reported JSON.
+
+6 new tests: train documents that 13-gram-overlap val/test are dropped, clean documents are
+never touched, documents below the 13-word window can never be spuriously flagged, empty
+val/test drops nothing, and the built `ContaminationIndex` is returned for inspection. 227 total,
+1 skipped. `report/phase1.md` §2.3 updated to document the stage; real
+`decontamination_stats.train_documents_dropped` counts will appear the next time the pipeline is
+actually run against the live corpus.
+
 ---
 
 ## What's left to do
@@ -657,6 +690,14 @@ Ordered by what's actually blocking:
   20% manual floor, verified against real committed stats (read-only). 221 tests passing.
   Crawlers climbed from 17,398→60,100 (Hindi) and 9,826→32,496 (Nepali) documents over this
   stretch, checked only via quick frontier-stats reads.
+
+- **2026-08-15, later still**: Found and fixed a sixth real gap (section 23): decontamination
+  was fully built and unit-tested but never actually wired into `build_corpus.py`'s split step,
+  meaning train/val/test leakage was never actually being prevented despite the module docstring
+  claiming otherwise. Fixed, extracted into its own testable pure function, and caught a
+  second-order bug it surfaced (corpus stats were computed pre-decontamination, over-counting).
+  6 new tests, `report/phase1.md` updated to document the stage. 227 tests passing. Crawlers
+  continued climbing throughout (Hindi 60,100→64,568, Nepali 32,496→33,651 documents).
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
