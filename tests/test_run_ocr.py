@@ -10,6 +10,8 @@ import gzip
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 MODULE_PATH = Path(__file__).resolve().parent.parent / "scripts" / "run_ocr.py"
 
 
@@ -135,3 +137,35 @@ def test_run_ocr_directory_with_no_pdfs_writes_nothing(tmp_path):
     summary = module.run_ocr_directory("hindi", pdf_dir, out_dir)
 
     assert summary == {"pdfs_found": 0, "documents_written": 0, "documents_skipped": 0}
+
+
+# --- main()'s language-pack pre-flight check ---
+
+def test_main_exits_with_clear_error_when_language_pack_missing(tmp_path, monkeypatch, capsys):
+    module = _load_module()
+    pdf_dir = tmp_path / "pdfs"
+    pdf_dir.mkdir()
+
+    monkeypatch.setattr(module, "is_tesseract_available", lambda: True)
+    monkeypatch.setattr(module, "available_ocr_languages", lambda: ["eng"])  # hin/nep NOT installed
+    monkeypatch.setattr("sys.argv", ["run_ocr.py", "--lang", "hindi", "--pdf-dir", str(pdf_dir)])
+
+    with pytest.raises(SystemExit) as exc_info:
+        module.main()
+
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "hin" in captured.err
+    assert "language pack is not" in captured.err
+
+
+def test_main_proceeds_when_language_pack_is_installed(tmp_path, monkeypatch):
+    module = _load_module()
+    pdf_dir = tmp_path / "pdfs"
+    pdf_dir.mkdir()  # empty -- run_ocr_directory should complete trivially with 0 PDFs found
+
+    monkeypatch.setattr(module, "is_tesseract_available", lambda: True)
+    monkeypatch.setattr(module, "available_ocr_languages", lambda: ["eng", "hin"])
+    monkeypatch.setattr("sys.argv", ["run_ocr.py", "--lang", "hindi", "--pdf-dir", str(pdf_dir)])
+
+    module.main()  # must NOT raise SystemExit -- the language-pack check passes

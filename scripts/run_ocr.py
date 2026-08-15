@@ -29,7 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from lma.crawl.async_crawler import ShardWriter  # noqa: E402
-from lma.ocr.pdf_ocr import is_tesseract_available, ocr_pdf  # noqa: E402
+from lma.ocr.pdf_ocr import available_ocr_languages, is_tesseract_available, ocr_pdf  # noqa: E402
 from lma.ocr.postcorrect import postcorrect_ocr_text  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -118,6 +118,22 @@ def main():
             "ERROR: tesseract binary not found on PATH. Install it (Kaggle/Colab: "
             "`apt-get install -y tesseract-ocr tesseract-ocr-hin tesseract-ocr-nep`) before "
             "running this script. See lma/ocr/pdf_ocr.py's module docstring.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # The binary existing is not sufficient on its own: tesseract can be installed with only its
+    # default (eng) language pack, in which case is_tesseract_available() passes but every real
+    # OCR call inside ocr_pdf() would fail deep in pytesseract with a much less obvious error.
+    # available_ocr_languages() was built but never actually checked anywhere -- this is that
+    # check, surfaced as a clear upfront message instead of a confusing failure mid-run.
+    installed_langs = available_ocr_languages()
+    required_lang = TESSERACT_LANG[args.lang]
+    if required_lang not in installed_langs:
+        print(
+            f"ERROR: tesseract is installed, but its '{required_lang}' language pack is not "
+            f"(installed packs: {installed_langs or 'none'}). Install it (Kaggle/Colab: "
+            f"`apt-get install -y tesseract-ocr-{required_lang}`) before running this script.",
             file=sys.stderr,
         )
         sys.exit(1)
