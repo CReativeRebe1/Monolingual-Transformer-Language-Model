@@ -76,6 +76,16 @@ resume-safety details, and three real bugs found and fixed by running this again
 5. **Deduplication** — exact `sha256` on normalized text, then a from-scratch MinHash-LSH
    (word-trigram shingles, 128 permutations, `b=8, r=16` targeting Jaccard ≈0.86), validated
    against `datasketch` in tests.
+6. **Decontamination** — after the document-level 98/1/1 split, a from-scratch 13-word n-gram
+   overlap check removes any train document that shares an n-gram with val or test. This catches
+   what whole-document MinHash dedup (stage 5) cannot: a near-duplicate of a held-out passage
+   embedded inside a much longer, otherwise-distinct training document. Without it, Phase-2's
+   perplexity/BPB on val/test could be inflated by memorized held-out text with no way for a
+   reader to tell a genuinely-good score from a leaked one. (This stage was fully built and
+   unit-tested from early in Phase 1, but was found — by re-reading the pipeline, not by a
+   crash — to have never actually been wired into `build_corpus.py`'s split step; fixed and now
+   active. The next corpus-statistics refresh in §3 will show real
+   `decontamination_stats.train_documents_dropped` counts.)
 
 Devanagari-specific Unicode normalization (NFC composition, nukta consistency, danda
 normalization, ZWJ/ZWNJ cleanup) runs before every stage; idempotency is enforced by test.
