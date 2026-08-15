@@ -60,3 +60,6 @@ scripts/sample_data/demo_run/
 # --- Intermediate tokenizer_sweep.py candidates (regenerable; only the selected model/vocab
 # pair + sweep_results.json are committed) ---
 */tokenizer/sweep/
+
+# Local strategy notes -- never published
+suggestion.md
