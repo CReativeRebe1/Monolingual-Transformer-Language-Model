@@ -17,14 +17,14 @@ against the actual history.
 
 | | Hindi (Model H) | Nepali (Model L) |
 |---|---|---|
-| Crawl frontier: fetched | 17,398 docs | 9,826 docs |
-| Crawl frontier: queued (pending) | 892,740 URLs | 17,528 URLs |
-| Crawl frontier: total discovered | 919,590 URLs | 35,377 URLs |
+| Crawl frontier: fetched | 60,100 docs | 32,496 docs |
+| Crawl frontier: queued (pending) | 830,689 URLs | 15,105 URLs |
+| Crawl frontier: total discovered | 920,825 URLs | 62,880 URLs |
 | Domains actively contributing (`done`) | all 13 seeded, 9+ actively fetched from | all 10 seeded and actively fetched from |
-| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** | **4,157 docs, 1,622,675 words, 8 sources** |
+| Cleaned corpus (latest committed `build_corpus.py` run) | **3,546 docs, 1,981,812 words, 9 sources** (not yet re-run at this fetch count — see §22) | **4,157 docs, 1,622,675 words, 8 sources** (ditto) |
 | Tokenizer (current selection) | BPE / 16,000 vocab, fertility 1.309 | BPE / 24,000 vocab, fertility 1.327 |
 
-Test suite: **200 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
+Test suite: **221 passed, 1 skipped** (the skip is an OCR test that needs the `tesseract` binary,
 not installed on this dev machine — see the OCR section below). `scripts/reproduce.sh` runs the
 full pipeline end to end on a small bundled sample in a couple of minutes, no GPU or live crawl
 needed (section 19). Crawlers now run continuously and independently in the user's own terminal
@@ -516,6 +516,48 @@ something this crawl caused. But continued growth over the remaining days is rea
 and 18GB free is not a large safety margin. Worth the user's attention; not something I can or
 should resolve by deleting files that aren't mine.
 
+### 22. Building the rest of Phase 1 without competing with the crawlers for I/O
+
+**User instruction**: the crawlers (now user-run, section 18/20) are the I/O-bound critical path;
+this assistant should keep building remaining Phase-1 code but stop running `build_corpus.py`,
+`tokenizer_sweep.py`, or `reproduce.sh` (all disk/CPU-heavy) while they're working, and only do
+lightweight reads (a single SQLite frontier-stats query) to check progress.
+
+**Two more real gaps found and fixed, reviewing the pipeline rather than running it**:
+
+1. **Implicit `source_type` tagging.** `lma/crawl/async_crawler.py` wrote every record with no
+   `source_type` key at all, relying entirely on `build_corpus.py`'s
+   `r.get("source_type", "manual")` fallback to supply the right answer — correct by
+   coincidence, not by design. `report/phase1.md`'s headline "≥20% manual" claim rests on this
+   number, so it now gets tagged explicitly at write time, matching how the downloaded-corpus
+   module already tags its own records. New end-to-end test runs a real (mocked-transport) crawl
+   through the full fetch → extract → write path, not just the isolated dict logic.
+
+2. **Missing OCR orchestration script.** The OCR primitives (PDF rendering, per-page OCR,
+   confidence filtering, post-correction) were built and unit-tested in isolation (§7), but
+   nothing actually walked a directory of PDFs and wrote shards — despite
+   `lma/crawl/downloaded_corpus.py`'s module docstring claiming OCR output is tagged
+   `source_type="manual"`, a claim that wasn't yet true because the script that would do it
+   didn't exist. Added `scripts/run_ocr.py`: reuses `ShardWriter` (no duplicated shard-writing
+   logic), joins a PDF's pages into one document per PDF (consistent with every other stage
+   operating at document granularity), applies the confidence floor and post-correction, and
+   explicitly tags `source_type="manual"`. Not run — this dev machine still has no `tesseract`
+   binary; 7 new tests mock `ocr_pdf` so the orchestration logic itself is verified without it.
+
+**New tool built for a decision the plan deliberately deferred rather than guessed at**:
+`lma/text/corpus_budget.py` + `scripts/corpus_budget.py` — computes how many downloaded tokens
+to pull, once the manual crawl's near-final size is known, to approach the ~500M-token target
+while staying comfortably (5-point cushion) above the ≥20%-manual floor. Verified against the
+real committed `stats.json` files (read-only, negligible I/O): at the current 3,546/4,157-document
+scale, both languages are still "manual_floor"-limited — recommending roughly 3× current manual
+tokens as a downloaded budget, nowhere near the 500M ceiling yet. 13 tests, including a
+property-style check across manual totals from 1 to ~500M confirming the recommendation never
+produces a resulting manual fraction below the true 20% floor.
+
+221 tests passing, 1 skipped, throughout this stretch. Crawlers continued climbing in the
+background the whole time (Hindi 17,398 → 60,100 documents, Nepali 9,826 → 32,496 documents,
+checked only via quick read-only frontier-stats queries).
+
 ---
 
 ## What's left to do
@@ -605,6 +647,16 @@ Ordered by what's actually blocking:
   and `build_corpus.py` wastefully re-downloading its trusted seed on every run. Flagged a real
   disk-space risk (95% used, ~18GB free system-wide) without touching files that aren't mine.
   200 tests passing.
+
+- **2026-08-15, later**: User instructed: stop running I/O-heavy pipeline scripts while the
+  crawlers work, only build code and check progress with lightweight reads (section 22). Fixed
+  two more real gaps found by reviewing (not running) the pipeline: implicit `source_type`
+  tagging in the crawler, and a missing OCR orchestration script (`scripts/run_ocr.py`, 7 new
+  tests, not run — no tesseract on this machine). Built a corpus-budget calculator
+  (`lma/text/corpus_budget.py` + CLI) for sizing the eventual downloaded-token pull against the
+  20% manual floor, verified against real committed stats (read-only). 221 tests passing.
+  Crawlers climbed from 17,398→60,100 (Hindi) and 9,826→32,496 (Nepali) documents over this
+  stretch, checked only via quick frontier-stats reads.
 
 - **2026-08-14, evening**: Built the entire Phase-1 pipeline end to end (sections 1-13 above),
   launched both crawlers, fixed three real bugs found by running the code against live data
