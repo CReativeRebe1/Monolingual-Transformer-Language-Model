@@ -66,3 +66,14 @@ suggestion.md
 FAST_HINDI_CRAWLER_IMPLEMENTATION_PLAN.md
 */data/fast_state.sqlite3
 */data/fast_state.sqlite3-*
+
+# --- Secrets: never commit HF tokens or env files ---
+.env
+.env.*
+*token*.txt
+*.token
+hf_token*
+
+# Downloaded-corpus resume state (large sqlite, regenerable)
+*/data/downloaded_state.sqlite3
+*/data/downloaded_state.sqlite3-*

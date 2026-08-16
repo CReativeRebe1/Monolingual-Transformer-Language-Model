@@ -10,7 +10,9 @@ import numpy as np
 import pytest
 from datasketch import MinHash as ReferenceMinHash
 
-from lma.dedup.minhash import MinHasher, estimate_jaccard, exact_jaccard, word_shingles
+from lma.dedup.minhash import (
+    MinHasher, _base_hash, estimate_jaccard, exact_jaccard, word_shingles,
+)
 
 DOC_A = "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में विस्तार से बताता है और सर्दियों की बात करता है"
 DOC_B = "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में विस्तार से बताता है लेकिन गर्मियों की बात करता है"
@@ -119,3 +121,48 @@ def test_own_minhash_agrees_with_datasketch_within_tolerance():
     assert abs(reference_estimate - true_jaccard) < 0.1
     # The two independent estimators should agree with each other to a similar tolerance.
     assert abs(own_estimate - reference_estimate) < 0.15
+
+
+# --- Cross-process determinism (regression: builtin hash() is PYTHONHASHSEED-salted) ---
+
+def test_base_hash_is_stable_across_processes():
+    """The same shingle must hash identically in a fresh interpreter.
+
+    Python's builtin hash() fails this: measured directly, one shingle gave 3735431355 in one
+    process and 2056009044 in another. Dedup results therefore varied run to run, and any
+    multiprocessing use would compare signatures from incompatible hash families. This test
+    pins the fix by shelling out to a genuinely separate interpreter.
+    """
+    import subprocess
+    import sys
+
+    shingle = "नमस्ते दुनिया परीक्षण"
+    code = (
+        "import sys; sys.path.insert(0, r'.');"
+        "from lma.dedup.minhash import _base_hash;"
+        f"print(_base_hash({shingle!r}))"
+    )
+    runs = [
+        subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+        .stdout.strip()
+        for _ in range(2)
+    ]
+    assert runs[0] == runs[1], f"base hash differs across processes: {runs}"
+    assert runs[0] == str(_base_hash(shingle)), "subprocess disagrees with in-process value"
+
+
+def test_signature_is_stable_across_processes():
+    """Full signatures, not just the base hash, must survive a process boundary."""
+    import subprocess
+    import sys
+
+    text = "यह एक समाचार लेख है जो दिल्ली के मौसम के बारे में विस्तार से बताता है।"
+    code = (
+        "import sys; sys.path.insert(0, r'.');"
+        "from lma.dedup.minhash import MinHasher;"
+        f"print(list(MinHasher(num_perm=16).signature_for_text({text!r})))"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    assert out == str(list(MinHasher(num_perm=16).signature_for_text(text)))

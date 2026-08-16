@@ -18,6 +18,7 @@ indic-nlp-library>=0.92
 zstandard>=0.23
 
 # Dedup
+xxhash>=3.4       # stable cross-process shingle hashing for MinHash (builtin hash() is PYTHONHASHSEED-salted)
 datasketch>=1.6
 
 # Evaluation

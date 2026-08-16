@@ -71,6 +71,27 @@ class LSHIndex:
             bucket_key = band.tobytes()
             self._buckets[band_idx][bucket_key].append(doc_id)
 
+    def query(self, signature: np.ndarray) -> set[str]:
+        """doc_ids already indexed that share >=1 band bucket with `signature`.
+
+        This is the one-against-many lookup, as opposed to candidate_pairs()'s many-against-many.
+        It is what streaming dedup needs -- "does this incoming document match anything I have
+        seen?" -- and it costs O(b) dict lookups with no dependence on corpus size. It also
+        sidesteps candidate_pairs()'s pair-explosion entirely, since nothing is enumerated: a
+        bucket holding 20k near-identical boilerplate documents returns 20k ids here, never the
+        200M pairs that enumerating them would produce.
+
+        Like candidate_pairs(), these are *candidates* -- verify with estimate_jaccard against a
+        real threshold before treating a hit as a duplicate.
+        """
+        if len(signature) != self.num_perm:
+            raise ValueError(f"signature length {len(signature)} != num_perm {self.num_perm}")
+        hits: set[str] = set()
+        for band_idx in range(self.b):
+            band = signature[band_idx * self.r : (band_idx + 1) * self.r]
+            hits.update(self._buckets[band_idx].get(band.tobytes(), ()))
+        return hits
+
     def candidate_pairs(self) -> set[tuple[str, str]]:
         """All (doc_id_a, doc_id_b) pairs sharing >=1 band bucket, a<b lexicographically.
 

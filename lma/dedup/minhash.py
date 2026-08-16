@@ -18,12 +18,36 @@ import re
 from dataclasses import dataclass
 
 import numpy as np
+import xxhash
 
 # A 61-bit Mersenne prime, standard choice for the universal hash family a*x + b mod p mod 2^32.
 _MERSENNE_PRIME = (1 << 61) - 1
 _MAX_HASH_32 = (1 << 32) - 1
 
 _WORD_RE = re.compile(r"\S+")
+
+
+def _base_hash(shingle: str) -> int:
+    """Canonical shingle -> 32-bit int mapping, stable across processes and runs.
+
+    Python's builtin `hash()` CANNOT be used here. It is salted per interpreter process by
+    PYTHONHASHSEED, so two processes hash the same string to different values -- measured
+    directly: the same shingle gave 3735431355 in one process and 2056009044 in another. That
+    silently breaks two things this project depends on:
+      * reproducibility -- dedup keeps a different subset of documents on every run, while the
+        MinHasher's `seed` field gives a false impression of determinism;
+      * any multiprocessing use -- an index built in the parent is not comparable to signatures
+        computed in a worker, so matches become garbage rather than failing loudly.
+
+    xxhash was chosen over hashlib.blake2b on measurement, not preference: over 200k realistic
+    Devanagari shingles, builtin hash() ran at 6.12M/s, xxhash.xxh64 at 3.25M/s (1.9x slower),
+    and blake2b(digest_size=8) at only 1.09M/s (5.6x slower). At the ~750M shingles a full
+    downloaded-corpus pull signs, that is ~4 minutes with xxhash versus ~11.5 with blake2b.
+
+    Deliberately NOT seeded: this is the fixed canonical mapping, and the randomisation that
+    MinHash actually requires comes from the (a, b) permutation family below, which IS seeded.
+    """
+    return xxhash.xxh64_intdigest(shingle) & _MAX_HASH_32
 
 
 def word_shingles(text: str, k: int = 3) -> set[str]:
@@ -65,7 +89,7 @@ class MinHasher:
         if not shingles:
             return np.full(self.num_perm, _MAX_HASH_32, dtype=np.uint64)
         shingle_hashes = np.array(
-            [hash(s) & _MAX_HASH_32 for s in shingles], dtype=np.int64
+            [_base_hash(s) for s in shingles], dtype=np.int64
         )
         # Broadcast: (num_perm, 1) hash-fn params against (1, n_shingles) shingle hashes.
         permuted = (
