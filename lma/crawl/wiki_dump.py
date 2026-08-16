@@ -40,7 +40,19 @@ from pathlib import Path
 logger = logging.getLogger("lma.wiki_dump")
 
 DUMP_URL = "https://dumps.wikimedia.org/{wiki}/latest/{wiki}-latest-pages-articles.xml.bz2"
-WIKI_CODE = {"hindi": "hiwiki", "nepali": "newiki"}
+
+# Sister-project dump codes, per language. Same TA-confirmed manual classification and the same
+# mechanism (raw XML dump, preprocessed by our own script) applies to every Wikimedia project,
+# not just Wikipedia -- these are just additional projects hosted at the same dumps.wikimedia.org
+# path convention (<lang><project>).
+#
+# ne.wikisource is deliberately absent: verified live that dumps.wikimedia.org/newikisource/
+# itself 404s (not just the latest dump -- the project index does not exist), meaning Nepali
+# Wikisource has no dump to pull at all. Re-check before assuming this has changed.
+WIKI_CODE = {
+    "hindi": {"wikipedia": "hiwiki", "wikisource": "hiwikisource", "wiktionary": "hiwiktionary"},
+    "nepali": {"wikipedia": "newiki", "wiktionary": "newiktionary"},
+}
 
 MIN_CHARS = 200          # matches lma/text/filters.py's min_chars floor
 CHUNK = 200              # articles handed to a pool worker at a time

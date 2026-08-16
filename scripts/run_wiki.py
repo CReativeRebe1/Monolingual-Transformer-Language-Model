@@ -1,17 +1,26 @@
 """
-Bulk-ingest Wikipedia for one language from the official Wikimedia dump.
+Bulk-ingest a Wikimedia project (Wikipedia, Wikisource, Wiktionary, ...) for one language from
+the official dump.
 
 This is the fastest legitimate route to bulk Devanagari prose -- see lma/crawl/wiki_dump.py for
 why the dump beats both the MediaWiki API (capped at 1 article per request for full extracts) and
 crawling the HTML. Streams the compressed archive without decompressing to disk, and strips
 wikitext markup across all CPU cores.
 
+Wikisource/Wiktionary are the same mechanism as Wikipedia, not a separate feature: same TA-
+confirmed manual classification (raw dump, preprocessed by our own script), same dump-URL
+convention, same parser. Only the project code changes. Not every project exists for every
+language -- ne.wikisource has no dump at all (dumps.wikimedia.org/newikisource/ itself 404s,
+confirmed live); lma/crawl/wiki_dump.py's WIKI_CODE only lists project/language pairs that were
+individually verified to exist.
+
 Runs independently of the main crawler (different host, no shared politeness budget), so both can
 run at the same time.
 
 Usage:
     python scripts/run_wiki.py --lang hindi
-    python scripts/run_wiki.py --lang nepali --workers 8
+    python scripts/run_wiki.py --lang hindi --project wikisource
+    python scripts/run_wiki.py --lang nepali --project wiktionary --workers 8
 """
 from __future__ import annotations
 
@@ -72,17 +81,32 @@ def download(url: str, dest: Path) -> Path:
     return dest
 
 
+LANG_CODE = {"hindi": "hi", "nepali": "ne"}
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Ingest Wikipedia from the Wikimedia dump.")
+    parser = argparse.ArgumentParser(description="Ingest a Wikimedia project from its dump.")
     parser.add_argument("--lang", required=True, choices=["hindi", "nepali"])
+    parser.add_argument("--project", default="wikipedia",
+                        choices=["wikipedia", "wikisource", "wiktionary"])
     parser.add_argument("--workers", type=int, default=None, help="default: cpu_count() - 1")
     parser.add_argument("--max-docs", type=int, default=None)
     parser.add_argument("--dump-path", type=Path, default=None,
                         help="use an already-downloaded dump instead of fetching one")
     args = parser.parse_args()
 
-    wiki = WIKI_CODE[args.lang]
-    site = f"{wiki[:2]}.wikipedia.org"
+    available = WIKI_CODE.get(args.lang, {})
+    if args.project not in available:
+        print(
+            f"ERROR: no dump exists for --lang {args.lang} --project {args.project} "
+            f"(available for {args.lang}: {sorted(available)}). Verified live -- see "
+            f"lma/crawl/wiki_dump.py's WIKI_CODE comment for which pairs were checked and why.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    wiki = available[args.project]
+    site = f"{LANG_CODE[args.lang]}.{args.project}.org"
     out_dir = REPO_ROOT / args.lang / "data" / "raw" / "wiki"
 
     dump_path = args.dump_path or download(
