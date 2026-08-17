@@ -35,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent if "__file__" in dir() el
 lang, lang_dir = sys.argv[1], Path(sys.argv[2])
 
 from lma.tokenizer.encode_corpus import encode_split
-from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_tokenizer_from_texts
+from lma.tokenizer.train_sp import Tokenizer, TokenizerTrainConfig, train_from_texts
 
 splits_dir = lang_dir / "data" / "splits"
 train_path = splits_dir / "train.txt"
@@ -51,7 +51,7 @@ if len(texts) < 2:
 
 tok_dir = lang_dir / "tokenizer"
 config = TokenizerTrainConfig(algorithm="bpe", vocab_size=350, character_coverage=1.0)
-model_path, _ = train_tokenizer_from_texts(texts, tok_dir / f"{lang}_demo", config)
+model_path, _ = train_from_texts(texts, tok_dir / f"{lang}_demo", config)
 tok = Tokenizer(model_path)
 print(f"  trained a {tok.vocab_size}-token demo BPE tokenizer for {lang} -> {model_path}")
 

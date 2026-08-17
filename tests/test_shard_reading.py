@@ -1,25 +1,19 @@
-"""Tests for scripts/build_corpus.py's _iter_shard_records -- specifically its tolerance of a
-shard file that is corrupted or truncated mid-write, which is a REAL, live scenario now that the
-crawler runs as a genuinely long-lived concurrent process (not something a build_corpus.py run
-always outlives): re-running build_corpus.py against the live corpus crashed with
-`zlib.error: Error -3 ... invalid block type` reading a shard the crawler was actively appending
-to. The original exception handling only caught (EOFError, OSError), which covers a clean
-truncation (e.g. gzip.BadGzipFile) but not a torn DEFLATE block caught mid-flush, which zlib
-reports as its own zlib.error instead.
+"""Tests for hindi.clean.run's shard reading -- specifically its tolerance of a shard that is
+corrupted or truncated mid-write, which is a REAL, live scenario: the crawler is a long-lived
+concurrent process, and re-running the corpus build against the live corpus crashed with
+`zlib.error: Error -3 ... invalid block type` while reading a shard the crawler was actively
+appending to. Catching only (EOFError, OSError) covers a clean truncation (gzip.BadGzipFile) but
+not a torn DEFLATE block caught mid-flush, which zlib raises as its own zlib.error.
+
+The reader moved from scripts/build_corpus.py into each language's clean/run.py when the cascade
+was split per language. The tolerance is the thing being tested, so the tests moved with it; the
+Nepali copy is identical code, so testing one language covers the shared behaviour.
 """
 import gzip
-import importlib.util
 import json
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).resolve().parent.parent / "scripts" / "build_corpus.py"
-
-
-def _load_module():
-    spec = importlib.util.spec_from_file_location("build_corpus", MODULE_PATH)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+from hindi.clean import run as pipeline
 
 
 def _write_shard(path: Path, records: list[dict]) -> None:
@@ -30,17 +24,15 @@ def _write_shard(path: Path, records: list[dict]) -> None:
 
 
 def test_reads_a_well_formed_shard_completely(tmp_path):
-    module = _load_module()
     records = [{"url": f"https://x.com/{i}", "text": f"doc {i}"} for i in range(5)]
     shard_path = tmp_path / "shard.jsonl.gz"
     _write_shard(shard_path, records)
 
-    read_back = list(module._iter_shard_records(shard_path))
+    read_back = list(pipeline.read_shards(shard_path.parent))
     assert [r["text"] for r in read_back] == [r["text"] for r in records]
 
 
 def test_tolerates_a_cleanly_truncated_gzip_file(tmp_path, caplog):
-    module = _load_module()
     records = [{"url": f"https://x.com/{i}", "text": f"doc number {i} with some content"} for i in range(20)]
     shard_path = tmp_path / "shard.jsonl.gz"
     _write_shard(shard_path, records)
@@ -49,7 +41,7 @@ def test_tolerates_a_cleanly_truncated_gzip_file(tmp_path, caplog):
     shard_path.write_bytes(full_bytes[: len(full_bytes) // 2])  # simulate an interrupted flush
 
     # Must not raise -- this is the whole point of the function.
-    read_back = list(module._iter_shard_records(shard_path))
+    read_back = list(pipeline.read_shards(shard_path.parent))
     assert len(read_back) < len(records)  # partial read is expected and fine
     assert len(read_back) >= 0
 
@@ -57,7 +49,6 @@ def test_tolerates_a_cleanly_truncated_gzip_file(tmp_path, caplog):
 def test_tolerates_a_torn_deflate_block_mid_stream(tmp_path):
     # Reproduces the EXACT real failure mode: corrupting a byte in the middle of the compressed
     # stream (rather than truncating cleanly at the end) triggers zlib.error, not EOFError/OSError.
-    module = _load_module()
     records = [{"url": f"https://x.com/{i}", "text": f"doc number {i} with quite a bit of content here"} for i in range(30)]
     shard_path = tmp_path / "shard.jsonl.gz"
     _write_shard(shard_path, records)
@@ -71,14 +62,13 @@ def test_tolerates_a_torn_deflate_block_mid_stream(tmp_path):
     shard_path.write_bytes(bytes(raw))
 
     # Must not raise zlib.error -- this was the actual bug found live.
-    read_back = list(module._iter_shard_records(shard_path))
+    read_back = list(pipeline.read_shards(shard_path.parent))
     assert isinstance(read_back, list)  # didn't crash; content recovered (if any) is a bonus
 
 
 def test_iter_raw_records_continues_past_one_corrupted_shard(tmp_path):
-    # _iter_raw_records reads multiple shards; one corrupted shard must not prevent records from
+    # load_manual reads multiple shards; one corrupted shard must not prevent records from
     # OTHER shards (or later in the raw/ tree) from being read.
-    module = _load_module()
     lang_dir = tmp_path / "hindi"
     good_shard = lang_dir / "data" / "raw" / "crawled" / "shard_00000.jsonl.gz"
     bad_shard = lang_dir / "data" / "raw" / "crawled" / "shard_00001.jsonl.gz"
@@ -89,6 +79,6 @@ def test_iter_raw_records_continues_past_one_corrupted_shard(tmp_path):
     raw[len(raw) // 2] ^= 0xFF
     bad_shard.write_bytes(bytes(raw))
 
-    all_records = list(module._iter_raw_records(lang_dir))
+    all_records = list(pipeline.load_manual(lang_dir))
     urls = [r["url"] for r in all_records]
     assert "https://a.com/1" in urls  # the good shard's record must still come through

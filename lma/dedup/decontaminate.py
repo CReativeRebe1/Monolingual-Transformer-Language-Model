@@ -65,3 +65,28 @@ def filter_contaminated(
         else:
             clean.append(text)
     return clean, dropped
+
+
+def decontaminate(
+    train_split: list[dict], val_split: list[dict], test_split: list[dict], n: int = 13
+) -> tuple[list[dict], int, ContaminationIndex]:
+    """Drops any train document sharing an n-word n-gram with val or test.
+
+    Without this, a near-duplicate of a held-out document embedded inside a longer training document
+    -- which whole-document dedup cannot catch, since MinHash measures whole-document similarity, not
+    substring containment -- leaks into training and inflates Phase-2's perplexity and BPB on the
+    held-out splits.
+
+    Lives here rather than in a per-language module because it is pure n-gram set arithmetic with no
+    language content, and both languages' run.py call it. It works on record dicts (not bare strings)
+    so callers keep their metadata; the index is returned so a caller can report its size.
+
+    Returns (clean_train_split, n_dropped, the_index_used).
+    """
+    index = ContaminationIndex(n=n)
+    index.add_reference_texts([r["text"] for r in val_split])
+    index.add_reference_texts([r["text"] for r in test_split])
+    _, contaminated = filter_contaminated([r["text"] for r in train_split], index)
+    bad = set(contaminated)
+    clean = [r for i, r in enumerate(train_split) if i not in bad]
+    return clean, len(train_split) - len(clean), index

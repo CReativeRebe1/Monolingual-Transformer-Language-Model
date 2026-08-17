@@ -58,7 +58,8 @@ sys.path.insert(0, str(REPO_ROOT))
 from nepali.clean import dedup, lang, repair, rules, safety, score  # noqa: E402
 from nepali.clean.config import DEFAULT, LANGUAGE, CleanConfig  # noqa: E402
 from nepali.clean.norm import norm  # noqa: E402
-from lma.dedup.decontaminate import ContaminationIndex, filter_contaminated  # noqa: E402
+from lma.dedup.decontaminate import decontaminate  # noqa: E402
+from lma.text.quality import QualityScorer  # noqa: E402
 from lma.text.stats import DocumentRecord, compute_corpus_stats  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -67,6 +68,8 @@ logger = logging.getLogger("nepali.clean.run")
 MANUAL_DIRS = ("crawled", "fast", "wiki")
 SEED_DOCS = 4_000            # trusted Wikipedia documents used to fit the ppl model + classifier
 SEED_NEG_DOCS = 4_000        # raw-crawl documents used as the classifier's negative class
+MIN_SEED_DOCS = 200          # below this there is not enough trusted text to fit on
+REAL_CORPUS_DOCS = 5_000     # at or above this, missing trusted text is an error, not a demo
 STAGES = (
     "collected", "language", "repaired_and_rules", "quality_scored",
     "paragraph_deduped", "exact_deduped", "near_deduped", "topic_filtered", "safety_checked",
@@ -207,13 +210,36 @@ def n_words(text: str) -> int:
 
 
 def fit_models(records: list[dict], cfg: CleanConfig):
-    """Fits the perplexity model, quality classifier, and coherence threshold on our own corpus."""
+    """Fits the perplexity model, quality classifier, and coherence threshold on our own corpus.
+
+    Needs trusted in-language prose for the positive class, which here means Wikipedia. If there is
+    not enough of it, what happens next depends on the size of the corpus:
+
+    * **A real corpus** (>= REAL_CORPUS_DOCS documents) raises. Wikipedia missing from a 290k-document
+      build means something is wrong with the data, and fitting the classifier on the very crawl it is
+      supposed to judge would produce a filter that means nothing while looking like it works.
+    * **A demo-scale corpus** degrades instead, with a warning: the perplexity threshold goes to
+      infinity and the classifier stays unfitted (scoring a neutral 0.5, which passes). Every other
+      stage still runs. scripts/reproduce.sh builds from a handful of bundled sample documents with no
+      Wikipedia at all, and it exists to demonstrate the pipeline end to end, not to produce a corpus.
+    """
     wiki = [r["text"] for r in records if r.get("source_dir") == "wiki"][:SEED_DOCS]
     crawl = [r["text"] for r in records if r.get("source_dir") != "wiki"][:SEED_NEG_DOCS]
-    if len(wiki) < 200:
-        # Wikipedia is the only trusted source available offline; without it the learned filters
-        # would be fitted on the very crawl they are meant to judge.
-        raise RuntimeError(f"need >=200 wiki documents to fit the learned filters, found {len(wiki)}")
+    if len(wiki) < MIN_SEED_DOCS:
+        if len(records) >= REAL_CORPUS_DOCS:
+            raise RuntimeError(
+                f"need >={MIN_SEED_DOCS} wiki documents to fit the learned filters, found "
+                f"{len(wiki)} in a corpus of {len(records)} -- refusing to fit the quality "
+                f"classifier on the crawl it is meant to judge"
+            )
+        logger.warning(
+            "only %d wiki documents in a %d-document corpus: this is demo scale, so perplexity "
+            "and quality filtering are DISABLED for this run (every other stage still runs)",
+            len(wiki), len(records),
+        )
+        scorer = QualityScorer()
+        scorer.fit([norm(t) for t in (wiki + crawl)[:SEED_DOCS]] or ["x"])
+        return scorer, float("inf"), score.QualityModel(), cfg.coherence_min_cosine
 
     logger.info("fitting perplexity model on %d trusted wiki documents...", len(wiki))
     scorer, ppl_thr = score.fit_ppl([norm(t) for t in wiki], config=cfg)
@@ -399,14 +425,9 @@ def run(
                     n_downloaded, downloaded_words, max(600_000_000 - downloaded_words, 0))
 
     logger.info("decontaminating train against val/test (13-gram)...")
-    index = ContaminationIndex(n=13)
-    index.add_reference_texts([r["text"] for r in val])
-    index.add_reference_texts([r["text"] for r in test])
-    _, contaminated = filter_contaminated([r["text"] for r in train], index)
-    bad = set(contaminated)
     n_before = len(train)
-    train = [r for i, r in enumerate(train) if i not in bad]
-    logger.info("  dropped %d/%d train documents", n_before - len(train), n_before)
+    train, n_contaminated, _ = decontaminate(train, val, test, n=13)
+    logger.info("  dropped %d/%d train documents", n_contaminated, n_before)
     funnel["decontaminated"] = len(train) + len(val) + len(test)
 
     # ---- write splits
@@ -451,27 +472,55 @@ def run(
         json.dumps(stats, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    _figures(report_dir, funnel, stats)
+    _figures(report_dir, funnel, stats, final)
     logger.info("manual share of the final corpus: %.1f%% (floor is 20%%)",
                 100 * stats["words"]["manual_fraction"])
     logger.info("done in %.0fs -> %s", time.time() - t_start, lang_dir / "data" / "stats.json")
     return stats
 
 
-def _figures(report_dir: Path, funnel: dict[str, int], stats: dict) -> None:
-    """Writes the funnel and length figures. Never fatal: a missing plotting backend must not
-    invalidate a completed multi-hour corpus build."""
+def _figures(report_dir: Path, funnel: dict[str, int], stats: dict, records: list[dict]) -> None:
+    """Writes the funnel, length-distribution, per-source and manual-vs-downloaded figures.
+
+    Never fatal: a missing plotting backend must not invalidate a completed multi-hour corpus build,
+    and every number behind these figures is already in stats.json, so they can be redrawn later.
+    The exception is logged rather than swallowed -- an earlier version of this function called
+    plot_funnel_chart with the wrong signature and the only symptom was an empty figures directory.
+    """
     try:
         from lma.text.stats import PipelineFunnel
-        from lma.viz.plots import plot_funnel_chart
+        from lma.viz.plots import (
+            plot_domain_distribution,
+            plot_funnel_chart,
+            plot_length_histogram,
+            plot_manual_vs_downloaded,
+        )
 
         report_dir.mkdir(parents=True, exist_ok=True)
         names = [k for k in STAGES if k in funnel]
-        pf = PipelineFunnel(stage_names=names, stage_counts=[funnel[k] for k in names])
-        plot_funnel_chart(pf, report_dir / f"{LANGUAGE}_funnel.png", title=f"{LANGUAGE} cleaning funnel")
+        counts = [funnel[k] for k in names]
+        PipelineFunnel(stage_names=names, counts=counts)      # validates the lengths match
+        plot_funnel_chart(names, counts, report_dir / f"{LANGUAGE}_funnel.png", LANGUAGE)
+
+        plot_length_histogram(
+            [n_words(r["text"]) for r in records],
+            report_dir / f"{LANGUAGE}_length_hist.png", LANGUAGE,
+        )
+
+        per_source: Counter[str] = Counter()
+        for r in records:
+            per_source[r.get("source_dir") or r.get("source_type") or "unknown"] += 1
+        plot_domain_distribution(
+            dict(per_source), report_dir / f"{LANGUAGE}_sources.png", LANGUAGE
+        )
+
+        plot_manual_vs_downloaded(
+            stats["words"]["manual"], stats["words"]["downloaded"],
+            report_dir / f"{LANGUAGE}_manual_vs_downloaded.png", LANGUAGE,
+        )
         logger.info("figures -> %s", report_dir)
     except Exception as e:                        # noqa: BLE001
-        logger.warning("figure generation skipped: %s", e)
+        logger.warning("figure generation skipped: %s: %s", type(e).__name__, e)
 
 
 def main():
