@@ -77,3 +77,6 @@ hf_token*
 # Downloaded-corpus resume state (large sqlite, regenerable)
 */data/downloaded_state.sqlite3
 */data/downloaded_state.sqlite3-*
+
+# Cached manual dedup index (regenerable via --rebuild-index)
+*/data/dup_index.npz

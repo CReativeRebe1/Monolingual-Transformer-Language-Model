@@ -1,4 +1,6 @@
 """Tests for lma.dedup.lsh -- LSH banding over MinHash signatures."""
+import inspect
+
 import numpy as np
 import pytest
 
@@ -96,3 +98,54 @@ def test_find_threshold_matches_s_curve_crossing():
     b, r = 8, 16
     threshold = find_threshold(b, r)
     assert s_curve_probability(threshold, b, r) == pytest.approx(0.5, abs=0.05)
+
+
+# --------------------------------------------------------- bucket cap / lazy enumeration
+
+def _identical_bucket(n: int) -> LSHIndex:
+    """An index where all n documents share every band -- the boilerplate pathology."""
+    lsh = LSHIndex(num_perm=128, b=8, r=16)
+    sig = np.arange(128, dtype=np.uint64)
+    for i in range(n):
+        lsh.insert(f"doc{i:05d}", sig)
+    return lsh
+
+
+def test_iter_pairs_is_lazy():
+    """The point of the generator: nothing is enumerated until it is consumed."""
+    pairs = _identical_bucket(5_000).iter_pairs()
+    assert inspect.isgenerator(pairs)
+    first = next(pairs)
+    assert first[0] != first[1]
+
+
+def test_bucket_cap_prevents_pair_explosion():
+    """5,000 identical documents would be ~12.5M pairs per band uncapped; starred it is ~5k.
+
+    This is the OOM that would otherwise hit at corpus scale -- one crawl produced 745
+    byte-identical pages out of ~950, so oversized buckets are real here, not hypothetical.
+    """
+    lsh = _identical_bucket(5_000)
+    uncapped_per_band = 5_000 * 4_999 // 2               # ~12.5M
+    n_capped = sum(1 for _ in lsh.iter_pairs(max_bucket=1000))
+    # 8 bands x (5,000 - 1) star edges. The generator does not dedupe across bands -- it does not
+    # need to, since the caller merges with union-find and a repeated pair is a no-op there, and
+    # deduping would mean holding every pair in a set, which is the allocation being avoided.
+    assert n_capped == 8 * 4_999
+    assert n_capped < uncapped_per_band // 100           # ~312x fewer, and it is per band
+
+
+def test_starred_bucket_still_reaches_every_member():
+    """Capping must not silently drop documents: union-find still collapses the whole bucket."""
+    lsh = _identical_bucket(2_000)
+    seen = set()
+    for a, b in lsh.iter_pairs(max_bucket=100):
+        seen.add(a)
+        seen.add(b)
+    assert len(seen) == 2_000
+
+
+def test_candidate_pairs_is_uncapped_by_default():
+    """The old batch API keeps its exact previous behaviour for small inputs."""
+    lsh = _identical_bucket(50)
+    assert len(lsh.candidate_pairs()) == 50 * 49 // 2

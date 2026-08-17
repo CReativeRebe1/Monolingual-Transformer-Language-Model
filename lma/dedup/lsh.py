@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+MAX_BUCKET = 1000        # above this a bucket is starred, not enumerated -- see iter_pairs
+
 
 def s_curve_probability(similarity: float, b: int, r: int) -> float:
     """P[a pair with true Jaccard `similarity` shares a bucket in >=1 of b bands of r rows]."""
@@ -92,20 +94,46 @@ class LSHIndex:
             hits.update(self._buckets[band_idx].get(band.tobytes(), ()))
         return hits
 
-    def candidate_pairs(self) -> set[tuple[str, str]]:
-        """All (doc_id_a, doc_id_b) pairs sharing >=1 band bucket, a<b lexicographically.
+    def iter_pairs(self, max_bucket: int = MAX_BUCKET):
+        """Yields candidate (doc_id_a, doc_id_b) pairs one at a time, a<b lexicographically.
 
-        These are *candidates* only -- callers should verify with estimate_jaccard/exact_jaccard
-        against a real similarity threshold before treating a pair as an actual duplicate, since
-        LSH banding has a nonzero false-positive rate away from the S-curve's threshold region.
+        This is the memory-safe form of candidate_pairs(). A bucket holding k documents contains
+        k(k-1)/2 pairs, so materialising them all is quadratic in the worst case -- and this
+        corpus has that worst case: one crawl produced 745 byte-identical boilerplate pages out of
+        ~950, and a single 20k-member bucket would mean ~200M tuples, tens of gigabytes, before a
+        single similarity check runs. Yielding keeps peak memory flat regardless of bucket size.
+
+        `max_bucket` bounds the remaining quadratic term. Above it, the bucket is emitted as a
+        star around its representative (the lexicographically smallest id) -- k-1 pairs instead of
+        k(k-1)/2. That is not an approximation of the *result*: callers merge verified pairs with
+        union-find, so a star still collapses the bucket into one cluster. What it gives up is the
+        ability to notice that two non-representative members are similar to each other but not to
+        the representative -- which, in a bucket that large, means they are near-identical
+        boilerplate anyway. Pass max_bucket=None to disable the cap and enumerate everything.
         """
-        pairs: set[tuple[str, str]] = set()
         for band_buckets in self._buckets:
             for doc_ids in band_buckets.values():
                 if len(doc_ids) < 2:
                     continue
                 sorted_ids = sorted(doc_ids)
+                if max_bucket is not None and len(sorted_ids) > max_bucket:
+                    rep = sorted_ids[0]
+                    for other in sorted_ids[1:]:
+                        yield (rep, other)
+                    continue
                 for i in range(len(sorted_ids)):
                     for j in range(i + 1, len(sorted_ids)):
-                        pairs.add((sorted_ids[i], sorted_ids[j]))
-        return pairs
+                        yield (sorted_ids[i], sorted_ids[j])
+
+    def candidate_pairs(self, max_bucket: int | None = None) -> set[tuple[str, str]]:
+        """All (doc_id_a, doc_id_b) pairs sharing >=1 band bucket, a<b lexicographically.
+
+        These are *candidates* only -- callers should verify with estimate_jaccard/exact_jaccard
+        against a real similarity threshold before treating a pair as an actual duplicate, since
+        LSH banding has a nonzero false-positive rate away from the S-curve's threshold region.
+
+        Materialises the whole set, so it is only safe on small inputs (tests, samples). At corpus
+        scale use iter_pairs(); the cap defaults to off here so existing callers keep the exact
+        behaviour they had.
+        """
+        return set(self.iter_pairs(max_bucket=max_bucket))

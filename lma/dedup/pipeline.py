@@ -20,24 +20,7 @@ import numpy as np
 from lma.dedup.exact import ExactDeduplicator
 from lma.dedup.lsh import LSHIndex
 from lma.dedup.minhash import MinHasher, estimate_jaccard, word_shingles
-
-
-class _UnionFind:
-    """Minimal union-find (disjoint-set) with path compression, for clustering duplicate pairs."""
-
-    def __init__(self, items):
-        self._parent = {item: item for item in items}
-
-    def find(self, x):
-        while self._parent[x] != x:
-            self._parent[x] = self._parent[self._parent[x]]  # path compression
-            x = self._parent[x]
-        return x
-
-    def union(self, a, b):
-        ra, rb = self.find(a), self.find(b)
-        if ra != rb:
-            self._parent[rb] = ra
+from lma.dedup.union import UnionFind
 
 
 @dataclass
@@ -88,9 +71,13 @@ def deduplicate_documents(
         signatures[doc_id] = sig
         lsh.insert(doc_id, sig)
 
-    uf = _UnionFind([doc_id for doc_id, _ in survivors])
+    uf = UnionFind([doc_id for doc_id, _ in survivors])
     verified_pairs = 0
-    for a, b in lsh.candidate_pairs():
+    # iter_pairs, not candidate_pairs: the latter materialises every pair at once, and a
+    # single oversized bucket (this corpus has them -- 745 of ~950 amarujala.com documents
+    # were byte-identical boilerplate) would allocate k(k-1)/2 tuples before the first
+    # verification runs. The generator plus the bucket cap keeps this bounded.
+    for a, b in lsh.iter_pairs():
         sim = estimate_jaccard(signatures[a], signatures[b])
         if sim >= similarity_threshold:
             uf.union(a, b)

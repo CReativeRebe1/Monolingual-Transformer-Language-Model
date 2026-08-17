@@ -35,14 +35,17 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import itertools
 import json
 import logging
-import os
+import multiprocessing as mp
 import sqlite3
 import sys
 import time
 import zlib
 from pathlib import Path
+
+import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -50,6 +53,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from lma.crawl.async_crawler import ShardWriter  # noqa: E402
 from lma.crawl.downloaded_corpus import SOURCE_CONFIGS  # noqa: E402
 from lma.dedup.index import DupIndex, hash_key  # noqa: E402
+from lma.dedup.minhash import MinHasher, word_shingles  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("lma.fetch_downloaded")
@@ -58,6 +62,7 @@ DEFAULT_TARGET_TOKENS = 600_000_000
 MIN_CHARS = 200                     # matches the floor every other source already applies
 MANUAL_DIRS = ("crawled", "fast", "wiki")
 BENCHMARK_DOCS = 20_000
+PARALLEL_MIN_DOCS = 5_000       # below this, pool startup costs more than it saves
 
 
 # ----------------------------------------------------------------------------- manual reference
@@ -88,17 +93,85 @@ def iter_manual(lang_dir: Path):
                 logger.warning("shard %s ended early: %s", shard.name, e)
 
 
-def build_index(lang_dir: Path, limit: int | None = None) -> DupIndex:
-    """Indexes the manual corpus so downloaded documents can be checked against it."""
+def _prep(text: str):
+    """Pool worker: text -> (exact key, MinHash signature).
+
+    Safe to run in a worker process only because the shingle hash is process-stable -- see
+    lma/dedup/minhash.py's `_base_hash`. With the previous builtin-hash() implementation,
+    signatures computed here would not have matched the parent's and every near-duplicate
+    comparison would have silently returned garbage.
+    """
+    return hash_key(text), _WORKER["hasher"].signature(word_shingles(text, k=3))
+
+
+_WORKER: dict = {}
+
+
+def _init_worker():
+    _WORKER["hasher"] = MinHasher()
+
+
+def build_index(lang_dir: Path, workers: int | None = None, rebuild: bool = False) -> DupIndex:
+    """Indexes the manual corpus so downloaded documents can be checked against it.
+
+    Cached to disk because this is pure overhead on every rerun: the manual corpus does not change
+    between pulls, and an interrupted run previously threw away several minutes of work. Profiled
+    at ~1.08ms/doc single-threaded (hash_key and signature costing about the same), i.e. ~4 minutes
+    for Hindi's ~230k documents before a single byte is streamed. Parallel + cached, a resumed run
+    starts in seconds.
+    """
+    cache = lang_dir / "data" / "dup_index.npz"
     index = DupIndex()
+
+    if cache.exists() and not rebuild:
+        t0 = time.time()
+        blob = np.load(cache, allow_pickle=False)
+        keys, sigs = blob["keys"], blob["sigs"]
+        for k, sig in zip(keys, sigs):
+            index.add_precomputed(k.decode("ascii"), sig)
+        logger.info("loaded cached index: %d docs in %.1fs (--rebuild-index to refresh)",
+                    len(index), time.time() - t0)
+        return index
+
+    workers = workers or max(1, mp.cpu_count() - 1)
     t0 = time.time()
-    for i, text in enumerate(iter_manual(lang_dir)):
-        index.add(text)
-        if (i + 1) % 25_000 == 0:
-            logger.info("  indexed %d manual docs (%.0fs)", i + 1, time.time() - t0)
-        if limit and i + 1 >= limit:
-            break
+    keys: list[bytes] = []
+    sigs: list[np.ndarray] = []
+
+    # Peek before committing to a pool. On Windows each worker is a fresh interpreter costing
+    # a second or two to spawn, so for a small manual corpus -- and for the test suite, which
+    # loads this file by path and therefore cannot be re-imported by a spawned child at all --
+    # sequential is both faster and the only thing that works.
+    stream = iter_manual(lang_dir)
+    head = list(itertools.islice(stream, PARALLEL_MIN_DOCS))
+    parallel = workers > 1 and len(head) == PARALLEL_MIN_DOCS
+    logger.info("building duplicate index over the manual corpus (%s)...",
+                f"{workers} workers" if parallel else "sequential")
+
+    def _record(i, pair):
+        key, sig = pair
+        index.add_precomputed(key, sig)
+        keys.append(key.encode("ascii"))
+        sigs.append(sig)
+        if i % 20_000 == 0:
+            dt = max(time.time() - t0, 1e-9)
+            logger.info("  %d docs (%.0fs, %.0f docs/s)", i, dt, i / dt)
+
+    if parallel:
+        with mp.Pool(workers, initializer=_init_worker) as pool:
+            for i, pair in enumerate(
+                pool.imap(_prep, itertools.chain(head, stream), chunksize=200), start=1
+            ):
+                _record(i, pair)
+    else:
+        _init_worker()
+        for i, text in enumerate(head, start=1):
+            _record(i, _prep(text))
+
     logger.info("manual index: %d documents in %.0fs", len(index), time.time() - t0)
+    if keys:
+        np.savez_compressed(cache, keys=np.array(keys, dtype="S64"), sigs=np.array(sigs))
+        logger.info("cached index -> %s", cache.name)
     return index
 
 
@@ -200,13 +273,13 @@ def benchmark(language: str) -> None:
         print(f"  ETA for 600M tokens: {600e6/tok_per_s/3600:.1f} hours")
 
 
-def fetch(language: str, target_tokens: int) -> dict:
+def fetch(language: str, target_tokens: int, workers: int | None = None,
+          rebuild_index: bool = False) -> dict:
     """Streams IndicCorpV2, drops anything duplicating the manual corpus, writes the rest."""
     check_auth()
     lang_dir = REPO_ROOT / language
 
-    logger.info("building duplicate index over the manual corpus...")
-    index = build_index(lang_dir)
+    index = build_index(lang_dir, workers=workers, rebuild=rebuild_index)
 
     state = State(lang_dir / "data" / "downloaded_state.sqlite3")
     if state.tokens:
@@ -288,12 +361,17 @@ def main():
     p.add_argument("--target-tokens", type=int, default=DEFAULT_TARGET_TOKENS)
     p.add_argument("--benchmark", action="store_true",
                    help="measure streaming throughput and exit, writing nothing")
+    p.add_argument("--workers", type=int, default=None,
+                   help="index-building workers (default: cpu_count() - 1)")
+    p.add_argument("--rebuild-index", action="store_true",
+                   help="ignore the cached manual index and rebuild it")
     args = p.parse_args()
 
     if args.benchmark:
         benchmark(args.lang)
         return
-    print(json.dumps(fetch(args.lang, args.target_tokens), indent=2))
+    print(json.dumps(fetch(args.lang, args.target_tokens, workers=args.workers,
+                          rebuild_index=args.rebuild_index), indent=2))
 
 
 if __name__ == "__main__":
