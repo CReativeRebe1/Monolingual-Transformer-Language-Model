@@ -1,47 +1,160 @@
 {
   "language": "nepali",
-  "status": "ok",
+  "elapsed_s": 2691.7,
   "funnel": {
-    "collected": 9292,
-    "language_filtered": 6506,
-    "heuristic_filtered": 5259,
-    "quality_filtered": 4256,
-    "deduplicated": 4157
+    "collected": 370801,
+    "language": 344932,
+    "repaired_and_rules": 306549,
+    "quality_scored": 286181,
+    "paragraph_deduped": 284132,
+    "exact_deduped": 282598,
+    "near_deduped": 275946,
+    "topic_filtered": 271591,
+    "safety_checked": 271589,
+    "decontaminated": 5536928
   },
-  "heuristic_rejection_counts": {
-    "repeated_line_fraction_too_high": 53,
-    "symbol_to_word_ratio_too_high": 946,
-    "bullet_or_ellipsis_line_fraction_too_high": 848,
-    "insufficient_stopword_evidence": 222,
-    "too_few_words": 96,
-    "too_long": 1
+  "rejected_by_rule": {
+    "symbol_to_word_ratio_too_high": 35431,
+    "quality_too_low": 18124,
+    "low_devanagari_ratio": 9765,
+    "lid_low_confidence": 6650,
+    "lid_said_hi": 5050,
+    "hindi_markers_dominant": 4377,
+    "insufficient_stopword_evidence": 2476,
+    "too_few_words": 2442,
+    "empty_after_paragraph_dedup": 2049,
+    "bullet_line_fraction_too_high": 1941,
+    "incoherent": 1545,
+    "repeated_line_fraction_too_high": 1065,
+    "dup_ngram_fraction": 840,
+    "perplexity_too_high": 699,
+    "top_word_fraction": 77,
+    "dup_paragraph_fraction": 57,
+    "digit_char_ratio_too_high": 32,
+    "too_short": 28,
+    "starts_with_json_metadata": 26,
+    "lid_said_mr": 18,
+    "boilerplate_phrase_present": 14,
+    "lid_said_sa": 8,
+    "too_long": 4,
+    "safety_blocklist": 2,
+    "lid_said_new": 1,
+    "top_2gram_fraction": 1,
+    "top_3gram_fraction": 1
   },
-  "dedup_stats": {
-    "input_count": 4256,
-    "exact_duplicates_removed": 77,
-    "near_duplicate_clusters": 19,
-    "near_duplicates_removed": 22,
-    "kept_count": 4157
+  "rejected_by_stage": {
+    "repaired_and_rules": 38383,
+    "language": 25869,
+    "quality_scored": 20368
   },
-  "corpus": {
-    "n_documents": 4157,
-    "n_words": 1622675,
-    "n_chars": 10930637,
-    "n_bytes": 29380009,
-    "docs_per_source": {
-      "www.bbc.com": 2938,
-      "ekantipur.com": 735,
-      "www.onlinekhabar.com": 158,
-      "www.setopati.com": 186,
-      "ne.wikipedia.org": 131,
-      "www.nagariknews.nagariknetwork.com": 5,
-      "www.himalkhabar.com": 2,
-      "ne.wikisource.org": 2
+  "repairs_applied": {
+    "repeated_punct": 20699,
+    "boilerplate_phrase_lines": 11188,
+    "boilerplate_lines": 541,
+    "mojibake": 48,
+    "skipped_mostly_boilerplate": 14
+  },
+  "thresholds": {
+    "perplexity": 18.01,
+    "quality_min": 0.1,
+    "coherence_min": 0.01061,
+    "lid_min_confidence": 0.5
+  },
+  "dedup": {
+    "paragraphs_removed": 1836622,
+    "documents_touched": 189039,
+    "exact_removed": 1534,
+    "near_removed": 6652,
+    "near_clusters": 6584
+  },
+  "clusters": {
+    "n": 60,
+    "ad_heavy": [
+      7,
+      11,
+      29
+    ],
+    "topic_dropped": 4355
+  },
+  "words": {
+    "manual": 102346029,
+    "downloaded": 312027108,
+    "total": 414373137,
+    "manual_fraction": 0.247
+  },
+  "downloaded": {
+    "documents_streamed": 761646,
+    "words_budget": 311533650,
+    "dropped_contaminated": 8596
+  },
+  "decontamination": {
+    "direction": "held-out side (train keeps every document)",
+    "train_documents_dropped": 0,
+    "candidates_discarded": 8596,
+    "candidates_offered": 20000,
+    "holdout": {
+      "val": 5000,
+      "test": 5000,
+      "val_manual": 580,
+      "test_manual": 552
     }
   },
   "splits": {
-    "train": 4075,
-    "val": 41,
-    "test": 41
+    "train": 5526928,
+    "val": 5000,
+    "test": 5000
+  },
+  "corpus": {
+    "n_documents": 10000,
+    "n_words": 920799,
+    "n_chars": 5996706,
+    "n_bytes": 15991673,
+    "n_tokens": null,
+    "manual_tokens": null,
+    "downloaded_tokens": null,
+    "manual_fraction": null,
+    "docs_per_source": {
+      "www.bbc.com": 167,
+      "www.setopati.com": 3,
+      "www.onlinekhabar.com": 5,
+      "ekantipur.com": 38,
+      "clickmandu.com": 4,
+      "www.karobardaily.com": 3,
+      "hamrakura.com": 84,
+      "swasthyakhabar.com": 3,
+      "www.nepalpage.com": 2,
+      "newsofnepal.com": 76,
+      "annapurnapost.com": 17,
+      "sahityasangraha.com": 2,
+      "techpana.com": 20,
+      "nepalnews.com": 3,
+      "imagekhabar.com": 42,
+      "ujyaaloonline.com": 63,
+      "nepalpage.com": 83,
+      "pardafas.com": 70,
+      "nepalisamachar.com": 26,
+      "thahakhabar.com": 60,
+      "nagariknews.nagariknetwork.com": 5,
+      "sadhana.newsofnepal.com": 2,
+      "election.onlinekhabar.com": 6,
+      "onlinekhabar.com": 5,
+      "bbc.com": 38,
+      "news24nepal.com": 36,
+      "nepalpress.com": 17,
+      "makalukhabar.com": 34,
+      "rajdhanidaily.com": 20,
+      "hamrokhelkud.com": 13,
+      "nepalsamaya.com": 21,
+      "bizmandu.com": 107,
+      "kendrabindu.com": 24,
+      "nepalkhabar.com": 8,
+      "archive.himalkhabar.com": 19,
+      "ai4bharat/IndicCorpV2": 8868,
+      "ne.wikipedia.org": 1,
+      "www.nagariknews.nagariknetwork.com": 2,
+      "www.ujyaaloonline.com": 1,
+      "www.reportersnepal.com": 2
+    },
+    "tokens_per_source": {}
   }
 }

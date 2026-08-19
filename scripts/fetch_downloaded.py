@@ -366,7 +366,7 @@ def main():
     p.add_argument("--rebuild-index", action="store_true",
                    help="ignore the cached manual index and rebuild it")
     args = p.parse_args()
-
+    
     if args.benchmark:
         benchmark(args.lang)
         return

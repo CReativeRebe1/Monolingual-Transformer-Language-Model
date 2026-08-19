@@ -7,7 +7,7 @@ its final size, close to the 19 Aug 2026 deadline. Every entry below corresponds
 real commits on the `phase-1` branch; commit hashes are included so this log stays traceable
 against the actual history.
 
-**Plan reference:** `C:\Users\ASUS\.claude\plans\read-the-assignment-carefully-foamy-kettle.md`
+**Plan reference:** the Phase-1 implementation plan (kept outside the repository).
 
 ---
 
@@ -301,7 +301,8 @@ opened via `np.memmap` so a ~500M-token corpus never needs to fully load into RA
 
 ### 15. Google Drive upload script (commit `89b1299`)
 
-`scripts/upload_to_drive.py` — uploads large artifacts (raw/cleaned corpus, tokenizer files,
+`scripts/upload_to_drive.py` (**removed 2026-08-18** — never run, since rclone was never
+installed here; uploads are manual) — uploaded large artifacts (raw/cleaned corpus, tokenizer files,
 later Phase-2/3 checkpoints) to Drive, since git must never hold them.
 
 - Wraps `rclone` rather than implementing a Google Drive OAuth flow ourselves — rclone handles
@@ -398,7 +399,7 @@ other 9 domains get an equal claim priority per round from here on.
 
 Checked on the crawlers after some time had passed and found **both python processes gone**,
 with no crash in the logs — Nepali's log simply stops mid-stream (last line at 00:11:37, no
-error, no exit message). Root cause: processes launched via `nohup ... &` from this assistant's
+error, no exit message). Root cause: processes launched via `nohup ... &` from a short-lived non-interactive
 shell are tied to that shell/session's lifecycle in this environment; they do not reliably
 survive a boundary between one turn of work and the next, even with `disown`.
 
@@ -408,15 +409,15 @@ died is durably recorded, `in_progress=0` on reopen confirms the requeue-on-cras
 and both crawlers resumed from their exact prior state (`done` counts unchanged, `seeded_domains`
 intact) with a simple relaunch.
 
-**This changes the operational plan for the remaining Phase-1 days.** Relying on this assistant
+**This changes the operational plan for the remaining Phase-1 days.** Relying on a short-lived
 to keep a background crawl alive unattended for multiple days is not reliable in this
 environment. Recommended going forward: run
 `python scripts/run_crawl.py --lang hindi --max-docs 500000 --concurrency 24 --min-delay 1.5`
 (and the `nepali` equivalent) **directly in your own terminal window** (or a `screen`/`tmux`
-session, or a Kaggle/Colab notebook cell) so it runs independently of this assistant's session.
+session, or a Kaggle/Colab notebook cell) so it runs independently of any single shell session.
 The crawler is fully resume-safe either way — restarting it from either side never loses
 progress — but it needs to actually be *running* to make progress, and that now needs to happen
-outside a single assistant turn.
+outside a single short-lived shell session.
 
 ### 19. `scripts/reproduce.sh`: full pipeline demo, no GPU or live crawl needed (commit `d9ec7e0`)
 
@@ -520,7 +521,7 @@ should resolve by deleting files that aren't mine.
 ### 22. Building the rest of Phase 1 without competing with the crawlers for I/O
 
 **User instruction**: the crawlers (now user-run, section 18/20) are the I/O-bound critical path;
-this assistant should keep building remaining Phase-1 code but stop running `build_corpus.py`,
+development should keep building remaining Phase-1 code but stop running `build_corpus.py`,
 `tokenizer_sweep.py`, or `reproduce.sh` (all disk/CPU-heavy) while they're working, and only do
 lightweight reads (a single SQLite frontier-stats query) to check progress.
 
@@ -778,46 +779,143 @@ sanctioned bulk-export path built for exactly this purpose.
 
 ---
 
+### 29. The downloaded 80%: `scripts/fetch_downloaded.py`
+
+Pulled 600M words per language from `ai4bharat/IndicCorpV2`, deduplicated against the manually
+collected side at fetch time. Direction is one-way by design: **duplicates are dropped from the
+downloaded side, never the manual side** — manual tokens are the scarce, graded resource, downloaded
+tokens are effectively unlimited, so the target counts what is actually *written* and dedup losses
+are absorbed by streaming further. No cleaning is applied to this side; IndicCorpV2 is already
+cleaned, and re-filtering it would both waste hours and blur the manual-vs-downloaded comparison.
+
+Two bugs fixed while building it:
+
+- **MinHash was not reproducible across processes.** The base shingle hash used Python's builtin
+  `hash()`, which `PYTHONHASHSEED` salts per process — the same shingle hashed to 3735431355 in one
+  process and 2056009044 in another. Any multiprocessing dedup would have silently produced garbage
+  matches, and the `seed=42` field gave false reassurance. Replaced with `xxhash`, chosen on
+  measurement rather than preference: over 200k realistic Devanagari shingles, builtin `hash()` ran
+  at 6.12M/s, `xxhash.xxh64` at 3.25M/s, and `blake2b(digest_size=8)` at only 1.09M/s.
+- **`LSHIndex.candidate_pairs()` materialised every pair at once.** A bucket with *k* members emits
+  *k(k−1)/2* tuples, and this corpus provably has that pathology (745 of ~950 amarujala.com
+  documents were byte-identical boilerplate). Replaced with a lazy `iter_pairs()` plus a bucket cap
+  that stars oversized buckets around a representative — 5,000 identical documents go from ~12.5M
+  pairs per band to 4,999.
+
+Index building was also cached to disk and parallelised after a Ctrl-C threw away four minutes of
+work: 288,469 manual documents now load from a cached `.npz` in 4.8 seconds.
+
+### 30. The Yi cascade, rebuilt per language — and four bugs only real data exposed
+
+`hindi/clean/` and `nepali/clean/` are now separate packages implementing all 14 steps of Yi's
+Figure-1 cascade, sharing only language-neutral math in `lma/`. `scripts/build_corpus.py` shrank
+from 364 lines to a ~105-line dispatcher (and finally got the `--workers` argument its `main()` had
+been reading since it was written, which had been crashing every invocation with `AttributeError`,
+`scripts/reproduce.sh` included).
+
+Every one of these was found by running the pipeline on the real corpus, not by reading it:
+
+1. **The safety blocklist was deleting good prose.** Built with `"...".split()`, which shredded its
+   multi-word entries into their component words — leaving का ("of"), करें ("do") and कैसे ("how") in
+   the blocklist. Every ordinary Hindi article hits two of those, so the filter silently deleted
+   5.4% of perfectly good documents. Now an explicit tuple, with single-token slurs and multi-word
+   instructional phrases counted separately (a court report quoting a slur is legitimate prose; an
+   instruction has no innocent reading).
+2. **Coherence scored 0.0000 for every document.** Textbook IDF, `log(N/(1+df))`, is exactly zero
+   for a term appearing in 2 of 3 paragraphs — it zeroes out precisely the shared terms the metric
+   exists to detect. Smoothed IDF fixed it; switching from word to character 4-grams then doubled
+   the separation between a coherent article and a stitched-together one, because both languages are
+   inflected and paragraphs share stems rather than surface forms.
+3. **A hand-picked threshold was wrong by an order of magnitude.** The coherence cutoff was set to
+   0.04 by eye; measurement put that at Wikipedia's *10th* percentile — it would have rejected ~9%
+   of Wikipedia itself. Calibrated from data it is 0.0107.
+4. **JSON metadata was only stripped from the start of a document.** The blobs sit mid-document and
+   are nested, so 1,285 documents were rejected for a symbol-to-word ratio caused entirely by
+   punctuation the pipeline believed it had already removed. Replaced the regex with a balanced-brace
+   scanner.
+
+Two thresholds were retuned on measured evidence rather than intuition: ad-heavy clusters are now
+identified relative to the corpus (an absolute rate of 0.35 could never fire when the observed
+maximum is 0.0214), and the duplicate-5-gram limit moved 0.30 → 0.40 after reading what it removed —
+real Hindi news quoting gold prices city by city, which is templated but not junk.
+
+### 31. Three scaling failures, and the corpus that finally came out
+
+The machine has 7.4 GB of RAM, and the pipeline hit that wall three times:
+
+- **MemoryError at 350k/370k documents.** The cascade held the entire manual corpus in memory as
+  record dicts, plus a second copy in `survivors`, plus 15 spawned workers. Rewritten to stream
+  document text through gzipped interim files between stages, keeping only bounded state (hashes,
+  MinHash signatures, cluster labels, the held-out slices) resident. Worker count is now capped by
+  *available memory*, not core count.
+- **MemoryError inside SentencePiece.** Training on a 5M-sentence / 516M-character sample died with
+  "bad allocation". Cut to 1M sentences, sampled by stride — a head sample would have contained no
+  downloaded text at all, since the splits are written manual-first.
+- **~2.3 GB peak in the encoder.** `encode_split` accumulated every document's array and called
+  `np.concatenate` at the end; it now writes each document straight to the `.bin` handle.
+
+Two correctness bugs surfaced in the same stretch, both caught by checks rather than crashes:
+
+- **Decontamination was deleting the wrong side of the corpus.** 123,357 of 266,189 Nepali manual
+  training documents (46.3%), leaving a 15.0% manual share — under the assignment's floor. The cause
+  is real and worth recording: the Nepali crawl reuses syndicated agency sentences so heavily that
+  each held-out article collided with ~23 training articles, something MinHash cannot see because
+  those documents are ~0.05 Jaccard-similar, not 0.8. Reversed to clean the held-out side instead,
+  discarding colliding candidates from an oversampled pool. Training now loses **zero** documents.
+  The 20% floor is additionally enforced in code, so a run cannot report success below it again.
+- **`train.txt` had 21,823 more lines than `train.manifest.jsonl`.** The split writer sanitised only
+  `\n`, but Python's universal-newline reading also splits on `\r`, and the downloaded side is
+  stored raw by design. Every document after the first stray carriage return had its `source_type`
+  misattributed. Caught by a lockstep length check added while rewriting `token_stats`; without it
+  the corruption would have flowed straight into the reported manual-vs-downloaded token split.
+
+Final corpora: **Hindi 517,640,653 tokens (22.5% manual), Nepali 572,506,257 tokens (24.7%
+manual)**, both encoded to `.bin`/`.idx` with a per-language Unigram-16k tokenizer. 372 tests pass.
+
 ## What's left to do
 
 Ordered by what's actually blocking:
 
-1. **Let the crawlers keep running — but see section 18: this needs to happen outside a single
-   assistant session now.** They need real days of wall-clock to approach the ~500M-token
-   targets. Current combined fetch rate: roughly 1,000-2,000 docs/hour across both languages,
-   growing as link-following discovers more distinct hosts. Run
-   `python scripts/run_crawl.py --lang hindi --max-docs 500000 --concurrency 24 --min-delay 1.5`
-   (and `--lang nepali`) in your own terminal/tmux/Kaggle notebook so it survives independently.
-2. **Watch for further crawl-quality issues** as new domains start contributing (each domain
-   can have its own boilerplate patterns, like `amarujala.com`'s cookie notice did) — re-run
-   `build_corpus.py` periodically and inspect `heuristic_rejection_counts` / dedup stats for
-   anything that looks like a repeat of the hub-page problem.
-3. **OCR**: needs to actually run somewhere with the `tesseract` binary (Kaggle/Colab) against
-   real public-domain Hindi/Nepali books/PDFs — this machine only proved the code path is
-   correct, it hasn't produced any real OCR'd text yet.
-4. **HuggingFace authentication**: `huggingface-cli login` (with an account that has accepted
-   OSCAR/CulturaX's terms) needs to happen on whichever machine does the real downloaded-corpus
-   pull, so those two sources aren't limited to Wikipedia-only.
-5. **Re-run `scripts/tokenizer_sweep.py`** once each language's train split is large enough to
-   support the full {8k...48k} range — pick the final vocab size/algorithm from real fertility
-   numbers, not the current placeholder.
-6. ~~Encode the final corpus to `uint16` memmap `.bin`/`.idx` for fast Phase-2 training~~ —
-   **done** (`lma/tokenizer/encode_corpus.py`, commit `d22b94e`); just needs to be run against
-   the final chosen tokenizer once item 5 is complete.
-7. **Write `report/phase1.md`** with the real final numbers, funnel charts, tokenizer sweep
-   table, dataset statistics, and the manual-vs-downloaded split — once items 1-6 are far
-   enough along that the numbers are representative, not a 130-document snapshot.
-8. ~~Write the Google Drive upload script~~ — **done** (`scripts/upload_to_drive.py`, commit
-   `89b1299`). **Still needed from you**: run `rclone config` once (see the script's docstring)
-   to authorize it against your own Google account, then actually run the uploads and fill in
-   the README's Drive-links table — I cannot authenticate this myself.
-9. **Final `phase-1` push** before 19 Aug 2026, 11:59 PM.
+1. ~~Upload the corpus artifacts.~~ **Done** — hosted on
+   [Google Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) and
+   [HuggingFace](https://huggingface.co/datasets/YogendraPatel/LMA_Individual_Project). `scripts/upload_to_drive.py` was removed rather than used: it wrapped
+   `rclone`, which was never installed here, and the upload was done manually. The committed record
+   of what those files contain is `<lang>/data/stats.json`, `<lang>/data/encoded/encoding.json` and
+   `result.md`.
 
----
+2. ~~Regenerate or drop the LangID confusion-matrix figures.~~ **Done** — `scripts/langid_report.py`
+   rebuilds them out-of-sample, labelling documents by the Wikipedia dump they came from rather than
+   by anything the pipeline decided, and reading raw shards from before the language filter. Result:
+   fastText is 99.97% correct on Hindi and 95.87% on Nepali, with
+   119 Nepali articles labelled Hindi and zero the other way -- a
+   one-directional confusion toward the higher-resource language. The marker vote is the stronger
+   detector on Nepali (99.97%), which is why the two are combined. The stale
+   per-language `*_domains.png` and `*_langid_confusion.png` figures were deleted.
+3. ~~Run `scripts/tokenizer_comparison.py`.~~ **Done** — 0 of 10 held-out documents segment
+   identically under the two tokenizers, and the same text costs 427 vs 668 / 342 vs 563 /
+   1,388 vs 2,333 tokens. The 300 KB dump is gitignored (`report/tables/`); the finding is in
+   report §5.
+4. ~~`scripts/corpus_budget.py`.~~ **Retired** — it read a `stats.json` shape that no longer exists,
+   and the decision it supported (how much downloaded text to pull) is now made inside each pipeline
+   by `target_manual_fraction`, which derives the budget every run and enforces the 20% floor in
+   code. Removed with `lma/text/corpus_budget.py` and its 13 tests.
+5. ~~Re-run `scripts/reproduce.sh`.~~ **Verified** end to end after the encoder rewrite, the
+   `--from-interim` work and the selection changes: sample shards -> clean -> split -> stats ->
+   tokenizer -> encode, exit 0.
+6. **Optional: revisit the vocabulary.** 16k is selected; 12k is measured and defensible (25% of the
+   parameter budget instead of 33%, the highest utilisation of any size tested, ~3% worse fertility).
+7. **Phase 2** — model implementation, pretraining, evaluation. Not started.
 
 ## Change log
 
 *(newest first; each entry = one working session's worth of changes)*
+
+- **2026-08-18**: Phase 1 completed end to end. Pulled the downloaded 80% from IndicCorpV2
+  (section 29), rebuilt the cleaning cascade as two independent per-language packages implementing
+  all 14 Yi steps (section 30), and pushed both corpora through to encoded `.bin`/`.idx` after
+  three memory-scaling failures and two silent-corruption bugs (section 31). Final: Hindi
+  517,640,653 tokens / 22.5% manual, Nepali 572,506,257 tokens / 24.7% manual, both with a
+  Unigram-16k tokenizer selected from a 12-model sweep. 372 tests (up from 274).
 
 - **2026-08-14, night**: Added `scripts/upload_to_drive.py` (section 15) — rclone-based Drive
   upload for large artifacts, with the manual one-time setup and shareable-link steps documented
@@ -848,7 +946,7 @@ Ordered by what's actually blocking:
 - **2026-08-15, early morning**: Discovered both crawlers had died silently (session-boundary
   issue, not a crash — section 18), relaunched them (no data lost, resumed cleanly), and flagged
   this to the user as an operational risk: continuous multi-day crawling needs to run outside a
-  single assistant session from here. Built `scripts/reproduce.sh` (section 19) — the full
+  single shell session from here. Built `scripts/reproduce.sh` (section 19) — the full
   Phase-1 pipeline runnable end to end in minutes on a small bundled sample, no GPU or live crawl
   needed; caught and fixed its own bug (sample docs too short to survive the heuristic filter) by
   actually running it, not just writing it. Committed the first real (non-demo) corpus snapshot

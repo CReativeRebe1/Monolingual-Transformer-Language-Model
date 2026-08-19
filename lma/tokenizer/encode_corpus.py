@@ -16,6 +16,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from array import array
+
 import numpy as np
 
 from lma.tokenizer.train_sp import Tokenizer
@@ -53,11 +55,16 @@ def encode_split(
 
     eos_id = tokenizer._sp.eos_id() if append_eos else None
 
-    all_token_chunks: list[np.ndarray] = []
-    offsets = [0]
+    # Written incrementally rather than concatenated at the end. Holding every document's array and
+    # then calling np.concatenate needs the chunks and the joined result in memory at once -- about
+    # 2.3 GB for a 470M-token split, on top of ~100 bytes of object overhead per document across
+    # millions of documents. Streaming keeps memory flat regardless of corpus size, which is the
+    # same reason the cleaning pipeline streams.
+    offsets = array("Q", [0])          # compact: 8 bytes each, not a 28-byte Python int each
     n_documents = 0
+    total = 0
 
-    with open(text_path, encoding="utf-8") as f:
+    with open(text_path, encoding="utf-8") as f, open(bin_path, "wb") as out:
         for line in f:
             line = line.strip()
             if not line:
@@ -66,20 +73,15 @@ def encode_split(
             if append_eos and eos_id is not None and eos_id >= 0:
                 ids = ids + [eos_id]
             arr = np.array(ids, dtype=np.uint16)
-            all_token_chunks.append(arr)
-            offsets.append(offsets[-1] + len(arr))
+            arr.tofile(out)
+            total += len(arr)
+            offsets.append(total)
             n_documents += 1
 
-    if all_token_chunks:
-        full = np.concatenate(all_token_chunks)
-    else:
-        full = np.array([], dtype=np.uint16)
-
-    full.tofile(bin_path)
-    np.array(offsets, dtype=np.uint64).tofile(idx_path)
+    np.frombuffer(offsets, dtype=np.uint64).tofile(idx_path)
 
     return EncodedCorpusInfo(
-        n_documents=n_documents, n_tokens=len(full), bin_path=bin_path, idx_path=idx_path
+        n_documents=n_documents, n_tokens=total, bin_path=bin_path, idx_path=idx_path
     )
 
 

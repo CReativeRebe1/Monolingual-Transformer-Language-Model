@@ -1,4 +1,11 @@
-"""Tests for scripts/tokenizer_sweep.py's token_stats -- another "built but
+"""Tests for scripts/tokenizer_sweep.py's token_stats.
+
+token_stats returns a plain dict rather than a CorpusStats object: it streams the split files line
+by line instead of building a DocumentRecord per document, because the real splits are 5.1 GB
+(Hindi) and 7.5 GB (Nepali) and the record-building version would exhaust this machine's memory
+before returning anything.
+
+Originally another "built but
 never wired in" gap found by reviewing the pipeline: lma/viz/plots.py's plot_manual_vs_downloaded
 and plot_zipf existed and were tested only indirectly (their own module has no dedicated caller
 anywhere), despite the assignment explicitly requiring the manual-vs-downloaded TOKEN split (not
@@ -68,10 +75,10 @@ def test_computes_manual_and_downloaded_token_totals_correctly(tmp_path, tiny_to
     expected_manual_tokens = sum(len(tiny_tokenizer.encode(d["text"])) for d in manual_docs)
     expected_downloaded_tokens = len(tiny_tokenizer.encode(downloaded_docs[0]["text"]))
 
-    assert stats.manual_tokens == expected_manual_tokens
-    assert stats.downloaded_tokens == expected_downloaded_tokens
-    assert stats.n_tokens == expected_manual_tokens + expected_downloaded_tokens
-    assert stats.manual_fraction == pytest.approx(
+    assert stats["manual_tokens"] == expected_manual_tokens
+    assert stats["downloaded_tokens"] == expected_downloaded_tokens
+    assert stats["n_tokens"] == expected_manual_tokens + expected_downloaded_tokens
+    assert stats["manual_fraction"] == pytest.approx(
         expected_manual_tokens / (expected_manual_tokens + expected_downloaded_tokens)
     )
 
@@ -87,7 +94,7 @@ def test_combines_all_three_splits(tmp_path, tiny_tokenizer):
 
     stats = module.token_stats(lang_dir, tiny_tokenizer)
 
-    assert stats.n_documents == 3
+    assert stats["n_documents"] == 3
 
 
 def test_100_percent_manual_when_no_downloaded_documents(tmp_path, tiny_tokenizer):
@@ -100,8 +107,8 @@ def test_100_percent_manual_when_no_downloaded_documents(tmp_path, tiny_tokenize
 
     stats = module.token_stats(lang_dir, tiny_tokenizer)
 
-    assert stats.downloaded_tokens == 0
-    assert stats.manual_fraction == 1.0
+    assert stats["downloaded_tokens"] == 0
+    assert stats["manual_fraction"] == 1.0
 
 
 def test_missing_splits_are_skipped_not_errored(tmp_path, tiny_tokenizer):
@@ -113,7 +120,7 @@ def test_missing_splits_are_skipped_not_errored(tmp_path, tiny_tokenizer):
 
     stats = module.token_stats(lang_dir, tiny_tokenizer)
 
-    assert stats.n_documents == 1
+    assert stats["n_documents"] == 1
 
 
 def test_mismatched_manifest_and_text_line_counts_raises(tmp_path, tiny_tokenizer):

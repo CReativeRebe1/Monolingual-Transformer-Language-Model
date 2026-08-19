@@ -94,7 +94,11 @@ class CleanConfig:
 
     # ---- stage 5: semantic + topic + safety
     n_clusters: int = 60
-    cluster_sample: int = 200_000             # docs sampled to fit TF-IDF + KMeans
+    cluster_sample: int = 50_000
+    # Documents sampled to fit TF-IDF + KMeans, then used to label the whole corpus in chunks. 50k
+    # rather than 200k because the sample is the one point where stage 5 holds text in memory, and
+    # this machine has 7.4 GB total: 200k documents is ~1 GB of str for no benefit, since k-means
+    # centres over 60 clusters stop moving long before 50k samples.
     ad_cluster_keep_fraction: float = 0.25    # ad-heavy clusters are downsampled, not deleted
     ad_cluster_percentile: float = 95.0       # only the top-rate clusters count as ad-heavy
     ad_cluster_min_ratio: float = 2.0         # ...and only if well above the median cluster
@@ -103,14 +107,53 @@ class CleanConfig:
     # meaningful scale here, and the 0.35 first written in this file could never have fired. The
     # 95th percentile plus a 2x-median guard flags the 3 genuinely commercial clusters (~3% of
     # documents); a "3x median" rule alone flagged 17 clusters holding 36% of the corpus.
-    safety_max_hits: int = 2                  # blocklist hits tolerated before rejecting
+    safety_max_hits: int = 2
+    # Applies to single-token blocklist terms ONLY. Multi-word instructional phrases reject on
+    # the first hit -- sharing one budget meant a document containing two explicit self-harm
+    # instructions was reported safe, which a test caught.
 
     # ---- corpus budget
-    target_manual_fraction: float = 0.25      # >=0.20 is the requirement; 0.25 leaves margin
+    target_manual_fraction: float = 0.215
+    # >=0.20 is the requirement. Hindi runs well below Nepali's 0.25 to reach the ~500M-token
+    # deliverable: its manual side cleans down harder (52.9% survival to the safety stage, against
+    # Nepali's 73.2%), and since the downloaded budget is derived from the manual word count, a
+    # smaller manual side shrinks the whole corpus. At 0.25 Hindi totals 352M words = 479M tokens at
+    # the measured fertility of 1.360; at 0.235 it totals 375M words = 510M tokens, still 3.5
+    # percentage points clear of the floor. Then measurement moved the target: the retrained
+    # tokenizer compresses better than the old one (fertility 1.231 vs 1.360), so the SAME corpus
+    # counts as fewer tokens -- 455.7M at 0.235, not the 509M the old fertility implied. 0.215 adds
+    # ~35M downloaded words from the 600M already fetched, landing at ~497M tokens with a 24k vocab
+    # or ~514M with 16k, at a manual share of ~21.5% (still 1.5pp clear of the floor). Nepali needs
+    # no such adjustment, which is exactly the kind of per-language divergence this design exists
+    # for. Note the direction of the trade: a WORSE tokenizer would report more tokens for identical
+    # text, so the token count is reported as measured rather than tuned toward a round number.
     seed: int = 42
 
     # ---- splits
     split_fractions: tuple[float, float, float] = (0.98, 0.01, 0.01)
+    holdout_oversample: float = 2.0
+    holdout_manual_fraction: float = 0.25
+    # Held-out documents are decontaminated against TRAIN rather than the other way round: candidates
+    # that share a 13-gram with a training document are discarded and replaced from the oversampled
+    # remainder, so training keeps every document. Measured on the first full Nepali run, the other
+    # direction cost 123,357 of 266,189 manual train documents (46.3%) and pushed the manual share to
+    # 15.0%, under the 20% floor -- because the Nepali crawl reuses syndicated sentences so heavily
+    # that each held-out manual article collided with ~23 training articles. Candidates are drawn
+    # mostly from the downloaded side (holdout_manual_fraction matches the corpus's own composition),
+    # which keeps the eval set representative and the candidate index small, since downloaded
+    # documents are much shorter.
+    max_val_docs: int = 5_000
+    max_test_docs: int = 5_000
+    # The fractions above decide WHICH documents are held out; these caps decide HOW MANY, and the
+    # caps bind at corpus scale. Held-out size has two independent costs, and the second one is
+    # brutal: every held-out document's 13-grams go into the decontamination index, and every train
+    # document sharing one is dropped. Measured on the first full Nepali run, 1% of 5.2M downloaded
+    # documents gave 110,102 held-out documents and 6,842,371 index n-grams, which discarded 128,567
+    # of 265,623 manual train documents -- 48% of the scarce side of the corpus, to protect a
+    # held-out set twenty times larger than any evaluation needs. 5,000 documents each is ample for
+    # perplexity and BPB (Phase 2 reports both over a few million tokens) and shrinks the index by
+    # roughly 20x. Overflow documents go to train, chosen deterministically by stream position so
+    # repeated passes agree.
     extra: dict = field(default_factory=dict)
 
 

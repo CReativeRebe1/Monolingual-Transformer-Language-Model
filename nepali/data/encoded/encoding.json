@@ -1,0 +1,29 @@
+{
+  "language": "nepali",
+  "tokenizer": "nepali\\tokenizer\\nepali_unigram_16000.model",
+  "vocab_size": 16000,
+  "splits": {
+    "train": {
+      "documents": 5526928,
+      "tokens": 571227702,
+      "bin_mb": 1142.5,
+      "idx_mb": 44.2,
+      "seconds": 456.8
+    },
+    "val": {
+      "documents": 5000,
+      "tokens": 634788,
+      "bin_mb": 1.3,
+      "idx_mb": 0.0,
+      "seconds": 0.8
+    },
+    "test": {
+      "documents": 5000,
+      "tokens": 643767,
+      "bin_mb": 1.3,
+      "idx_mb": 0.0,
+      "seconds": 0.6
+    }
+  },
+  "total_tokens": 572506257
+}

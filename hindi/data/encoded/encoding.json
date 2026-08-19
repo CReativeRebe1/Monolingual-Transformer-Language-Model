@@ -1,0 +1,29 @@
+{
+  "language": "hindi",
+  "tokenizer": "hindi\\tokenizer\\hindi_unigram_16000.model",
+  "vocab_size": 16000,
+  "splits": {
+    "train": {
+      "documents": 3577045,
+      "tokens": 515972223,
+      "bin_mb": 1031.9,
+      "idx_mb": 28.6,
+      "seconds": 332.7
+    },
+    "val": {
+      "documents": 5000,
+      "tokens": 821762,
+      "bin_mb": 1.6,
+      "idx_mb": 0.0,
+      "seconds": 0.6
+    },
+    "test": {
+      "documents": 5000,
+      "tokens": 846668,
+      "bin_mb": 1.7,
+      "idx_mb": 0.0,
+      "seconds": 0.5
+    }
+  },
+  "total_tokens": 517640653
+}

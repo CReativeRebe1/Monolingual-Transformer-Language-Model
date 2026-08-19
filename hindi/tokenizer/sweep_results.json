@@ -5,56 +5,227 @@
     {
       "algorithm": "bpe",
       "vocab_size": 8000,
-      "fertility": 1.4277122503795399,
-      "chars_per_token": 3.635679522309926,
+      "fertility": 1.41974340953963,
+      "chars_per_token": 3.6608186749381506,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.444125
+      "vocab_utilization": 0.96725,
+      "embedding_params": 4096000,
+      "embedding_share_of_budget": 0.1638,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 12000,
+      "fertility": 1.338956216311399,
+      "chars_per_token": 3.8816976417504327,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9576666666666667,
+      "embedding_params": 6144000,
+      "embedding_share_of_budget": 0.2458,
+      "affordable_at_25M": true
     },
     {
       "algorithm": "bpe",
       "vocab_size": 16000,
-      "fertility": 1.3090622445404647,
-      "chars_per_token": 3.9652080824300815,
+      "fertility": 1.292591975042191,
+      "chars_per_token": 4.0209310343996165,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.2494375
+      "vocab_utilization": 0.9475625,
+      "embedding_params": 8192000,
+      "embedding_share_of_budget": 0.3277,
+      "affordable_at_25M": true
     },
     {
       "algorithm": "bpe",
       "vocab_size": 24000,
-      "fertility": 1.2728015882284247,
-      "chars_per_token": 4.078172309386182,
+      "fertility": 1.2420265441631357,
+      "chars_per_token": 4.184631328282125,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.17341666666666666
+      "vocab_utilization": 0.907,
+      "embedding_params": 12288000,
+      "embedding_share_of_budget": 0.4915,
+      "affordable_at_25M": false
     },
     {
       "algorithm": "bpe",
       "vocab_size": 32000,
-      "fertility": 1.2507882751372184,
-      "chars_per_token": 4.149946314364409,
+      "fertility": 1.215515105427108,
+      "chars_per_token": 4.275901767125114,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.13240625
+      "vocab_utilization": 0.84603125,
+      "embedding_params": 16384000,
+      "embedding_share_of_budget": 0.6554,
+      "affordable_at_25M": false
     },
     {
       "algorithm": "bpe",
       "vocab_size": 48000,
-      "fertility": 1.2324535793530305,
-      "chars_per_token": 4.211683327805941,
+      "fertility": 1.1877227401854071,
+      "chars_per_token": 4.375956619683569,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.09016666666666667
+      "vocab_utilization": 0.7101875,
+      "embedding_params": 24576000,
+      "embedding_share_of_budget": 0.983,
+      "affordable_at_25M": false
     },
     {
       "algorithm": "unigram",
       "vocab_size": 8000,
-      "fertility": 1.4368212075207287,
-      "chars_per_token": 3.612630552281871,
+      "fertility": 1.3887721026050182,
+      "chars_per_token": 3.742459383734643,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.39175
+      "vocab_utilization": 0.9765,
+      "embedding_params": 4096000,
+      "embedding_share_of_budget": 0.1638,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 12000,
+      "fertility": 1.3139859409745327,
+      "chars_per_token": 3.9554633159988852,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9784166666666667,
+      "embedding_params": 6144000,
+      "embedding_share_of_budget": 0.2458,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 16000,
+      "fertility": 1.2727641053850338,
+      "chars_per_token": 4.083571468799969,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9695,
+      "embedding_params": 8192000,
+      "embedding_share_of_budget": 0.3277,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 24000,
+      "fertility": 1.2304670395170503,
+      "chars_per_token": 4.223943446143013,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9154166666666667,
+      "embedding_params": 12288000,
+      "embedding_share_of_budget": 0.4915,
+      "affordable_at_25M": false
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 32000,
+      "fertility": 1.207326213958359,
+      "chars_per_token": 4.3049037842247175,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.84134375,
+      "embedding_params": 16384000,
+      "embedding_share_of_budget": 0.6554,
+      "affordable_at_25M": false
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 48000,
+      "fertility": 1.1841308477333679,
+      "chars_per_token": 4.389230461491491,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.6951875,
+      "embedding_params": 24576000,
+      "embedding_share_of_budget": 0.983,
+      "affordable_at_25M": false
     }
   ],
   "selected": {
-    "algorithm": "bpe",
+    "algorithm": "unigram",
     "vocab_size": 16000,
-    "fertility": 1.3090622445404647
+    "fertility": 1.2727641053850338,
+    "rule": "pinned by the caller (vocab_size=16000, algorithm=unigram)",
+    "embedding_params": 8192000,
+    "embedding_share_of_budget": 0.3277
   },
-  "final_model_path": "hindi\\tokenizer\\hindi_bpe_16000.model"
+  "final_model_path": "hindi\\tokenizer\\hindi_unigram_16000.model",
+  "final_corpus_token_stats": {
+    "n_documents": 3587045,
+    "n_words": 409031270,
+    "n_chars": 2099548804,
+    "n_tokens": 514053608,
+    "manual_documents": 151183,
+    "downloaded_documents": 3435862,
+    "manual_tokens": 115682511,
+    "downloaded_tokens": 398371097,
+    "manual_fraction": 0.225039780286884,
+    "n_hosts": 90,
+    "top_hosts": [
+      [
+        "ai4bharat/IndicCorpV2",
+        3435862
+      ],
+      [
+        "hi.wikipedia.org",
+        61466
+      ],
+      [
+        "www.livehindustan.com",
+        11392
+      ],
+      [
+        "prabhasakshi.com",
+        6269
+      ],
+      [
+        "tv9hindi.com",
+        5946
+      ],
+      [
+        "navbharattimes.indiatimes.com",
+        5759
+      ],
+      [
+        "bhaskar.com",
+        5492
+      ],
+      [
+        "patrika.com",
+        5212
+      ],
+      [
+        "www.bhaskar.com",
+        4453
+      ],
+      [
+        "haribhoomi.com",
+        4210
+      ],
+      [
+        "indiatv.in",
+        3763
+      ],
+      [
+        "livehindustan.com",
+        3697
+      ],
+      [
+        "abplive.com",
+        3620
+      ],
+      [
+        "amarujala.com",
+        3589
+      ],
+      [
+        "gadyakosh.org",
+        3421
+      ]
+    ]
+  },
+  "tokenizer_training_sample": {
+    "path": "hindi\\tokenizer\\sweep\\hindi_sentences.txt",
+    "sentences": null,
+    "documents_read": null
+  },
+  "phase2_budget": {
+    "params": 25000000,
+    "d_model": 512,
+    "max_embedding_share": 0.35
+  }
 }

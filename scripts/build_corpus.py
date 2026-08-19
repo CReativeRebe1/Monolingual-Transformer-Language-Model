@@ -55,6 +55,8 @@ def build_corpus(
     workers: int | None = None,
     limit: int | None = None,
     include_downloaded: bool = True,
+    batch: int | None = None,
+    from_interim: bool = False,
 ) -> dict:
     """Runs one language's cleaning pipeline and returns its stats dict.
 
@@ -63,13 +65,12 @@ def build_corpus(
     shards from a running crawler) or overwrites the real graded figures.
     """
     logger.info("=== build_corpus: %s ===", language)
-    return get_pipeline(language).run(
-        lang_dir=lang_dir,
-        report_dir=report_dir,
-        workers=workers,
-        limit=limit,
-        include_downloaded=include_downloaded,
-    )
+    pipeline = get_pipeline(language)
+    kwargs = dict(lang_dir=lang_dir, report_dir=report_dir, workers=workers, limit=limit,
+                  include_downloaded=include_downloaded, from_interim=from_interim)
+    if batch is not None:
+        kwargs["batch"] = batch
+    return pipeline.run(**kwargs)
 
 
 def main():
@@ -79,6 +80,9 @@ def main():
     # registered, so every invocation died with AttributeError -- including scripts/reproduce.sh.
     p.add_argument("--workers", type=int, default=None,
                    help="parallel workers for the per-document stages (default: cpu_count() - 1)")
+    p.add_argument("--batch", type=int, default=None,
+                   help="documents held in memory per parallel batch. Lower it if a run runs out of "
+                        "memory; raise it for throughput on a machine with RAM to spare.")
     p.add_argument("--limit", type=int, default=None,
                    help="process only the first N manual documents, spread across sources "
                         "(for a quick smoke run, not for a real build)")
@@ -90,6 +94,9 @@ def main():
                         "graded figures.")
     p.add_argument("--no-downloaded", action="store_true",
                    help="clean the manual side only, skipping the downloaded pass-through")
+    p.add_argument("--from-interim", action="store_true",
+                   help="redo only the split/decontamination phase from a previous run's "
+                        "data/interim/stage7.jsonl.gz, skipping the ~1.5h cascade")
     args = p.parse_args()
 
     stats = build_corpus(
@@ -99,6 +106,8 @@ def main():
         workers=args.workers,
         limit=args.limit,
         include_downloaded=not args.no_downloaded,
+        batch=args.batch,
+        from_interim=args.from_interim,
     )
     # `corpus` holds the full per-host distribution, which is long; it is in stats.json either way.
     print(json.dumps({k: v for k, v in stats.items() if k != "corpus"},

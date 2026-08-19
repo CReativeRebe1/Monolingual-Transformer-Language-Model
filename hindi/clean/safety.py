@@ -14,8 +14,9 @@ The stage the earlier pipeline skipped entirely. Three functions, each Yi Figure
   keeping all of it lets commercial boilerplate dominate the topic mixture.
 * `check(text)` -- Safety Filtering. A keyword blocklist plus the existing light PII redaction.
 
-**Deliberately conservative.** `safety_max_hits = 2` means one incidental occurrence in a news
-report does not discard the document; a court report on a sexual assault case is legitimate Hindi
+**Deliberately conservative for single tokens, strict for instructions.** `safety_max_hits`
+tolerates incidental single-token hits so a news report is not discarded for one word, while a
+single instructional phrase is enough to reject; a court report on a sexual assault case is legitimate Hindi
 prose and losing it costs a low-resource corpus more than it protects it. This is a keyword filter
 appropriate to a course project, not a content-moderation system, and it is documented as such.
 
@@ -41,24 +42,44 @@ logger = logging.getLogger("hindi.clean.safety")
 
 # ------------------------------------------------------------------ safety
 
-def hits(text: str) -> int:
-    """Number of distinct blocklist terms present. Distinct, not total: a single slur repeated
-    twenty times is one signal about the document, not twenty."""
+def hits(text: str) -> tuple[int, int]:
+    """Returns (token_hits, phrase_hits) as counts of DISTINCT blocklist entries present.
+
+    Distinct, not total: a single slur repeated twenty times is one signal about the document, not
+    twenty.
+
+    The two classes are counted separately because they carry different evidence. A single-token slur
+    can appear incidentally in legitimate prose -- a court report quoting testimony, an article about
+    online abuse -- so a lone hit must not condemn the document. A multi-word instructional phrase
+    ("आत्महत्या कैसे करें") has no such innocent reading; it is the thing itself.
+    """
     lowered = text.casefold()
     ws = set(words(lowered))
-    return sum(1 for term in SAFETY_BLOCKLIST if (term in ws or (" " in term and term in lowered)))
+    tokens = phrases = 0
+    for term in SAFETY_BLOCKLIST:
+        if " " in term:
+            phrases += 1 if term in lowered else 0
+        else:
+            tokens += 1 if term in ws else 0
+    return tokens, phrases
 
 
 def check(text: str, *, config: CleanConfig | None = None) -> tuple[bool, str, int]:
-    """Returns (is_safe, redacted_text, n_hits).
+    """Returns (is_safe, redacted_text, n_hits) where n_hits is the total across both classes.
+
+    A document is unsafe if it contains ANY instructional phrase, or more than
+    `safety_max_hits` distinct single-token blocklist terms. Counting both against one budget was
+    wrong in a way a test caught: with `safety_max_hits = 2`, a document containing two explicit
+    self-harm instructions was reported safe.
 
     PII redaction runs regardless of the verdict, and only after the filters have measured the
     document -- substituting "[EMAIL]" earlier would distort the length and symbol-ratio statistics
     that stage 3a depends on.
     """
     cfg = config or DEFAULT
-    n = hits(text)
-    return n <= cfg.safety_max_hits, strip_light_pii(text), n
+    tokens, phrases = hits(text)
+    safe = phrases == 0 and tokens <= cfg.safety_max_hits
+    return safe, strip_light_pii(text), tokens + phrases
 
 
 # ------------------------------------------------------------------ semantic + topic
@@ -76,6 +97,68 @@ class ClusterResult:
     ad_clusters: set[int] = field(default_factory=set)
     n_clusters: int = 0
     fitted_on: int = 0
+
+
+@dataclass
+class ClusterModel:
+    """A fitted vectoriser + k-means, separated from the act of labelling documents.
+
+    Split out so the corpus can be labelled in chunks streamed from disk: `cluster()` below needs
+    every document in memory at once, which a 7.4 GB machine cannot afford for a corpus of this size.
+    `vec is None` means scikit-learn was unavailable and everything lands in one cluster, making
+    stage 5 a no-op rather than an error.
+    """
+
+    vec: object = None
+    km: object = None
+    n_clusters: int = 1
+    fitted_on: int = 0
+
+
+def fit_clusters(sample: list[str], *, config: CleanConfig | None = None) -> ClusterModel:
+    """Fits TF-IDF + MiniBatchKMeans on a sample of documents."""
+    cfg = config or DEFAULT
+    if not sample:
+        return ClusterModel()
+    try:
+        from sklearn.cluster import MiniBatchKMeans
+        from sklearn.feature_extraction.text import TfidfVectorizer
+    except ImportError:
+        logger.warning("scikit-learn unavailable: semantic/topic filtering skipped")
+        return ClusterModel()
+
+    k = min(cfg.n_clusters, max(2, len(sample) // 50))
+    vec = TfidfVectorizer(
+        analyzer="char_wb", ngram_range=(3, 4), max_features=60_000, min_df=3, sublinear_tf=True
+    )
+    X = vec.fit_transform(sample)
+    km = MiniBatchKMeans(n_clusters=k, random_state=cfg.seed, n_init=3, batch_size=4096)
+    km.fit(X)
+    return ClusterModel(vec=vec, km=km, n_clusters=k, fitted_on=len(sample))
+
+
+def assign(model: ClusterModel, texts: list[str]) -> list[int]:
+    """Cluster ids for one chunk of documents. All zeros if the model is unfitted."""
+    if model.vec is None or not texts:
+        return [0] * len(texts)
+    return [int(c) for c in model.km.predict(model.vec.transform(texts))]
+
+
+def ad_heavy(rates: dict[int, float], *, config: CleanConfig | None = None) -> set[int]:
+    """Which clusters count as ad-heavy, given each cluster's mean ad-keyword rate.
+
+    Relative, not absolute -- see the comment in topics() for the measurements behind both guards.
+    """
+    cfg = config or DEFAULT
+    if len(rates) < 2:
+        return set()
+    ordered = sorted(rates.values())
+    cutoff = ordered[min(int(len(ordered) * cfg.ad_cluster_percentile / 100.0), len(ordered) - 1)]
+    median = ordered[len(ordered) // 2]
+    return {
+        lab for lab, r in rates.items()
+        if r >= cutoff and r >= cfg.ad_cluster_min_ratio * max(median, 1e-9)
+    }
 
 
 def cluster(texts: list[str], *, config: CleanConfig | None = None) -> ClusterResult:

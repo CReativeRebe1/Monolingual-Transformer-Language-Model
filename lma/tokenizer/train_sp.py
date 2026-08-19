@@ -36,6 +36,7 @@ def train_tokenizer(
     out_prefix: Path,
     config: TokenizerTrainConfig,
     input_sentence_size: int = 5_000_000,
+    max_sentence_length: int = 8_192,
 ) -> tuple[Path, Path]:
     """Trains a SentencePiece model from one or more plaintext corpus files (one doc per line).
 
@@ -44,6 +45,13 @@ def train_tokenizer(
     (not a hard cap on corpus size used downstream); this keeps tokenizer training tractable on
     a >100M-token corpus without needing the entire corpus in memory at once, which is exactly
     the reason SentencePiece exposes this knob.
+
+    max_sentence_length is passed EXPLICITLY because SentencePiece's default is 4192 bytes and it
+    discards longer lines in silence. Devanagari costs 3 bytes per character in UTF-8, so the
+    default drops anything past ~1,400 characters -- and this project's splits are written one
+    document per line, averaging ~1.6 KB. A large share of the corpus was therefore never seen by
+    the trainer, with no error and no warning. Callers should feed sentence-split input
+    (lma/tokenizer/sample.py) and leave this at the raised default as a second line of defence.
     """
     out_prefix.parent.mkdir(parents=True, exist_ok=True)
     model_type = "bpe" if config.algorithm == "bpe" else "unigram"
@@ -60,6 +68,7 @@ def train_tokenizer(
         eos_id=config.eos_id,
         unk_id=config.unk_id,
         input_sentence_size=input_sentence_size,
+        max_sentence_length=max_sentence_length,
         shuffle_input_sentence=True,
         train_extremely_large_corpus=True,
     )

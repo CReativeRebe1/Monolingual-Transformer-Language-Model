@@ -5,64 +5,227 @@
     {
       "algorithm": "bpe",
       "vocab_size": 8000,
-      "fertility": 1.5223475653291447,
-      "chars_per_token": 4.510599380921114,
+      "fertility": 1.5807311241675086,
+      "chars_per_token": 4.116168611059122,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.507875
+      "vocab_utilization": 0.9655,
+      "embedding_params": 4096000,
+      "embedding_share_of_budget": 0.1638,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "bpe",
+      "vocab_size": 12000,
+      "fertility": 1.4661842471472308,
+      "chars_per_token": 4.43774774451599,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9611666666666666,
+      "embedding_params": 6144000,
+      "embedding_share_of_budget": 0.2458,
+      "affordable_at_25M": true
     },
     {
       "algorithm": "bpe",
       "vocab_size": 16000,
-      "fertility": 1.3794802227616736,
-      "chars_per_token": 4.977744423166503,
+      "fertility": 1.401835590200543,
+      "chars_per_token": 4.641454305559247,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.3006875
+      "vocab_utilization": 0.9575,
+      "embedding_params": 8192000,
+      "embedding_share_of_budget": 0.3277,
+      "affordable_at_25M": true
     },
     {
       "algorithm": "bpe",
       "vocab_size": 24000,
-      "fertility": 1.3269313151506497,
-      "chars_per_token": 5.1748722087705135,
+      "fertility": 1.3271146213876062,
+      "chars_per_token": 4.902783626194522,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.21216666666666667
+      "vocab_utilization": 0.9360416666666667,
+      "embedding_params": 12288000,
+      "embedding_share_of_budget": 0.4915,
+      "affordable_at_25M": false
     },
     {
       "algorithm": "bpe",
       "vocab_size": 32000,
-      "fertility": 1.302870198486363,
-      "chars_per_token": 5.270440596229724,
+      "fertility": 1.2851673529676033,
+      "chars_per_token": 5.062808217776535,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.16134375
+      "vocab_utilization": 0.89325,
+      "embedding_params": 16384000,
+      "embedding_share_of_budget": 0.6554,
+      "affordable_at_25M": false
     },
     {
       "algorithm": "bpe",
       "vocab_size": 48000,
-      "fertility": 1.2701699271740683,
-      "chars_per_token": 5.406127037661608,
+      "fertility": 1.2384689389473407,
+      "chars_per_token": 5.25370934320958,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.11083333333333334
+      "vocab_utilization": 0.7894375,
+      "embedding_params": 24576000,
+      "embedding_share_of_budget": 0.983,
+      "affordable_at_25M": false
     },
     {
       "algorithm": "unigram",
       "vocab_size": 8000,
-      "fertility": 1.539554476652863,
-      "chars_per_token": 4.460186430459584,
+      "fertility": 1.5411199817668213,
+      "chars_per_token": 4.221965786442558,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.437125
+      "vocab_utilization": 0.971875,
+      "embedding_params": 4096000,
+      "embedding_share_of_budget": 0.1638,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 12000,
+      "fertility": 1.4392596277538783,
+      "chars_per_token": 4.520765892653216,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9750833333333333,
+      "embedding_params": 6144000,
+      "embedding_share_of_budget": 0.2458,
+      "affordable_at_25M": true
     },
     {
       "algorithm": "unigram",
       "vocab_size": 16000,
-      "fertility": 1.393759817221191,
-      "chars_per_token": 4.926745556067824,
+      "fertility": 1.3801727330702087,
+      "chars_per_token": 4.714305448817697,
       "unk_rate": 0.0,
-      "vocab_utilization": 0.2754375
+      "vocab_utilization": 0.969625,
+      "embedding_params": 8192000,
+      "embedding_share_of_budget": 0.3277,
+      "affordable_at_25M": true
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 24000,
+      "fertility": 1.3145617791374742,
+      "chars_per_token": 4.94960064949679,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.9309583333333333,
+      "embedding_params": 12288000,
+      "embedding_share_of_budget": 0.4915,
+      "affordable_at_25M": false
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 32000,
+      "fertility": 1.2766161674822654,
+      "chars_per_token": 5.096720534767069,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.877375,
+      "embedding_params": 16384000,
+      "embedding_share_of_budget": 0.6554,
+      "affordable_at_25M": false
+    },
+    {
+      "algorithm": "unigram",
+      "vocab_size": 48000,
+      "fertility": 1.2343138780349368,
+      "chars_per_token": 5.271394862853785,
+      "unk_rate": 0.0,
+      "vocab_utilization": 0.7618958333333333,
+      "embedding_params": 24576000,
+      "embedding_share_of_budget": 0.983,
+      "affordable_at_25M": false
     }
   ],
   "selected": {
-    "algorithm": "bpe",
-    "vocab_size": 24000,
-    "fertility": 1.3269313151506497
+    "algorithm": "unigram",
+    "vocab_size": 16000,
+    "fertility": 1.3801727330702087,
+    "rule": "pinned by the caller (vocab_size=16000, algorithm=unigram)",
+    "embedding_params": 8192000,
+    "embedding_share_of_budget": 0.3277
   },
-  "final_model_path": "nepali\\tokenizer\\nepali_bpe_24000.model"
+  "final_model_path": "nepali\\tokenizer\\nepali_unigram_16000.model",
+  "final_corpus_token_stats": {
+    "n_documents": 5536928,
+    "n_words": 414373137,
+    "n_chars": 2687598943,
+    "n_tokens": 566969329,
+    "manual_documents": 267721,
+    "downloaded_documents": 5269207,
+    "manual_tokens": 140233982,
+    "downloaded_tokens": 426735347,
+    "manual_fraction": 0.2473396263733342,
+    "n_hosts": 63,
+    "top_hosts": [
+      [
+        "ai4bharat/IndicCorpV2",
+        5269207
+      ],
+      [
+        "nepalpage.com",
+        16076
+      ],
+      [
+        "onlinekhabar.com",
+        15594
+      ],
+      [
+        "ne.wikipedia.org",
+        15143
+      ],
+      [
+        "karobardaily.com",
+        14370
+      ],
+      [
+        "reportersnepal.com",
+        13751
+      ],
+      [
+        "newsofnepal.com",
+        13344
+      ],
+      [
+        "clickmandu.com",
+        12939
+      ],
+      [
+        "pardafas.com",
+        12035
+      ],
+      [
+        "nepalnews.com",
+        11217
+      ],
+      [
+        "www.bbc.com",
+        11092
+      ],
+      [
+        "makalukhabar.com",
+        10449
+      ],
+      [
+        "rajdhanidaily.com",
+        10071
+      ],
+      [
+        "kendrabindu.com",
+        9807
+      ],
+      [
+        "deshsanchar.com",
+        7393
+      ]
+    ]
+  },
+  "tokenizer_training_sample": {
+    "path": "nepali\\tokenizer\\sweep\\nepali_sentences.txt",
+    "sentences": null,
+    "documents_read": null
+  },
+  "phase2_budget": {
+    "params": 25000000,
+    "d_model": 512,
+    "max_embedding_share": 0.35
+  }
 }

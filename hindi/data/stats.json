@@ -1,51 +1,158 @@
 {
   "language": "hindi",
-  "status": "ok",
+  "elapsed_s": 2448.9,
   "funnel": {
-    "collected": 12581,
-    "language_filtered": 12160,
-    "heuristic_filtered": 5979,
-    "quality_filtered": 3802,
-    "deduplicated": 3546
+    "collected": 288469,
+    "language": 269182,
+    "repaired_and_rules": 197165,
+    "quality_scored": 157285,
+    "paragraph_deduped": 156390,
+    "exact_deduped": 156012,
+    "near_deduped": 154669,
+    "topic_filtered": 152714,
+    "safety_checked": 152699,
+    "decontaminated": 3587045
   },
-  "heuristic_rejection_counts": {
-    "boilerplate_phrase_present": 940,
-    "symbol_to_word_ratio_too_high": 4088,
-    "repeated_line_fraction_too_high": 2024,
-    "bullet_or_ellipsis_line_fraction_too_high": 2029,
-    "too_few_words": 62,
-    "too_short": 5,
-    "insufficient_stopword_evidence": 110,
-    "digit_char_ratio_too_high": 1,
-    "mean_word_length_too_high": 1
+  "rejected_by_rule": {
+    "symbol_to_word_ratio_too_high": 41426,
+    "quality_too_low": 34405,
+    "dup_ngram_fraction": 22435,
+    "dup_paragraph_fraction": 19079,
+    "low_devanagari_ratio": 18269,
+    "bullet_line_fraction_too_high": 7662,
+    "repeated_line_fraction_too_high": 4996,
+    "perplexity_too_high": 4544,
+    "too_few_words": 4041,
+    "top_word_fraction": 935,
+    "incoherent": 931,
+    "empty_after_paragraph_dedup": 895,
+    "boilerplate_phrase_present": 852,
+    "lid_said_mr": 518,
+    "insufficient_stopword_evidence": 349,
+    "lid_low_confidence": 312,
+    "starts_with_json_metadata": 259,
+    "digit_char_ratio_too_high": 139,
+    "lid_said_sa": 121,
+    "too_short": 85,
+    "nepali_markers_dominant": 44,
+    "top_3gram_fraction": 39,
+    "top_2gram_fraction": 37,
+    "lid_said_ne": 15,
+    "safety_blocklist": 15,
+    "mean_word_length_too_high": 11,
+    "lid_said_it": 3,
+    "lid_said_en": 2,
+    "too_long": 2,
+    "lid_said_ca": 1,
+    "lid_said_hu": 1,
+    "lid_said_new": 1
   },
-  "dedup_stats": {
-    "input_count": 3802,
-    "exact_duplicates_removed": 158,
-    "near_duplicate_clusters": 11,
-    "near_duplicates_removed": 98,
-    "kept_count": 3546
+  "rejected_by_stage": {
+    "repaired_and_rules": 72017,
+    "quality_scored": 39880,
+    "language": 19287
   },
-  "corpus": {
-    "n_documents": 3546,
-    "n_words": 1981812,
-    "n_chars": 10314215,
-    "n_bytes": 26300540,
-    "docs_per_source": {
-      "navbharattimes.indiatimes.com": 929,
-      "www.livehindustan.com": 1149,
-      "www.amarujala.com": 356,
-      "www.jagran.com": 451,
-      "hi.wikisource.org": 257,
-      "www.aajtak.in": 20,
-      "hi.wikipedia.org": 133,
-      "bhaskar.com": 217,
-      "hi.wiktionary.org": 34
+  "repairs_applied": {
+    "repeated_punct": 36683,
+    "boilerplate_lines": 31671,
+    "boilerplate_phrase_lines": 25100,
+    "json_blob": 22867,
+    "skipped_mostly_boilerplate": 852,
+    "mojibake": 607
+  },
+  "thresholds": {
+    "perplexity": 16.68,
+    "quality_min": 0.3,
+    "coherence_min": 0.01234,
+    "lid_min_confidence": 0.65
+  },
+  "dedup": {
+    "paragraphs_removed": 510077,
+    "documents_touched": 67059,
+    "exact_removed": 378,
+    "near_removed": 1343,
+    "near_clusters": 1077
+  },
+  "clusters": {
+    "n": 60,
+    "ad_heavy": [
+      16,
+      37,
+      54
+    ],
+    "topic_dropped": 1955
+  },
+  "words": {
+    "manual": 86845726,
+    "downloaded": 322185544,
+    "total": 409031270,
+    "manual_fraction": 0.2123
+  },
+  "downloaded": {
+    "documents_streamed": 851868,
+    "words_budget": 321446681,
+    "dropped_contaminated": 3293
+  },
+  "decontamination": {
+    "direction": "held-out side (train keeps every document)",
+    "train_documents_dropped": 0,
+    "candidates_discarded": 3293,
+    "candidates_offered": 20000,
+    "holdout": {
+      "val": 5000,
+      "test": 5000,
+      "val_manual": 803,
+      "test_manual": 771
     }
   },
   "splits": {
-    "train": 3476,
-    "val": 35,
-    "test": 35
+    "train": 3577045,
+    "val": 5000,
+    "test": 5000
+  },
+  "corpus": {
+    "n_documents": 10000,
+    "n_words": 1298009,
+    "n_chars": 6757076,
+    "n_bytes": 17226003,
+    "n_tokens": null,
+    "manual_tokens": null,
+    "downloaded_tokens": null,
+    "manual_fraction": null,
+    "docs_per_source": {
+      "www.amarujala.com": 42,
+      "www.livehindustan.com": 153,
+      "navbharattimes.indiatimes.com": 80,
+      "www.jagran.com": 1,
+      "bhaskar.com": 3,
+      "hi.wikisource.org": 9,
+      "www.bhaskar.com": 69,
+      "www.prabhasakshi.com": 1,
+      "mp.punjabkesari.in": 1,
+      "himachal.punjabkesari.in": 1,
+      "haryana.punjabkesari.in": 2,
+      "aajtak.in": 25,
+      "abplive.com": 21,
+      "jagran.com": 23,
+      "prabhasakshi.com": 21,
+      "tv9hindi.com": 66,
+      "patrika.com": 57,
+      "naidunia.com": 18,
+      "haribhoomi.com": 20,
+      "hindi.moneycontrol.com": 12,
+      "jansatta.com": 14,
+      "indiatv.in": 19,
+      "livehindustan.com": 68,
+      "amarujala.com": 35,
+      "blogs.navbharattimes.indiatimes.com": 7,
+      "newsnationtv.com": 6,
+      "hi.wikipedia.org": 795,
+      "ai4bharat/IndicCorpV2": 8426,
+      "www.punjabkesari.in": 2,
+      "dainiktribuneonline.com": 1,
+      "english.newsnationtv.com": 1,
+      "blog.mygov.in": 1
+    },
+    "tokens_per_source": {}
   }
 }

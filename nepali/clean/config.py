@@ -91,11 +91,17 @@ class CleanConfig:
 
     # ---- stage 5: semantic + topic + safety
     n_clusters: int = 60
-    cluster_sample: int = 200_000
+    cluster_sample: int = 50_000
+    # Documents sampled to fit TF-IDF + KMeans, then used to label the whole corpus in chunks. 50k
+    # rather than 200k because the sample is the one point where stage 5 holds text in memory, and
+    # this machine has 7.4 GB total: 200k documents is ~1 GB of str for no benefit, since k-means
+    # centres over 60 clusters stop moving long before 50k samples.
     ad_cluster_keep_fraction: float = 0.25
     ad_cluster_percentile: float = 95.0
     ad_cluster_min_ratio: float = 2.0
     safety_max_hits: int = 2
+    # Applies to single-token blocklist terms ONLY; multi-word instructional phrases reject on
+    # the first hit. Sharing one budget meant two explicit self-harm instructions read as safe.
 
     # ---- corpus budget
     target_manual_fraction: float = 0.25
@@ -103,6 +109,29 @@ class CleanConfig:
 
     # ---- splits
     split_fractions: tuple[float, float, float] = (0.98, 0.01, 0.01)
+    holdout_oversample: float = 2.0
+    holdout_manual_fraction: float = 0.25
+    # Held-out documents are decontaminated against TRAIN rather than the other way round: candidates
+    # that share a 13-gram with a training document are discarded and replaced from the oversampled
+    # remainder, so training keeps every document. Measured on the first full Nepali run, the other
+    # direction cost 123,357 of 266,189 manual train documents (46.3%) and pushed the manual share to
+    # 15.0%, under the 20% floor -- because the Nepali crawl reuses syndicated sentences so heavily
+    # that each held-out manual article collided with ~23 training articles. Candidates are drawn
+    # mostly from the downloaded side (holdout_manual_fraction matches the corpus's own composition),
+    # which keeps the eval set representative and the candidate index small, since downloaded
+    # documents are much shorter.
+    max_val_docs: int = 5_000
+    max_test_docs: int = 5_000
+    # The fractions above decide WHICH documents are held out; these caps decide HOW MANY, and the
+    # caps bind at corpus scale. Held-out size has two independent costs, and the second one is
+    # brutal: every held-out document's 13-grams go into the decontamination index, and every train
+    # document sharing one is dropped. Measured on the first full Nepali run, 1% of 5.2M downloaded
+    # documents gave 110,102 held-out documents and 6,842,371 index n-grams, which discarded 128,567
+    # of 265,623 manual train documents -- 48% of the scarce side of the corpus, to protect a
+    # held-out set twenty times larger than any evaluation needs. 5,000 documents each is ample for
+    # perplexity and BPB (Phase 2 reports both over a few million tokens) and shrinks the index by
+    # roughly 20x. Overflow documents go to train, chosen deterministically by stream position so
+    # repeated passes agree.
     extra: dict = field(default_factory=dict)
 
 

@@ -80,3 +80,30 @@ hf_token*
 
 # Cached manual dedup index (regenerable via --rebuild-index)
 */data/dup_index.npz
+
+# --- Final splits: multi-GB, kept on Drive, never in git ---
+# hindi/data/splits is 5.1 GB and nepali/data/splits 7.5 GB at the final corpus size (3.6M and
+# 5.5M documents). They are regenerable from the raw shards + interim files via
+#   python scripts/build_corpus.py --lang <lang> --from-interim
+# and are uploaded with
+#   python scripts/upload_to_drive.py --lang <lang> --what cleaned
+# The committed record of what they contain is <lang>/data/stats.json, <lang>/data/encoded/
+# encoding.json (authoritative token counts) and result.md.
+*/data/splits/*.txt
+*/data/splits/*.manifest.jsonl
+
+# --- Extras: regenerable diagnostics, not part of the submission ---
+# scripts/tokenizer_comparison.py dumps every piece of ten documents under both tokenizers (~300 KB
+# of raw segmentations). The finding it supports is summarised in report/phase1.md; the dump itself
+# is reproducible in seconds and would only bloat the repo.
+report/tables/
+
+# --- LaTeX report source + build artifacts (the PDF is what gets submitted) ---
+*.tex
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk

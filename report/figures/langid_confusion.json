@@ -1,0 +1,50 @@
+{
+  "matrix": {
+    "hindi": {
+      "hindi": 2999,
+      "nepali": 0,
+      "other": 1
+    },
+    "nepali": {
+      "hindi": 119,
+      "nepali": 2876,
+      "other": 5
+    },
+    "other": {
+      "hindi": 0,
+      "nepali": 0,
+      "other": 0
+    }
+  },
+  "per_language": {
+    "hindi": {
+      "documents": 3000,
+      "fasttext_correct": 2999,
+      "fasttext_accuracy": 0.9997,
+      "confused_as_other_language": 0,
+      "labelled_other_script_or_language": 1,
+      "marker_vote_agrees": 2919,
+      "marker_vote_accuracy": 0.973,
+      "raw_fasttext_labels": {
+        "hi": 2999,
+        "en": 1
+      }
+    },
+    "nepali": {
+      "documents": 3000,
+      "fasttext_correct": 2876,
+      "fasttext_accuracy": 0.9587,
+      "confused_as_other_language": 119,
+      "labelled_other_script_or_language": 5,
+      "marker_vote_agrees": 2999,
+      "marker_vote_accuracy": 0.9997,
+      "raw_fasttext_labels": {
+        "ne": 2876,
+        "hi": 119,
+        "en": 3,
+        "mr": 1,
+        "te": 1
+      }
+    }
+  }
+}
