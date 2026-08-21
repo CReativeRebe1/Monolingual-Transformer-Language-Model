@@ -499,10 +499,6 @@ files are committed, so every number here is checkable without downloading the c
    are unaffected.
 4. **Vocabulary is defensibly chosen, not proven optimal** — 12k is a genuine alternative (25% of
    budget, highest utilisation measured, ~3% worse fertility).
-5. **Emoji are not specifically filtered** — measured residue: 0.69% of Hindi documents and 0.05% of
-   Nepali contain any emoji (0.00078% / 0.00007% of characters), caught only incidentally by the
-   symbol-ratio rule; `byte_fallback` tokenises them losslessly.
-
 ---
 
 *Every number here comes from `<lang>/data/stats.json`, `<lang>/tokenizer/sweep_results.json`,
