@@ -1,0 +1,462 @@
+starting model_h from scratch
+[2026-09-03T05:26:02+00:00] RUN_START    model=model_h  run_id=20260903T052602Z  params=23846784  non_embedding_params=17702784  world_size=2  device=cuda:0  max_steps=3936  warmup_steps=78  tokens_per_step=131072  peak_lr=0.0006  block_size=1024  micro_batch_size=16  grad_accum_steps=4  train_tokens=515972223  smoke=False
+model_h: 23,846,784 params | 2x cuda:0 | 3,936 steps x 131,072 tok/step = 516M tokens (1.00 epochs)
+step      10  train_loss 9.1093  lr 0.0001  grad_norm 1.5446  scaler_scale 65536.0000  tokens 1310720  tokens_per_s 78409  gpu_mem_gb 6.7200
+step      20  train_loss 8.6233  lr 0.0002  grad_norm 1.4372  scaler_scale 65536.0000  tokens 2621440  tokens_per_s 80793  gpu_mem_gb 6.7200
+step      30  train_loss 7.9849  lr 0.0002  grad_norm 1.2571  scaler_scale 65536.0000  tokens 3932160  tokens_per_s 80876  gpu_mem_gb 6.7200
+step      40  train_loss 7.3354  lr 0.0003  grad_norm 1.0124  scaler_scale 65536.0000  tokens 5242880  tokens_per_s 80184  gpu_mem_gb 6.7200
+step      50  train_loss 6.9427  lr 0.0004  grad_norm 0.6526  scaler_scale 65536.0000  tokens 6553600  tokens_per_s 79232  gpu_mem_gb 6.7200
+step      60  train_loss 6.6121  lr 0.0005  grad_norm 0.4279  scaler_scale 65536.0000  tokens 7864320  tokens_per_s 77033  gpu_mem_gb 6.7200
+step      70  train_loss 6.3684  lr 0.0005  grad_norm 0.5259  scaler_scale 65536.0000  tokens 9175040  tokens_per_s 73126  gpu_mem_gb 6.7200
+step      80  train_loss 6.1551  lr 0.0006  grad_norm 0.4887  scaler_scale 65536.0000  tokens 10485760  tokens_per_s 68887  gpu_mem_gb 6.7200
+step      90  train_loss 6.0375  lr 0.0006  grad_norm 0.5222  scaler_scale 65536.0000  tokens 11796480  tokens_per_s 69349  gpu_mem_gb 6.7200
+step     100  train_loss 5.9173  lr 0.0006  grad_norm 0.6932  scaler_scale 65536.0000  tokens 13107200  tokens_per_s 75592  gpu_mem_gb 6.7200
+step     110  train_loss 5.7549  lr 0.0006  grad_norm 0.4334  scaler_scale 65536.0000  tokens 14417920  tokens_per_s 75873  gpu_mem_gb 6.7200
+step     120  train_loss 5.7023  lr 0.0006  grad_norm 0.3430  scaler_scale 65536.0000  tokens 15728640  tokens_per_s 73719  gpu_mem_gb 6.7200
+step     130  train_loss 5.5675  lr 0.0006  grad_norm 0.7259  scaler_scale 65536.0000  tokens 17039360  tokens_per_s 73060  gpu_mem_gb 6.7200
+step     140  train_loss 5.4559  lr 0.0006  grad_norm 0.4639  scaler_scale 65536.0000  tokens 18350080  tokens_per_s 75273  gpu_mem_gb 6.7200
+step     150  train_loss 5.4170  lr 0.0006  grad_norm 0.4441  scaler_scale 65536.0000  tokens 19660800  tokens_per_s 76321  gpu_mem_gb 6.7200
+step     160  train_loss 5.3321  lr 0.0006  grad_norm 0.3870  scaler_scale 65536.0000  tokens 20971520  tokens_per_s 74472  gpu_mem_gb 6.7200
+step     170  train_loss 5.2187  lr 0.0006  grad_norm 0.5527  scaler_scale 65536.0000  tokens 22282240  tokens_per_s 73923  gpu_mem_gb 6.7200
+step     180  train_loss 5.1838  lr 0.0006  grad_norm 0.5322  scaler_scale 65536.0000  tokens 23592960  tokens_per_s 74837  gpu_mem_gb 6.7200
+step     190  train_loss 5.1371  lr 0.0006  grad_norm 0.5117  scaler_scale 65536.0000  tokens 24903680  tokens_per_s 76078  gpu_mem_gb 6.7200
+step     200  train_loss 5.0468  lr 0.0006  grad_norm 0.5470  scaler_scale 65536.0000  tokens 26214400  tokens_per_s 76141  gpu_mem_gb 6.7200
+step     210  train_loss 4.9930  lr 0.0006  grad_norm 0.4752  scaler_scale 65536.0000  tokens 27525120  tokens_per_s 75043  gpu_mem_gb 6.7200
+step     220  train_loss 4.9735  lr 0.0006  grad_norm 0.4648  scaler_scale 65536.0000  tokens 28835840  tokens_per_s 75127  gpu_mem_gb 6.7200
+step     230  train_loss 4.9227  lr 0.0006  grad_norm 0.5383  scaler_scale 65536.0000  tokens 30146560  tokens_per_s 76048  gpu_mem_gb 6.7200
+step     240  train_loss 4.8922  lr 0.0006  grad_norm 0.4338  scaler_scale 65536.0000  tokens 31457280  tokens_per_s 76098  gpu_mem_gb 6.7200
+step     250  train_loss 4.8465  lr 0.0006  grad_norm 0.7385  scaler_scale 65536.0000  tokens 32768000  tokens_per_s 75726  gpu_mem_gb 6.7200
+step     250  val_loss 4.9273  val_ppl 138.0110
+  step     250 | val loss 4.9273 | ppl 138.01
+[2026-09-03T05:33:21+00:00] CHECKPOINT_BEST step=250  val_loss=4.92733
+[2026-09-03T05:33:22+00:00] CHECKPOINT_LAST step=250  tokens_seen=32768000
+step     260  train_loss 4.7849  lr 0.0006  grad_norm 0.4831  scaler_scale 65536.0000  tokens 34078720  tokens_per_s 54904  gpu_mem_gb 6.7200
+step     270  train_loss 4.7936  lr 0.0006  grad_norm 0.4260  scaler_scale 65536.0000  tokens 35389440  tokens_per_s 75657  gpu_mem_gb 6.7200
+step     280  train_loss 4.7528  lr 0.0006  grad_norm 0.8545  scaler_scale 65536.0000  tokens 36700160  tokens_per_s 76159  gpu_mem_gb 6.7200
+step     290  train_loss 4.6920  lr 0.0006  grad_norm 0.5104  scaler_scale 65536.0000  tokens 38010880  tokens_per_s 76000  gpu_mem_gb 6.7200
+step     300  train_loss 4.6743  lr 0.0006  grad_norm 0.6088  scaler_scale 65536.0000  tokens 39321600  tokens_per_s 75495  gpu_mem_gb 6.7200
+step     310  train_loss 4.6774  lr 0.0006  grad_norm 0.4110  scaler_scale 65536.0000  tokens 40632320  tokens_per_s 75130  gpu_mem_gb 6.7200
+step     320  train_loss 4.5776  lr 0.0006  grad_norm 0.5148  scaler_scale 65536.0000  tokens 41943040  tokens_per_s 75567  gpu_mem_gb 6.7200
+step     330  train_loss 4.5697  lr 0.0006  grad_norm 0.4288  scaler_scale 65536.0000  tokens 43253760  tokens_per_s 75967  gpu_mem_gb 6.7200
+step     340  train_loss 4.5331  lr 0.0006  grad_norm 0.5271  scaler_scale 65536.0000  tokens 44564480  tokens_per_s 75995  gpu_mem_gb 6.7200
+step     350  train_loss 4.5697  lr 0.0006  grad_norm 0.4569  scaler_scale 65536.0000  tokens 45875200  tokens_per_s 76131  gpu_mem_gb 6.7200
+step     360  train_loss 4.5404  lr 0.0006  grad_norm 0.6514  scaler_scale 65536.0000  tokens 47185920  tokens_per_s 76064  gpu_mem_gb 6.7200
+step     370  train_loss 4.5223  lr 0.0006  grad_norm 0.4575  scaler_scale 65536.0000  tokens 48496640  tokens_per_s 75925  gpu_mem_gb 6.7200
+step     380  train_loss 4.4834  lr 0.0006  grad_norm 0.4049  scaler_scale 65536.0000  tokens 49807360  tokens_per_s 75807  gpu_mem_gb 6.7200
+step     390  train_loss 4.4771  lr 0.0006  grad_norm 0.4745  scaler_scale 65536.0000  tokens 51118080  tokens_per_s 75391  gpu_mem_gb 6.7200
+step     400  train_loss 4.4649  lr 0.0006  grad_norm 0.4828  scaler_scale 65536.0000  tokens 52428800  tokens_per_s 75357  gpu_mem_gb 6.7200
+step     410  train_loss 4.4523  lr 0.0006  grad_norm 0.4071  scaler_scale 65536.0000  tokens 53739520  tokens_per_s 75406  gpu_mem_gb 6.7200
+step     420  train_loss 4.4281  lr 0.0006  grad_norm 0.5423  scaler_scale 65536.0000  tokens 55050240  tokens_per_s 75320  gpu_mem_gb 6.7200
+step     430  train_loss 4.3820  lr 0.0006  grad_norm 0.5016  scaler_scale 65536.0000  tokens 56360960  tokens_per_s 75350  gpu_mem_gb 6.7200
+step     440  train_loss 4.3792  lr 0.0006  grad_norm 0.4679  scaler_scale 65536.0000  tokens 57671680  tokens_per_s 75565  gpu_mem_gb 6.7200
+step     450  train_loss 4.3315  lr 0.0006  grad_norm 0.4585  scaler_scale 65536.0000  tokens 58982400  tokens_per_s 76004  gpu_mem_gb 6.7200
+step     460  train_loss 4.3512  lr 0.0006  grad_norm 0.4833  scaler_scale 65536.0000  tokens 60293120  tokens_per_s 76013  gpu_mem_gb 6.7200
+step     470  train_loss 4.3202  lr 0.0006  grad_norm 0.5838  scaler_scale 65536.0000  tokens 61603840  tokens_per_s 76113  gpu_mem_gb 6.7200
+step     480  train_loss 4.3478  lr 0.0006  grad_norm 0.5040  scaler_scale 65536.0000  tokens 62914560  tokens_per_s 76073  gpu_mem_gb 6.7200
+step     490  train_loss 4.3467  lr 0.0006  grad_norm 0.5203  scaler_scale 65536.0000  tokens 64225280  tokens_per_s 75764  gpu_mem_gb 6.7200
+step     500  train_loss 4.3517  lr 0.0006  grad_norm 0.4346  scaler_scale 65536.0000  tokens 65536000  tokens_per_s 75313  gpu_mem_gb 6.7200
+step     500  val_loss 4.3774  val_ppl 79.6320
+  step     500 | val loss 4.3774 | ppl 79.63
+[2026-09-03T05:40:41+00:00] CHECKPOINT_BEST step=500  val_loss=4.37741
+[2026-09-03T05:40:41+00:00] CHECKPOINT_LAST step=500  tokens_seen=65536000
+step     510  train_loss 4.2824  lr 0.0006  grad_norm 0.4580  scaler_scale 65536.0000  tokens 66846720  tokens_per_s 54423  gpu_mem_gb 6.7200
+step     520  train_loss 4.2543  lr 0.0006  grad_norm 0.4949  scaler_scale 65536.0000  tokens 68157440  tokens_per_s 76127  gpu_mem_gb 6.7200
+step     530  train_loss 4.2520  lr 0.0006  grad_norm 0.4312  scaler_scale 65536.0000  tokens 69468160  tokens_per_s 76041  gpu_mem_gb 6.7200
+step     540  train_loss 4.2131  lr 0.0006  grad_norm 0.5360  scaler_scale 65536.0000  tokens 70778880  tokens_per_s 75787  gpu_mem_gb 6.7200
+step     550  train_loss 4.2596  lr 0.0006  grad_norm 0.5031  scaler_scale 65536.0000  tokens 72089600  tokens_per_s 75226  gpu_mem_gb 6.7200
+step     560  train_loss 4.2760  lr 0.0006  grad_norm 0.5022  scaler_scale 65536.0000  tokens 73400320  tokens_per_s 75347  gpu_mem_gb 6.7200
+step     570  train_loss 4.1889  lr 0.0006  grad_norm 0.4684  scaler_scale 65536.0000  tokens 74711040  tokens_per_s 75924  gpu_mem_gb 6.7200
+step     580  train_loss 4.1919  lr 0.0006  grad_norm 0.4395  scaler_scale 65536.0000  tokens 76021760  tokens_per_s 76105  gpu_mem_gb 6.7200
+step     590  train_loss 4.1973  lr 0.0006  grad_norm 0.4297  scaler_scale 65536.0000  tokens 77332480  tokens_per_s 76201  gpu_mem_gb 6.7200
+step     600  train_loss 4.2026  lr 0.0006  grad_norm 0.4297  scaler_scale 65536.0000  tokens 78643200  tokens_per_s 76000  gpu_mem_gb 6.7200
+step     610  train_loss 4.1529  lr 0.0006  grad_norm 0.4466  scaler_scale 65536.0000  tokens 79953920  tokens_per_s 76011  gpu_mem_gb 6.7200
+step     620  train_loss 4.1899  lr 0.0006  grad_norm 0.4374  scaler_scale 65536.0000  tokens 81264640  tokens_per_s 76056  gpu_mem_gb 6.7200
+step     630  train_loss 4.1534  lr 0.0006  grad_norm 0.4618  scaler_scale 65536.0000  tokens 82575360  tokens_per_s 76069  gpu_mem_gb 6.7200
+step     640  train_loss 4.1844  lr 0.0006  grad_norm 0.4812  scaler_scale 65536.0000  tokens 83886080  tokens_per_s 75908  gpu_mem_gb 6.7200
+step     650  train_loss 4.1198  lr 0.0006  grad_norm 0.4782  scaler_scale 65536.0000  tokens 85196800  tokens_per_s 75945  gpu_mem_gb 6.7200
+step     660  train_loss 4.1377  lr 0.0006  grad_norm 0.4436  scaler_scale 65536.0000  tokens 86507520  tokens_per_s 75867  gpu_mem_gb 6.7200
+step     670  train_loss 4.1392  lr 0.0006  grad_norm 0.4516  scaler_scale 65536.0000  tokens 87818240  tokens_per_s 75940  gpu_mem_gb 6.7200
+step     680  train_loss 4.0696  lr 0.0006  grad_norm 0.5109  scaler_scale 65536.0000  tokens 89128960  tokens_per_s 75873  gpu_mem_gb 6.7200
+step     690  train_loss 4.0886  lr 0.0006  grad_norm 0.4205  scaler_scale 65536.0000  tokens 90439680  tokens_per_s 75843  gpu_mem_gb 6.7200
+step     700  train_loss 4.1089  lr 0.0006  grad_norm 0.4514  scaler_scale 65536.0000  tokens 91750400  tokens_per_s 75816  gpu_mem_gb 6.7200
+step     710  train_loss 4.0341  lr 0.0006  grad_norm 0.4321  scaler_scale 65536.0000  tokens 93061120  tokens_per_s 75899  gpu_mem_gb 6.7200
+step     720  train_loss 4.0499  lr 0.0006  grad_norm 0.4413  scaler_scale 65536.0000  tokens 94371840  tokens_per_s 75722  gpu_mem_gb 6.7200
+step     730  train_loss 4.0808  lr 0.0006  grad_norm 0.4543  scaler_scale 65536.0000  tokens 95682560  tokens_per_s 75784  gpu_mem_gb 6.7200
+step     740  train_loss 4.0942  lr 0.0006  grad_norm 0.4844  scaler_scale 65536.0000  tokens 96993280  tokens_per_s 75684  gpu_mem_gb 6.7200
+step     750  train_loss 4.0234  lr 0.0006  grad_norm 0.4858  scaler_scale 65536.0000  tokens 98304000  tokens_per_s 75834  gpu_mem_gb 6.7200
+step     750  val_loss 4.0945  val_ppl 60.0120
+  step     750 | val loss 4.0946 | ppl 60.01
+[2026-09-03T05:48:00+00:00] CHECKPOINT_BEST step=750  val_loss=4.09455
+[2026-09-03T05:48:00+00:00] CHECKPOINT_LAST step=750  tokens_seen=98304000
+step     760  train_loss 3.9936  lr 0.0006  grad_norm 0.4522  scaler_scale 65536.0000  tokens 99614720  tokens_per_s 54226  gpu_mem_gb 6.7200
+step     770  train_loss 4.0060  lr 0.0006  grad_norm 0.4412  scaler_scale 65536.0000  tokens 100925440  tokens_per_s 75559  gpu_mem_gb 6.7200
+step     780  train_loss 3.9718  lr 0.0006  grad_norm 0.4564  scaler_scale 65536.0000  tokens 102236160  tokens_per_s 75624  gpu_mem_gb 6.7200
+step     790  train_loss 4.0080  lr 0.0006  grad_norm 0.4690  scaler_scale 65536.0000  tokens 103546880  tokens_per_s 75536  gpu_mem_gb 6.7200
+step     800  train_loss 3.9346  lr 0.0006  grad_norm 0.4354  scaler_scale 65536.0000  tokens 104857600  tokens_per_s 75627  gpu_mem_gb 6.7200
+step     810  train_loss 3.9324  lr 0.0006  grad_norm 0.4146  scaler_scale 65536.0000  tokens 106168320  tokens_per_s 75927  gpu_mem_gb 6.7200
+step     820  train_loss 3.9823  lr 0.0006  grad_norm 0.4520  scaler_scale 65536.0000  tokens 107479040  tokens_per_s 76023  gpu_mem_gb 6.7200
+step     830  train_loss 3.9539  lr 0.0006  grad_norm 0.4981  scaler_scale 65536.0000  tokens 108789760  tokens_per_s 76150  gpu_mem_gb 6.7200
+step     840  train_loss 3.9932  lr 0.0005  grad_norm 0.4815  scaler_scale 65536.0000  tokens 110100480  tokens_per_s 76091  gpu_mem_gb 6.7200
+step     850  train_loss 3.9275  lr 0.0005  grad_norm 0.4505  scaler_scale 65536.0000  tokens 111411200  tokens_per_s 76053  gpu_mem_gb 6.7200
+step     860  train_loss 3.9547  lr 0.0005  grad_norm 0.4401  scaler_scale 65536.0000  tokens 112721920  tokens_per_s 76076  gpu_mem_gb 6.7200
+step     870  train_loss 3.9374  lr 0.0005  grad_norm 0.4497  scaler_scale 65536.0000  tokens 114032640  tokens_per_s 75717  gpu_mem_gb 6.7200
+step     880  train_loss 3.8826  lr 0.0005  grad_norm 0.4903  scaler_scale 65536.0000  tokens 115343360  tokens_per_s 75724  gpu_mem_gb 6.7200
+step     890  train_loss 3.9054  lr 0.0005  grad_norm 0.4515  scaler_scale 65536.0000  tokens 116654080  tokens_per_s 75720  gpu_mem_gb 6.7200
+step     900  train_loss 3.9426  lr 0.0005  grad_norm 0.4621  scaler_scale 65536.0000  tokens 117964800  tokens_per_s 75684  gpu_mem_gb 6.7200
+step     910  train_loss 3.8959  lr 0.0005  grad_norm 0.4660  scaler_scale 65536.0000  tokens 119275520  tokens_per_s 75685  gpu_mem_gb 6.7200
+step     920  train_loss 3.9511  lr 0.0005  grad_norm 0.4278  scaler_scale 65536.0000  tokens 120586240  tokens_per_s 75690  gpu_mem_gb 6.7200
+step     930  train_loss 3.9005  lr 0.0005  grad_norm 0.4854  scaler_scale 65536.0000  tokens 121896960  tokens_per_s 75515  gpu_mem_gb 6.7200
+step     940  train_loss 3.9168  lr 0.0005  grad_norm 0.4651  scaler_scale 65536.0000  tokens 123207680  tokens_per_s 75643  gpu_mem_gb 6.7200
+step     950  train_loss 3.9652  lr 0.0005  grad_norm 0.4584  scaler_scale 65536.0000  tokens 124518400  tokens_per_s 75523  gpu_mem_gb 6.7200
+step     960  train_loss 3.8734  lr 0.0005  grad_norm 0.4614  scaler_scale 65536.0000  tokens 125829120  tokens_per_s 75565  gpu_mem_gb 6.7200
+step     970  train_loss 3.8228  lr 0.0005  grad_norm 0.4280  scaler_scale 65536.0000  tokens 127139840  tokens_per_s 75526  gpu_mem_gb 6.7200
+step     980  train_loss 3.8842  lr 0.0005  grad_norm 0.4933  scaler_scale 65536.0000  tokens 128450560  tokens_per_s 75697  gpu_mem_gb 6.7200
+step     990  train_loss 3.8759  lr 0.0005  grad_norm 0.4322  scaler_scale 65536.0000  tokens 129761280  tokens_per_s 75801  gpu_mem_gb 6.7200
+step   1,000  train_loss 3.9063  lr 0.0005  grad_norm 0.4294  scaler_scale 65536.0000  tokens 131072000  tokens_per_s 75909  gpu_mem_gb 6.7200
+step   1,000  val_loss 3.8999  val_ppl 49.3990
+  step   1,000 | val loss 3.8999 | ppl 49.40
+[2026-09-03T05:55:19+00:00] CHECKPOINT_BEST step=1000  val_loss=3.89994
+[2026-09-03T05:55:20+00:00] CHECKPOINT_LAST step=1000  tokens_seen=131072000
+step   1,010  train_loss 3.8423  lr 0.0005  grad_norm 0.4658  scaler_scale 65536.0000  tokens 132382720  tokens_per_s 54239  gpu_mem_gb 6.7200
+step   1,020  train_loss 3.8964  lr 0.0005  grad_norm 0.4318  scaler_scale 65536.0000  tokens 133693440  tokens_per_s 75944  gpu_mem_gb 6.7200
+step   1,030  train_loss 3.8762  lr 0.0005  grad_norm 0.4099  scaler_scale 65536.0000  tokens 135004160  tokens_per_s 75714  gpu_mem_gb 6.7200
+step   1,040  train_loss 3.8418  lr 0.0005  grad_norm 0.4685  scaler_scale 65536.0000  tokens 136314880  tokens_per_s 75299  gpu_mem_gb 6.7200
+step   1,050  train_loss 3.7638  lr 0.0005  grad_norm 0.4223  scaler_scale 65536.0000  tokens 137625600  tokens_per_s 75487  gpu_mem_gb 6.7200
+step   1,060  train_loss 3.8875  lr 0.0005  grad_norm 0.4223  scaler_scale 65536.0000  tokens 138936320  tokens_per_s 75644  gpu_mem_gb 6.7200
+step   1,070  train_loss 3.7993  lr 0.0005  grad_norm 0.4562  scaler_scale 65536.0000  tokens 140247040  tokens_per_s 75572  gpu_mem_gb 6.7200
+step   1,080  train_loss 3.8718  lr 0.0005  grad_norm 0.4735  scaler_scale 65536.0000  tokens 141557760  tokens_per_s 75741  gpu_mem_gb 6.7200
+step   1,090  train_loss 3.8598  lr 0.0005  grad_norm 0.4470  scaler_scale 65536.0000  tokens 142868480  tokens_per_s 75590  gpu_mem_gb 6.7200
+step   1,100  train_loss 3.7989  lr 0.0005  grad_norm 0.4413  scaler_scale 65536.0000  tokens 144179200  tokens_per_s 75723  gpu_mem_gb 6.7200
+step   1,110  train_loss 3.7800  lr 0.0005  grad_norm 0.4403  scaler_scale 65536.0000  tokens 145489920  tokens_per_s 75691  gpu_mem_gb 6.7200
+step   1,120  train_loss 3.7894  lr 0.0005  grad_norm 0.4366  scaler_scale 65536.0000  tokens 146800640  tokens_per_s 75690  gpu_mem_gb 6.7200
+step   1,130  train_loss 3.8277  lr 0.0005  grad_norm 0.5197  scaler_scale 65536.0000  tokens 148111360  tokens_per_s 75655  gpu_mem_gb 6.7200
+step   1,140  train_loss 3.8091  lr 0.0005  grad_norm 0.4388  scaler_scale 65536.0000  tokens 149422080  tokens_per_s 75520  gpu_mem_gb 6.7200
+step   1,150  train_loss 3.8109  lr 0.0005  grad_norm 0.4096  scaler_scale 65536.0000  tokens 150732800  tokens_per_s 75660  gpu_mem_gb 6.7200
+step   1,160  train_loss 3.7691  lr 0.0005  grad_norm 0.4574  scaler_scale 65536.0000  tokens 152043520  tokens_per_s 75491  gpu_mem_gb 6.7200
+step   1,170  train_loss 3.7846  lr 0.0005  grad_norm 0.4340  scaler_scale 65536.0000  tokens 153354240  tokens_per_s 75700  gpu_mem_gb 6.7200
+step   1,180  train_loss 3.8058  lr 0.0005  grad_norm 0.4258  scaler_scale 65536.0000  tokens 154664960  tokens_per_s 75996  gpu_mem_gb 6.7200
+step   1,190  train_loss 3.8365  lr 0.0005  grad_norm 0.4707  scaler_scale 65536.0000  tokens 155975680  tokens_per_s 75995  gpu_mem_gb 6.7200
+step   1,200  train_loss 3.7618  lr 0.0005  grad_norm 0.4254  scaler_scale 65536.0000  tokens 157286400  tokens_per_s 75981  gpu_mem_gb 6.7200
+step   1,210  train_loss 3.7730  lr 0.0005  grad_norm 0.4377  scaler_scale 65536.0000  tokens 158597120  tokens_per_s 76040  gpu_mem_gb 6.7200
+step   1,220  train_loss 3.7653  lr 0.0005  grad_norm 0.4309  scaler_scale 65536.0000  tokens 159907840  tokens_per_s 75929  gpu_mem_gb 6.7200
+step   1,230  train_loss 3.7371  lr 0.0005  grad_norm 0.4138  scaler_scale 65536.0000  tokens 161218560  tokens_per_s 75963  gpu_mem_gb 6.7200
+step   1,240  train_loss 3.7663  lr 0.0005  grad_norm 0.4192  scaler_scale 65536.0000  tokens 162529280  tokens_per_s 75883  gpu_mem_gb 6.7200
+step   1,250  train_loss 3.7276  lr 0.0005  grad_norm 0.4210  scaler_scale 65536.0000  tokens 163840000  tokens_per_s 75764  gpu_mem_gb 6.7200
+step   1,250  val_loss 3.7841  val_ppl 43.9980
+  step   1,250 | val loss 3.7841 | ppl 44.00
+[2026-09-03T06:02:38+00:00] CHECKPOINT_BEST step=1250  val_loss=3.78414
+[2026-09-03T06:02:39+00:00] CHECKPOINT_LAST step=1250  tokens_seen=163840000
+step   1,260  train_loss 3.8024  lr 0.0005  grad_norm 0.4242  scaler_scale 65536.0000  tokens 165150720  tokens_per_s 54415  gpu_mem_gb 6.7200
+step   1,270  train_loss 3.7554  lr 0.0005  grad_norm 0.4847  scaler_scale 65536.0000  tokens 166461440  tokens_per_s 75737  gpu_mem_gb 6.7200
+step   1,280  train_loss 3.7621  lr 0.0005  grad_norm 0.4643  scaler_scale 65536.0000  tokens 167772160  tokens_per_s 75535  gpu_mem_gb 6.7200
+step   1,290  train_loss 3.7559  lr 0.0005  grad_norm 0.4293  scaler_scale 65536.0000  tokens 169082880  tokens_per_s 75497  gpu_mem_gb 6.7200
+step   1,300  train_loss 3.7128  lr 0.0005  grad_norm 0.4365  scaler_scale 65536.0000  tokens 170393600  tokens_per_s 75571  gpu_mem_gb 6.7200
+step   1,310  train_loss 3.7135  lr 0.0005  grad_norm 0.4110  scaler_scale 65536.0000  tokens 171704320  tokens_per_s 76067  gpu_mem_gb 6.7200
+step   1,320  train_loss 3.7287  lr 0.0005  grad_norm 0.4135  scaler_scale 65536.0000  tokens 173015040  tokens_per_s 76077  gpu_mem_gb 6.7200
+step   1,330  train_loss 3.6977  lr 0.0005  grad_norm 0.4088  scaler_scale 65536.0000  tokens 174325760  tokens_per_s 76151  gpu_mem_gb 6.7200
+step   1,340  train_loss 3.6947  lr 0.0005  grad_norm 0.4332  scaler_scale 65536.0000  tokens 175636480  tokens_per_s 76099  gpu_mem_gb 6.7200
+step   1,350  train_loss 3.7323  lr 0.0005  grad_norm 0.4213  scaler_scale 65536.0000  tokens 176947200  tokens_per_s 76053  gpu_mem_gb 6.7200
+step   1,360  train_loss 3.7842  lr 0.0005  grad_norm 0.4341  scaler_scale 65536.0000  tokens 178257920  tokens_per_s 76151  gpu_mem_gb 6.7200
+step   1,370  train_loss 3.6433  lr 0.0005  grad_norm 0.4201  scaler_scale 65536.0000  tokens 179568640  tokens_per_s 75963  gpu_mem_gb 6.7200
+step   1,380  train_loss 3.7030  lr 0.0005  grad_norm 0.4252  scaler_scale 65536.0000  tokens 180879360  tokens_per_s 76005  gpu_mem_gb 6.7200
+step   1,390  train_loss 3.7043  lr 0.0005  grad_norm 0.4132  scaler_scale 65536.0000  tokens 182190080  tokens_per_s 76047  gpu_mem_gb 6.7200
+step   1,400  train_loss 3.6878  lr 0.0005  grad_norm 0.4226  scaler_scale 65536.0000  tokens 183500800  tokens_per_s 76032  gpu_mem_gb 6.7200
+step   1,410  train_loss 3.7578  lr 0.0005  grad_norm 0.4262  scaler_scale 65536.0000  tokens 184811520  tokens_per_s 75979  gpu_mem_gb 6.7200
+step   1,420  train_loss 3.6923  lr 0.0005  grad_norm 0.4602  scaler_scale 65536.0000  tokens 186122240  tokens_per_s 75568  gpu_mem_gb 6.7200
+step   1,430  train_loss 3.7086  lr 0.0005  grad_norm 0.4448  scaler_scale 65536.0000  tokens 187432960  tokens_per_s 75516  gpu_mem_gb 6.7200
+step   1,440  train_loss 3.6609  lr 0.0005  grad_norm 0.4082  scaler_scale 65536.0000  tokens 188743680  tokens_per_s 75654  gpu_mem_gb 6.7200
+step   1,450  train_loss 3.6678  lr 0.0004  grad_norm 0.4187  scaler_scale 65536.0000  tokens 190054400  tokens_per_s 75502  gpu_mem_gb 6.7200
+step   1,460  train_loss 3.6911  lr 0.0004  grad_norm 0.4761  scaler_scale 65536.0000  tokens 191365120  tokens_per_s 75803  gpu_mem_gb 6.7200
+step   1,470  train_loss 3.6511  lr 0.0004  grad_norm 0.4016  scaler_scale 65536.0000  tokens 192675840  tokens_per_s 75563  gpu_mem_gb 6.7200
+step   1,480  train_loss 3.7218  lr 0.0004  grad_norm 0.4240  scaler_scale 65536.0000  tokens 193986560  tokens_per_s 75440  gpu_mem_gb 6.7200
+step   1,490  train_loss 3.6810  lr 0.0004  grad_norm 0.4171  scaler_scale 65536.0000  tokens 195297280  tokens_per_s 75699  gpu_mem_gb 6.7200
+step   1,500  train_loss 3.7209  lr 0.0004  grad_norm 0.4153  scaler_scale 65536.0000  tokens 196608000  tokens_per_s 75531  gpu_mem_gb 6.7200
+step   1,500  val_loss 3.7059  val_ppl 40.6870
+  step   1,500 | val loss 3.7059 | ppl 40.69
+[2026-09-03T06:09:58+00:00] CHECKPOINT_BEST step=1500  val_loss=3.7059
+[2026-09-03T06:09:58+00:00] CHECKPOINT_LAST step=1500  tokens_seen=196608000
+step   1,510  train_loss 3.6743  lr 0.0004  grad_norm 0.4548  scaler_scale 65536.0000  tokens 197918720  tokens_per_s 54373  gpu_mem_gb 6.7200
+step   1,520  train_loss 3.6612  lr 0.0004  grad_norm 0.4121  scaler_scale 65536.0000  tokens 199229440  tokens_per_s 75779  gpu_mem_gb 6.7200
+step   1,530  train_loss 3.6530  lr 0.0004  grad_norm 0.4409  scaler_scale 65536.0000  tokens 200540160  tokens_per_s 75573  gpu_mem_gb 6.7200
+step   1,540  train_loss 3.7221  lr 0.0004  grad_norm 0.4046  scaler_scale 65536.0000  tokens 201850880  tokens_per_s 75781  gpu_mem_gb 6.7200
+step   1,550  train_loss 3.6689  lr 0.0004  grad_norm 0.4263  scaler_scale 65536.0000  tokens 203161600  tokens_per_s 75652  gpu_mem_gb 6.7200
+step   1,560  train_loss 3.6437  lr 0.0004  grad_norm 0.3980  scaler_scale 65536.0000  tokens 204472320  tokens_per_s 75675  gpu_mem_gb 6.7200
+step   1,570  train_loss 3.6987  lr 0.0004  grad_norm 0.4159  scaler_scale 65536.0000  tokens 205783040  tokens_per_s 75695  gpu_mem_gb 6.7200
+step   1,580  train_loss 3.6814  lr 0.0004  grad_norm 0.4265  scaler_scale 65536.0000  tokens 207093760  tokens_per_s 75726  gpu_mem_gb 6.7200
+step   1,590  train_loss 3.6564  lr 0.0004  grad_norm 0.3993  scaler_scale 65536.0000  tokens 208404480  tokens_per_s 75974  gpu_mem_gb 6.7200
+step   1,600  train_loss 3.6766  lr 0.0004  grad_norm 0.4287  scaler_scale 65536.0000  tokens 209715200  tokens_per_s 76025  gpu_mem_gb 6.7200
+step   1,610  train_loss 3.6270  lr 0.0004  grad_norm 0.4084  scaler_scale 65536.0000  tokens 211025920  tokens_per_s 76192  gpu_mem_gb 6.7200
+step   1,620  train_loss 3.6652  lr 0.0004  grad_norm 0.4178  scaler_scale 65536.0000  tokens 212336640  tokens_per_s 76002  gpu_mem_gb 6.7200
+step   1,630  train_loss 3.6670  lr 0.0004  grad_norm 0.4136  scaler_scale 65536.0000  tokens 213647360  tokens_per_s 75967  gpu_mem_gb 6.7200
+step   1,640  train_loss 3.6196  lr 0.0004  grad_norm 0.4061  scaler_scale 65536.0000  tokens 214958080  tokens_per_s 75769  gpu_mem_gb 6.7200
+step   1,650  train_loss 3.5969  lr 0.0004  grad_norm 0.4227  scaler_scale 65536.0000  tokens 216268800  tokens_per_s 75601  gpu_mem_gb 6.7200
+step   1,660  train_loss 3.6712  lr 0.0004  grad_norm 0.4320  scaler_scale 65536.0000  tokens 217579520  tokens_per_s 75445  gpu_mem_gb 6.7200
+step   1,670  train_loss 3.6812  lr 0.0004  grad_norm 0.4235  scaler_scale 65536.0000  tokens 218890240  tokens_per_s 75712  gpu_mem_gb 6.7200
+step   1,680  train_loss 3.6465  lr 0.0004  grad_norm 0.4190  scaler_scale 65536.0000  tokens 220200960  tokens_per_s 75947  gpu_mem_gb 6.7200
+step   1,690  train_loss 3.6586  lr 0.0004  grad_norm 0.4092  scaler_scale 65536.0000  tokens 221511680  tokens_per_s 75955  gpu_mem_gb 6.7200
+step   1,700  train_loss 3.6418  lr 0.0004  grad_norm 0.4074  scaler_scale 65536.0000  tokens 222822400  tokens_per_s 75959  gpu_mem_gb 6.7200
+step   1,710  train_loss 3.6300  lr 0.0004  grad_norm 0.4107  scaler_scale 65536.0000  tokens 224133120  tokens_per_s 76206  gpu_mem_gb 6.7200
+step   1,720  train_loss 3.6464  lr 0.0004  grad_norm 0.4196  scaler_scale 65536.0000  tokens 225443840  tokens_per_s 75907  gpu_mem_gb 6.7200
+step   1,730  train_loss 3.6516  lr 0.0004  grad_norm 0.4074  scaler_scale 65536.0000  tokens 226754560  tokens_per_s 75532  gpu_mem_gb 6.7200
+step   1,740  train_loss 3.6108  lr 0.0004  grad_norm 0.3952  scaler_scale 65536.0000  tokens 228065280  tokens_per_s 75911  gpu_mem_gb 6.7200
+step   1,750  train_loss 3.5720  lr 0.0004  grad_norm 0.3979  scaler_scale 65536.0000  tokens 229376000  tokens_per_s 76246  gpu_mem_gb 6.7200
+step   1,750  val_loss 3.6469  val_ppl 38.3560
+  step   1,750 | val loss 3.6469 | ppl 38.36
+[2026-09-03T06:17:16+00:00] CHECKPOINT_BEST step=1750  val_loss=3.64691
+[2026-09-03T06:17:17+00:00] CHECKPOINT_LAST step=1750  tokens_seen=229376000
+step   1,760  train_loss 3.6314  lr 0.0004  grad_norm 0.4269  scaler_scale 65536.0000  tokens 230686720  tokens_per_s 54616  gpu_mem_gb 6.7200
+step   1,770  train_loss 3.6137  lr 0.0004  grad_norm 0.4040  scaler_scale 65536.0000  tokens 231997440  tokens_per_s 75279  gpu_mem_gb 6.7200
+step   1,780  train_loss 3.6031  lr 0.0004  grad_norm 0.4278  scaler_scale 65536.0000  tokens 233308160  tokens_per_s 75738  gpu_mem_gb 6.7200
+step   1,790  train_loss 3.5846  lr 0.0004  grad_norm 0.4063  scaler_scale 65536.0000  tokens 234618880  tokens_per_s 76312  gpu_mem_gb 6.7200
+step   1,800  train_loss 3.6052  lr 0.0004  grad_norm 0.4213  scaler_scale 65536.0000  tokens 235929600  tokens_per_s 76290  gpu_mem_gb 6.7200
+step   1,810  train_loss 3.6079  lr 0.0004  grad_norm 0.4163  scaler_scale 65536.0000  tokens 237240320  tokens_per_s 75910  gpu_mem_gb 6.7200
+step   1,820  train_loss 3.6091  lr 0.0004  grad_norm 0.3860  scaler_scale 65536.0000  tokens 238551040  tokens_per_s 75607  gpu_mem_gb 6.7200
+step   1,830  train_loss 3.6138  lr 0.0004  grad_norm 0.4160  scaler_scale 65536.0000  tokens 239861760  tokens_per_s 75259  gpu_mem_gb 6.7200
+step   1,840  train_loss 3.6404  lr 0.0004  grad_norm 0.3957  scaler_scale 65536.0000  tokens 241172480  tokens_per_s 75816  gpu_mem_gb 6.7200
+step   1,850  train_loss 3.5897  lr 0.0004  grad_norm 0.3900  scaler_scale 65536.0000  tokens 242483200  tokens_per_s 75954  gpu_mem_gb 6.7200
+step   1,860  train_loss 3.4883  lr 0.0004  grad_norm 0.4194  scaler_scale 65536.0000  tokens 243793920  tokens_per_s 76211  gpu_mem_gb 6.7200
+step   1,870  train_loss 3.6024  lr 0.0004  grad_norm 0.4294  scaler_scale 65536.0000  tokens 245104640  tokens_per_s 76226  gpu_mem_gb 6.7200
+step   1,880  train_loss 3.6791  lr 0.0004  grad_norm 0.4262  scaler_scale 65536.0000  tokens 246415360  tokens_per_s 76148  gpu_mem_gb 6.7200
+step   1,890  train_loss 3.5650  lr 0.0004  grad_norm 0.4363  scaler_scale 65536.0000  tokens 247726080  tokens_per_s 76075  gpu_mem_gb 6.7200
+step   1,900  train_loss 3.6221  lr 0.0004  grad_norm 0.4091  scaler_scale 65536.0000  tokens 249036800  tokens_per_s 76017  gpu_mem_gb 6.7200
+step   1,910  train_loss 3.6091  lr 0.0004  grad_norm 0.4296  scaler_scale 65536.0000  tokens 250347520  tokens_per_s 76000  gpu_mem_gb 6.7200
+step   1,920  train_loss 3.5943  lr 0.0003  grad_norm 0.3985  scaler_scale 65536.0000  tokens 251658240  tokens_per_s 76005  gpu_mem_gb 6.7200
+step   1,930  train_loss 3.5921  lr 0.0003  grad_norm 0.4137  scaler_scale 65536.0000  tokens 252968960  tokens_per_s 76027  gpu_mem_gb 6.7200
+step   1,940  train_loss 3.5548  lr 0.0003  grad_norm 0.3993  scaler_scale 65536.0000  tokens 254279680  tokens_per_s 75817  gpu_mem_gb 6.7200
+step   1,950  train_loss 3.6205  lr 0.0003  grad_norm 0.4010  scaler_scale 65536.0000  tokens 255590400  tokens_per_s 75770  gpu_mem_gb 6.7200
+step   1,960  train_loss 3.5484  lr 0.0003  grad_norm 0.4037  scaler_scale 65536.0000  tokens 256901120  tokens_per_s 75623  gpu_mem_gb 6.7200
+step   1,970  train_loss 3.5770  lr 0.0003  grad_norm 0.4193  scaler_scale 65536.0000  tokens 258211840  tokens_per_s 75651  gpu_mem_gb 6.7200
+step   1,980  train_loss 3.5669  lr 0.0003  grad_norm 0.4046  scaler_scale 65536.0000  tokens 259522560  tokens_per_s 75650  gpu_mem_gb 6.7200
+step   1,990  train_loss 3.5542  lr 0.0003  grad_norm 0.4043  scaler_scale 65536.0000  tokens 260833280  tokens_per_s 75448  gpu_mem_gb 6.7200
+step   2,000  train_loss 3.5935  lr 0.0003  grad_norm 0.4133  scaler_scale 131072.0000  tokens 262144000  tokens_per_s 75587  gpu_mem_gb 6.7200
+step   2,000  val_loss 3.6002  val_ppl 36.6070
+  step   2,000 | val loss 3.6002 | ppl 36.61
+[2026-09-03T06:24:35+00:00] CHECKPOINT_BEST step=2000  val_loss=3.60024
+[2026-09-03T06:24:36+00:00] CHECKPOINT_LAST step=2000  tokens_seen=262144000
+step   2,010  train_loss 3.5160  lr 0.0003  grad_norm 0.3970  scaler_scale 131072.0000  tokens 263454720  tokens_per_s 54252  gpu_mem_gb 6.7200
+step   2,020  train_loss 3.6019  lr 0.0003  grad_norm 0.4455  scaler_scale 131072.0000  tokens 264765440  tokens_per_s 75541  gpu_mem_gb 6.7200
+step   2,030  train_loss 3.6378  lr 0.0003  grad_norm 0.4154  scaler_scale 131072.0000  tokens 266076160  tokens_per_s 75332  gpu_mem_gb 6.7200
+step   2,040  train_loss 3.5736  lr 0.0003  grad_norm 0.4025  scaler_scale 131072.0000  tokens 267386880  tokens_per_s 75672  gpu_mem_gb 6.7200
+step   2,050  train_loss 3.5958  lr 0.0003  grad_norm 0.4238  scaler_scale 131072.0000  tokens 268697600  tokens_per_s 75724  gpu_mem_gb 6.7200
+step   2,060  train_loss 3.5947  lr 0.0003  grad_norm 0.4153  scaler_scale 131072.0000  tokens 270008320  tokens_per_s 75930  gpu_mem_gb 6.7200
+step   2,070  train_loss 3.5948  lr 0.0003  grad_norm 0.4546  scaler_scale 131072.0000  tokens 271319040  tokens_per_s 75689  gpu_mem_gb 6.7200
+step   2,080  train_loss 3.5756  lr 0.0003  grad_norm 0.4229  scaler_scale 131072.0000  tokens 272629760  tokens_per_s 75969  gpu_mem_gb 6.7200
+step   2,090  train_loss 3.5730  lr 0.0003  grad_norm 0.4293  scaler_scale 131072.0000  tokens 273940480  tokens_per_s 76015  gpu_mem_gb 6.7200
+step   2,100  train_loss 3.5553  lr 0.0003  grad_norm 0.4082  scaler_scale 131072.0000  tokens 275251200  tokens_per_s 75880  gpu_mem_gb 6.7200
+step   2,110  train_loss 3.5337  lr 0.0003  grad_norm 0.4021  scaler_scale 131072.0000  tokens 276561920  tokens_per_s 75956  gpu_mem_gb 6.7200
+step   2,120  train_loss 3.5337  lr 0.0003  grad_norm 0.4051  scaler_scale 131072.0000  tokens 277872640  tokens_per_s 75939  gpu_mem_gb 6.7200
+step   2,130  train_loss 3.5158  lr 0.0003  grad_norm 0.4427  scaler_scale 131072.0000  tokens 279183360  tokens_per_s 75810  gpu_mem_gb 6.7200
+step   2,140  train_loss 3.5636  lr 0.0003  grad_norm 0.4182  scaler_scale 131072.0000  tokens 280494080  tokens_per_s 75886  gpu_mem_gb 6.7200
+step   2,150  train_loss 3.5727  lr 0.0003  grad_norm 0.4141  scaler_scale 131072.0000  tokens 281804800  tokens_per_s 75899  gpu_mem_gb 6.7200
+step   2,160  train_loss 3.5317  lr 0.0003  grad_norm 0.3908  scaler_scale 131072.0000  tokens 283115520  tokens_per_s 75676  gpu_mem_gb 6.7200
+step   2,170  train_loss 3.5630  lr 0.0003  grad_norm 0.4215  scaler_scale 131072.0000  tokens 284426240  tokens_per_s 75603  gpu_mem_gb 6.7200
+step   2,180  train_loss 3.4915  lr 0.0003  grad_norm 0.4018  scaler_scale 131072.0000  tokens 285736960  tokens_per_s 75547  gpu_mem_gb 6.7200
+step   2,190  train_loss 3.6098  lr 0.0003  grad_norm 0.3719  scaler_scale 131072.0000  tokens 287047680  tokens_per_s 75791  gpu_mem_gb 6.7200
+step   2,200  train_loss 3.5624  lr 0.0003  grad_norm 0.4025  scaler_scale 131072.0000  tokens 288358400  tokens_per_s 75545  gpu_mem_gb 6.7200
+step   2,210  train_loss 3.5641  lr 0.0003  grad_norm 0.4006  scaler_scale 131072.0000  tokens 289669120  tokens_per_s 75496  gpu_mem_gb 6.7200
+step   2,220  train_loss 3.5629  lr 0.0003  grad_norm 0.4316  scaler_scale 131072.0000  tokens 290979840  tokens_per_s 75508  gpu_mem_gb 6.7200
+step   2,230  train_loss 3.5928  lr 0.0003  grad_norm 0.4104  scaler_scale 131072.0000  tokens 292290560  tokens_per_s 75608  gpu_mem_gb 6.7200
+step   2,240  train_loss 3.5642  lr 0.0003  grad_norm 0.4225  scaler_scale 131072.0000  tokens 293601280  tokens_per_s 75412  gpu_mem_gb 6.7200
+step   2,250  train_loss 3.5332  lr 0.0003  grad_norm 0.4106  scaler_scale 131072.0000  tokens 294912000  tokens_per_s 75297  gpu_mem_gb 6.7200
+step   2,250  val_loss 3.5598  val_ppl 35.1570
+  step   2,250 | val loss 3.5598 | ppl 35.16
+[2026-09-03T06:31:55+00:00] CHECKPOINT_BEST step=2250  val_loss=3.55983
+[2026-09-03T06:31:56+00:00] CHECKPOINT_LAST step=2250  tokens_seen=294912000
+step   2,260  train_loss 3.5055  lr 0.0003  grad_norm 0.3916  scaler_scale 131072.0000  tokens 296222720  tokens_per_s 53984  gpu_mem_gb 6.7200
+step   2,270  train_loss 3.5913  lr 0.0003  grad_norm 0.4128  scaler_scale 131072.0000  tokens 297533440  tokens_per_s 75257  gpu_mem_gb 6.7200
+step   2,280  train_loss 3.5516  lr 0.0003  grad_norm 0.4165  scaler_scale 131072.0000  tokens 298844160  tokens_per_s 75439  gpu_mem_gb 6.7200
+step   2,290  train_loss 3.5181  lr 0.0003  grad_norm 0.4007  scaler_scale 131072.0000  tokens 300154880  tokens_per_s 75401  gpu_mem_gb 6.7200
+step   2,300  train_loss 3.5225  lr 0.0003  grad_norm 0.4129  scaler_scale 131072.0000  tokens 301465600  tokens_per_s 75451  gpu_mem_gb 6.7200
+step   2,310  train_loss 3.4991  lr 0.0003  grad_norm 0.3951  scaler_scale 131072.0000  tokens 302776320  tokens_per_s 75414  gpu_mem_gb 6.7200
+step   2,320  train_loss 3.5298  lr 0.0003  grad_norm 0.3898  scaler_scale 131072.0000  tokens 304087040  tokens_per_s 75387  gpu_mem_gb 6.7200
+step   2,330  train_loss 3.4893  lr 0.0003  grad_norm 0.4101  scaler_scale 131072.0000  tokens 305397760  tokens_per_s 75361  gpu_mem_gb 6.7200
+step   2,340  train_loss 3.5285  lr 0.0003  grad_norm 0.4132  scaler_scale 131072.0000  tokens 306708480  tokens_per_s 75363  gpu_mem_gb 6.7200
+step   2,350  train_loss 3.5663  lr 0.0003  grad_norm 0.4431  scaler_scale 131072.0000  tokens 308019200  tokens_per_s 75412  gpu_mem_gb 6.7200
+step   2,360  train_loss 3.5651  lr 0.0003  grad_norm 0.4112  scaler_scale 131072.0000  tokens 309329920  tokens_per_s 75343  gpu_mem_gb 6.7200
+step   2,370  train_loss 3.5413  lr 0.0003  grad_norm 0.3907  scaler_scale 131072.0000  tokens 310640640  tokens_per_s 75396  gpu_mem_gb 6.7200
+step   2,380  train_loss 3.5284  lr 0.0002  grad_norm 0.4090  scaler_scale 131072.0000  tokens 311951360  tokens_per_s 75336  gpu_mem_gb 6.7200
+step   2,390  train_loss 3.5759  lr 0.0002  grad_norm 0.4511  scaler_scale 131072.0000  tokens 313262080  tokens_per_s 75517  gpu_mem_gb 6.7200
+step   2,400  train_loss 3.5265  lr 0.0002  grad_norm 0.4019  scaler_scale 131072.0000  tokens 314572800  tokens_per_s 75799  gpu_mem_gb 6.7200
+step   2,410  train_loss 3.5368  lr 0.0002  grad_norm 0.3935  scaler_scale 131072.0000  tokens 315883520  tokens_per_s 75952  gpu_mem_gb 6.7200
+step   2,420  train_loss 3.5364  lr 0.0002  grad_norm 0.4024  scaler_scale 131072.0000  tokens 317194240  tokens_per_s 76113  gpu_mem_gb 6.7200
+step   2,430  train_loss 3.5139  lr 0.0002  grad_norm 0.4035  scaler_scale 131072.0000  tokens 318504960  tokens_per_s 76185  gpu_mem_gb 6.7200
+step   2,440  train_loss 3.5724  lr 0.0002  grad_norm 0.4279  scaler_scale 131072.0000  tokens 319815680  tokens_per_s 76075  gpu_mem_gb 6.7200
+step   2,450  train_loss 3.5244  lr 0.0002  grad_norm 0.3869  scaler_scale 131072.0000  tokens 321126400  tokens_per_s 75988  gpu_mem_gb 6.7200
+step   2,460  train_loss 3.5385  lr 0.0002  grad_norm 0.3904  scaler_scale 131072.0000  tokens 322437120  tokens_per_s 75897  gpu_mem_gb 6.7200
+step   2,470  train_loss 3.5444  lr 0.0002  grad_norm 0.3999  scaler_scale 131072.0000  tokens 323747840  tokens_per_s 75865  gpu_mem_gb 6.7200
+step   2,480  train_loss 3.5207  lr 0.0002  grad_norm 0.4406  scaler_scale 131072.0000  tokens 325058560  tokens_per_s 75895  gpu_mem_gb 6.7200
+step   2,490  train_loss 3.4487  lr 0.0002  grad_norm 0.4137  scaler_scale 131072.0000  tokens 326369280  tokens_per_s 75761  gpu_mem_gb 6.7200
+step   2,500  train_loss 3.5551  lr 0.0002  grad_norm 0.3967  scaler_scale 131072.0000  tokens 327680000  tokens_per_s 75818  gpu_mem_gb 6.7200
+step   2,500  val_loss 3.5251  val_ppl 33.9580
+  step   2,500 | val loss 3.5251 | ppl 33.96
+[2026-09-03T06:39:15+00:00] CHECKPOINT_BEST step=2500  val_loss=3.52513
+[2026-09-03T06:39:16+00:00] CHECKPOINT_LAST step=2500  tokens_seen=327680000
+step   2,510  train_loss 3.4742  lr 0.0002  grad_norm 0.4225  scaler_scale 131072.0000  tokens 328990720  tokens_per_s 54206  gpu_mem_gb 6.7200
+step   2,520  train_loss 3.4845  lr 0.0002  grad_norm 0.3984  scaler_scale 131072.0000  tokens 330301440  tokens_per_s 75754  gpu_mem_gb 6.7200
+step   2,530  train_loss 3.5374  lr 0.0002  grad_norm 0.4132  scaler_scale 131072.0000  tokens 331612160  tokens_per_s 75876  gpu_mem_gb 6.7200
+step   2,540  train_loss 3.5324  lr 0.0002  grad_norm 0.4107  scaler_scale 131072.0000  tokens 332922880  tokens_per_s 75684  gpu_mem_gb 6.7200
+step   2,550  train_loss 3.5601  lr 0.0002  grad_norm 0.4303  scaler_scale 131072.0000  tokens 334233600  tokens_per_s 75688  gpu_mem_gb 6.7200
+step   2,560  train_loss 3.4823  lr 0.0002  grad_norm 0.4521  scaler_scale 131072.0000  tokens 335544320  tokens_per_s 75428  gpu_mem_gb 6.7200
+step   2,570  train_loss 3.4981  lr 0.0002  grad_norm 0.4200  scaler_scale 131072.0000  tokens 336855040  tokens_per_s 75458  gpu_mem_gb 6.7200
+step   2,580  train_loss 3.4536  lr 0.0002  grad_norm 0.3972  scaler_scale 131072.0000  tokens 338165760  tokens_per_s 75538  gpu_mem_gb 6.7200
+step   2,590  train_loss 3.4650  lr 0.0002  grad_norm 0.3905  scaler_scale 131072.0000  tokens 339476480  tokens_per_s 75638  gpu_mem_gb 6.7200
+step   2,600  train_loss 3.5108  lr 0.0002  grad_norm 0.4069  scaler_scale 131072.0000  tokens 340787200  tokens_per_s 75610  gpu_mem_gb 6.7200
+step   2,610  train_loss 3.5260  lr 0.0002  grad_norm 0.4264  scaler_scale 131072.0000  tokens 342097920  tokens_per_s 75738  gpu_mem_gb 6.7200
+step   2,620  train_loss 3.4700  lr 0.0002  grad_norm 0.3937  scaler_scale 131072.0000  tokens 343408640  tokens_per_s 75695  gpu_mem_gb 6.7200
+step   2,630  train_loss 3.5066  lr 0.0002  grad_norm 0.3925  scaler_scale 131072.0000  tokens 344719360  tokens_per_s 75600  gpu_mem_gb 6.7200
+step   2,640  train_loss 3.5124  lr 0.0002  grad_norm 0.3825  scaler_scale 131072.0000  tokens 346030080  tokens_per_s 75613  gpu_mem_gb 6.7200
+step   2,650  train_loss 3.5106  lr 0.0002  grad_norm 0.4138  scaler_scale 131072.0000  tokens 347340800  tokens_per_s 75459  gpu_mem_gb 6.7200
+step   2,660  train_loss 3.5104  lr 0.0002  grad_norm 0.4043  scaler_scale 131072.0000  tokens 348651520  tokens_per_s 75433  gpu_mem_gb 6.7200
+step   2,670  train_loss 3.4343  lr 0.0002  grad_norm 0.3911  scaler_scale 131072.0000  tokens 349962240  tokens_per_s 75424  gpu_mem_gb 6.7200
+step   2,680  train_loss 3.4661  lr 0.0002  grad_norm 0.4206  scaler_scale 131072.0000  tokens 351272960  tokens_per_s 75617  gpu_mem_gb 6.7200
+step   2,690  train_loss 3.4731  lr 0.0002  grad_norm 0.4013  scaler_scale 131072.0000  tokens 352583680  tokens_per_s 75685  gpu_mem_gb 6.7200
+step   2,700  train_loss 3.5273  lr 0.0002  grad_norm 0.4101  scaler_scale 131072.0000  tokens 353894400  tokens_per_s 75783  gpu_mem_gb 6.7200
+step   2,710  train_loss 3.4966  lr 0.0002  grad_norm 0.4018  scaler_scale 131072.0000  tokens 355205120  tokens_per_s 75697  gpu_mem_gb 6.7200
+step   2,720  train_loss 3.4929  lr 0.0002  grad_norm 0.4101  scaler_scale 131072.0000  tokens 356515840  tokens_per_s 75860  gpu_mem_gb 6.7200
+step   2,730  train_loss 3.4760  lr 0.0002  grad_norm 0.3897  scaler_scale 131072.0000  tokens 357826560  tokens_per_s 75717  gpu_mem_gb 6.7200
+step   2,740  train_loss 3.5364  lr 0.0002  grad_norm 0.3890  scaler_scale 131072.0000  tokens 359137280  tokens_per_s 75742  gpu_mem_gb 6.7200
+step   2,750  train_loss 3.4739  lr 0.0002  grad_norm 0.3856  scaler_scale 131072.0000  tokens 360448000  tokens_per_s 75738  gpu_mem_gb 6.7200
+step   2,750  val_loss 3.4977  val_ppl 33.0410
+  step   2,750 | val loss 3.4977 | ppl 33.04
+[2026-09-03T06:46:35+00:00] CHECKPOINT_BEST step=2750  val_loss=3.49774
+[2026-09-03T06:46:36+00:00] CHECKPOINT_LAST step=2750  tokens_seen=360448000
+step   2,760  train_loss 3.5068  lr 0.0002  grad_norm 0.3957  scaler_scale 131072.0000  tokens 361758720  tokens_per_s 54188  gpu_mem_gb 6.7200
+step   2,770  train_loss 3.4492  lr 0.0002  grad_norm 0.4130  scaler_scale 131072.0000  tokens 363069440  tokens_per_s 75508  gpu_mem_gb 6.7200
+step   2,780  train_loss 3.4907  lr 0.0002  grad_norm 0.4061  scaler_scale 131072.0000  tokens 364380160  tokens_per_s 75476  gpu_mem_gb 6.7200
+step   2,790  train_loss 3.5175  lr 0.0002  grad_norm 0.3933  scaler_scale 131072.0000  tokens 365690880  tokens_per_s 75360  gpu_mem_gb 6.7200
+step   2,800  train_loss 3.4634  lr 0.0002  grad_norm 0.3928  scaler_scale 131072.0000  tokens 367001600  tokens_per_s 75218  gpu_mem_gb 6.7200
+step   2,810  train_loss 3.4366  lr 0.0002  grad_norm 0.4086  scaler_scale 131072.0000  tokens 368312320  tokens_per_s 75295  gpu_mem_gb 6.7200
+step   2,820  train_loss 3.5076  lr 0.0002  grad_norm 0.4346  scaler_scale 131072.0000  tokens 369623040  tokens_per_s 75534  gpu_mem_gb 6.7200
+step   2,830  train_loss 3.4751  lr 0.0002  grad_norm 0.4178  scaler_scale 131072.0000  tokens 370933760  tokens_per_s 75618  gpu_mem_gb 6.7200
+step   2,840  train_loss 3.4866  lr 0.0002  grad_norm 0.4021  scaler_scale 131072.0000  tokens 372244480  tokens_per_s 75680  gpu_mem_gb 6.7200
+step   2,850  train_loss 3.4999  lr 0.0002  grad_norm 0.4072  scaler_scale 131072.0000  tokens 373555200  tokens_per_s 75823  gpu_mem_gb 6.7200
+step   2,860  train_loss 3.4766  lr 0.0002  grad_norm 0.4021  scaler_scale 131072.0000  tokens 374865920  tokens_per_s 75995  gpu_mem_gb 6.7200
+step   2,870  train_loss 3.4465  lr 0.0002  grad_norm 0.4259  scaler_scale 131072.0000  tokens 376176640  tokens_per_s 75892  gpu_mem_gb 6.7200
+step   2,880  train_loss 3.4498  lr 0.0002  grad_norm 0.4049  scaler_scale 131072.0000  tokens 377487360  tokens_per_s 76029  gpu_mem_gb 6.7200
+step   2,890  train_loss 3.4562  lr 0.0002  grad_norm 0.3947  scaler_scale 131072.0000  tokens 378798080  tokens_per_s 76041  gpu_mem_gb 6.7200
+step   2,900  train_loss 3.4820  lr 0.0002  grad_norm 0.4382  scaler_scale 131072.0000  tokens 380108800  tokens_per_s 75915  gpu_mem_gb 6.7200
+step   2,910  train_loss 3.4587  lr 0.0001  grad_norm 0.4244  scaler_scale 131072.0000  tokens 381419520  tokens_per_s 75846  gpu_mem_gb 6.7200
+step   2,920  train_loss 3.4548  lr 0.0001  grad_norm 0.4060  scaler_scale 131072.0000  tokens 382730240  tokens_per_s 75904  gpu_mem_gb 6.7200
+step   2,930  train_loss 3.4683  lr 0.0001  grad_norm 0.4004  scaler_scale 131072.0000  tokens 384040960  tokens_per_s 75756  gpu_mem_gb 6.7200
+step   2,940  train_loss 3.4637  lr 0.0001  grad_norm 0.4063  scaler_scale 131072.0000  tokens 385351680  tokens_per_s 75752  gpu_mem_gb 6.7200
+step   2,950  train_loss 3.4257  lr 0.0001  grad_norm 0.4021  scaler_scale 131072.0000  tokens 386662400  tokens_per_s 75752  gpu_mem_gb 6.7200
+step   2,960  train_loss 3.4706  lr 0.0001  grad_norm 0.4113  scaler_scale 131072.0000  tokens 387973120  tokens_per_s 75216  gpu_mem_gb 6.7200
+step   2,970  train_loss 3.4113  lr 0.0001  grad_norm 0.4081  scaler_scale 131072.0000  tokens 389283840  tokens_per_s 75317  gpu_mem_gb 6.7200
+step   2,980  train_loss 3.4585  lr 0.0001  grad_norm 0.4034  scaler_scale 131072.0000  tokens 390594560  tokens_per_s 75799  gpu_mem_gb 6.7200
+step   2,990  train_loss 3.4787  lr 0.0001  grad_norm 0.4051  scaler_scale 131072.0000  tokens 391905280  tokens_per_s 75864  gpu_mem_gb 6.7200
+step   3,000  train_loss 3.4665  lr 0.0001  grad_norm 0.4026  scaler_scale 131072.0000  tokens 393216000  tokens_per_s 76092  gpu_mem_gb 6.7200
+step   3,000  val_loss 3.4735  val_ppl 32.2480
+  step   3,000 | val loss 3.4735 | ppl 32.25
+[2026-09-03T06:53:55+00:00] CHECKPOINT_BEST step=3000  val_loss=3.47346
+[2026-09-03T06:53:55+00:00] CHECKPOINT_LAST step=3000  tokens_seen=393216000
+step   3,010  train_loss 3.4505  lr 0.0001  grad_norm 0.4099  scaler_scale 131072.0000  tokens 394526720  tokens_per_s 54424  gpu_mem_gb 6.7200
+step   3,020  train_loss 3.4954  lr 0.0001  grad_norm 0.3928  scaler_scale 131072.0000  tokens 395837440  tokens_per_s 75604  gpu_mem_gb 6.7200
+step   3,030  train_loss 3.5091  lr 0.0001  grad_norm 0.3980  scaler_scale 131072.0000  tokens 397148160  tokens_per_s 75347  gpu_mem_gb 6.7200
+step   3,040  train_loss 3.5090  lr 0.0001  grad_norm 0.4061  scaler_scale 131072.0000  tokens 398458880  tokens_per_s 75652  gpu_mem_gb 6.7200
+step   3,050  train_loss 3.4355  lr 0.0001  grad_norm 0.4030  scaler_scale 131072.0000  tokens 399769600  tokens_per_s 75964  gpu_mem_gb 6.7200
+step   3,060  train_loss 3.4631  lr 0.0001  grad_norm 0.4157  scaler_scale 131072.0000  tokens 401080320  tokens_per_s 76020  gpu_mem_gb 6.7200
+step   3,070  train_loss 3.3971  lr 0.0001  grad_norm 0.3896  scaler_scale 131072.0000  tokens 402391040  tokens_per_s 75987  gpu_mem_gb 6.7200
+step   3,080  train_loss 3.4567  lr 0.0001  grad_norm 0.4010  scaler_scale 131072.0000  tokens 403701760  tokens_per_s 76035  gpu_mem_gb 6.7200
+step   3,090  train_loss 3.4376  lr 0.0001  grad_norm 0.3899  scaler_scale 131072.0000  tokens 405012480  tokens_per_s 76055  gpu_mem_gb 6.7200
+step   3,100  train_loss 3.4956  lr 0.0001  grad_norm 0.3948  scaler_scale 131072.0000  tokens 406323200  tokens_per_s 76012  gpu_mem_gb 6.7200
+step   3,110  train_loss 3.4366  lr 0.0001  grad_norm 0.4175  scaler_scale 131072.0000  tokens 407633920  tokens_per_s 75993  gpu_mem_gb 6.7200
+step   3,120  train_loss 3.4540  lr 0.0001  grad_norm 0.4108  scaler_scale 131072.0000  tokens 408944640  tokens_per_s 75690  gpu_mem_gb 6.7200
+step   3,130  train_loss 3.4707  lr 0.0001  grad_norm 0.4059  scaler_scale 131072.0000  tokens 410255360  tokens_per_s 75701  gpu_mem_gb 6.7200
+step   3,140  train_loss 3.4086  lr 0.0001  grad_norm 0.3937  scaler_scale 131072.0000  tokens 411566080  tokens_per_s 75602  gpu_mem_gb 6.7200
+step   3,150  train_loss 3.4499  lr 0.0001  grad_norm 0.4069  scaler_scale 131072.0000  tokens 412876800  tokens_per_s 75601  gpu_mem_gb 6.7200
+step   3,160  train_loss 3.4746  lr 0.0001  grad_norm 0.4144  scaler_scale 131072.0000  tokens 414187520  tokens_per_s 75434  gpu_mem_gb 6.7200
+step   3,170  train_loss 3.4162  lr 0.0001  grad_norm 0.4351  scaler_scale 131072.0000  tokens 415498240  tokens_per_s 75412  gpu_mem_gb 6.7200
+step   3,180  train_loss 3.4865  lr 0.0001  grad_norm 0.4092  scaler_scale 131072.0000  tokens 416808960  tokens_per_s 75565  gpu_mem_gb 6.7200
+step   3,190  train_loss 3.4568  lr 0.0001  grad_norm 0.4089  scaler_scale 131072.0000  tokens 418119680  tokens_per_s 75616  gpu_mem_gb 6.7200
+step   3,200  train_loss 3.4494  lr 0.0001  grad_norm 0.3921  scaler_scale 131072.0000  tokens 419430400  tokens_per_s 75866  gpu_mem_gb 6.7200
+step   3,210  train_loss 3.4317  lr 0.0001  grad_norm 0.4093  scaler_scale 131072.0000  tokens 420741120  tokens_per_s 75797  gpu_mem_gb 6.7200
+step   3,220  train_loss 3.4407  lr 0.0001  grad_norm 0.4045  scaler_scale 131072.0000  tokens 422051840  tokens_per_s 75875  gpu_mem_gb 6.7200
+step   3,230  train_loss 3.4581  lr 0.0001  grad_norm 0.3894  scaler_scale 131072.0000  tokens 423362560  tokens_per_s 76030  gpu_mem_gb 6.7200
+step   3,240  train_loss 3.4445  lr 0.0001  grad_norm 0.4103  scaler_scale 131072.0000  tokens 424673280  tokens_per_s 75992  gpu_mem_gb 6.7200
+step   3,250  train_loss 3.3932  lr 0.0001  grad_norm 0.4068  scaler_scale 131072.0000  tokens 425984000  tokens_per_s 76071  gpu_mem_gb 6.7200
+step   3,250  val_loss 3.4546  val_ppl 31.6450
+  step   3,250 | val loss 3.4546 | ppl 31.64
+[2026-09-03T07:01:14+00:00] CHECKPOINT_BEST step=3250  val_loss=3.45458
+[2026-09-03T07:01:15+00:00] CHECKPOINT_LAST step=3250  tokens_seen=425984000
+step   3,260  train_loss 3.4051  lr 0.0001  grad_norm 0.4143  scaler_scale 131072.0000  tokens 427294720  tokens_per_s 54584  gpu_mem_gb 6.7200
+step   3,270  train_loss 3.4253  lr 0.0001  grad_norm 0.4048  scaler_scale 131072.0000  tokens 428605440  tokens_per_s 75985  gpu_mem_gb 6.7200
+step   3,280  train_loss 3.4568  lr 0.0001  grad_norm 0.4402  scaler_scale 131072.0000  tokens 429916160  tokens_per_s 75863  gpu_mem_gb 6.7200
+step   3,290  train_loss 3.3805  lr 0.0001  grad_norm 0.4141  scaler_scale 131072.0000  tokens 431226880  tokens_per_s 75721  gpu_mem_gb 6.7200
+step   3,300  train_loss 3.4597  lr 0.0001  grad_norm 0.3982  scaler_scale 131072.0000  tokens 432537600  tokens_per_s 75843  gpu_mem_gb 6.7200
+step   3,310  train_loss 3.4050  lr 0.0001  grad_norm 0.4080  scaler_scale 131072.0000  tokens 433848320  tokens_per_s 75483  gpu_mem_gb 6.7200
+step   3,320  train_loss 3.3759  lr 0.0001  grad_norm 0.4171  scaler_scale 131072.0000  tokens 435159040  tokens_per_s 75210  gpu_mem_gb 6.7200
+step   3,330  train_loss 3.4367  lr 0.0001  grad_norm 0.4082  scaler_scale 131072.0000  tokens 436469760  tokens_per_s 75210  gpu_mem_gb 6.7200
+step   3,340  train_loss 3.4098  lr 0.0001  grad_norm 0.4186  scaler_scale 131072.0000  tokens 437780480  tokens_per_s 75361  gpu_mem_gb 6.7200
+step   3,350  train_loss 3.4796  lr 0.0001  grad_norm 0.4026  scaler_scale 131072.0000  tokens 439091200  tokens_per_s 75437  gpu_mem_gb 6.7200
+step   3,360  train_loss 3.4287  lr 0.0001  grad_norm 0.4046  scaler_scale 131072.0000  tokens 440401920  tokens_per_s 75379  gpu_mem_gb 6.7200
+step   3,370  train_loss 3.4567  lr 0.0001  grad_norm 0.3990  scaler_scale 131072.0000  tokens 441712640  tokens_per_s 75549  gpu_mem_gb 6.7200
+step   3,380  train_loss 3.4697  lr 0.0001  grad_norm 0.4132  scaler_scale 131072.0000  tokens 443023360  tokens_per_s 75522  gpu_mem_gb 6.7200
+step   3,390  train_loss 3.4314  lr 0.0001  grad_norm 0.4009  scaler_scale 131072.0000  tokens 444334080  tokens_per_s 75436  gpu_mem_gb 6.7200
+step   3,400  train_loss 3.4558  lr 0.0001  grad_norm 0.3944  scaler_scale 131072.0000  tokens 445644800  tokens_per_s 75562  gpu_mem_gb 6.7200
+step   3,410  train_loss 3.4621  lr 0.0001  grad_norm 0.3967  scaler_scale 131072.0000  tokens 446955520  tokens_per_s 75454  gpu_mem_gb 6.7200
+step   3,420  train_loss 3.4440  lr 0.0001  grad_norm 0.3904  scaler_scale 131072.0000  tokens 448266240  tokens_per_s 75508  gpu_mem_gb 6.7200
+step   3,430  train_loss 3.4324  lr 0.0001  grad_norm 0.3980  scaler_scale 131072.0000  tokens 449576960  tokens_per_s 75314  gpu_mem_gb 6.7200
+step   3,440  train_loss 3.4217  lr 0.0001  grad_norm 0.4049  scaler_scale 131072.0000  tokens 450887680  tokens_per_s 75446  gpu_mem_gb 6.7200
+step   3,450  train_loss 3.4458  lr 0.0001  grad_norm 0.4063  scaler_scale 131072.0000  tokens 452198400  tokens_per_s 75577  gpu_mem_gb 6.7200
+step   3,460  train_loss 3.4421  lr 0.0001  grad_norm 0.4154  scaler_scale 131072.0000  tokens 453509120  tokens_per_s 75724  gpu_mem_gb 6.7200
+step   3,470  train_loss 3.4142  lr 0.0001  grad_norm 0.4086  scaler_scale 131072.0000  tokens 454819840  tokens_per_s 75948  gpu_mem_gb 6.7200
+step   3,480  train_loss 3.5113  lr 0.0001  grad_norm 0.4075  scaler_scale 131072.0000  tokens 456130560  tokens_per_s 75766  gpu_mem_gb 6.7200
+step   3,490  train_loss 3.3721  lr 0.0001  grad_norm 0.4009  scaler_scale 131072.0000  tokens 457441280  tokens_per_s 75803  gpu_mem_gb 6.7200
+step   3,500  train_loss 3.4483  lr 0.0001  grad_norm 0.4086  scaler_scale 131072.0000  tokens 458752000  tokens_per_s 75956  gpu_mem_gb 6.7200
+step   3,500  val_loss 3.4403  val_ppl 31.1950
+  step   3,500 | val loss 3.4403 | ppl 31.20
+[2026-09-03T07:08:34+00:00] CHECKPOINT_BEST step=3500  val_loss=3.44026
+[2026-09-03T07:08:35+00:00] CHECKPOINT_LAST step=3500  tokens_seen=458752000
+step   3,510  train_loss 3.3596  lr 0.0001  grad_norm 0.4018  scaler_scale 131072.0000  tokens 460062720  tokens_per_s 54370  gpu_mem_gb 6.7200
+step   3,520  train_loss 3.4057  lr 0.0001  grad_norm 0.3930  scaler_scale 131072.0000  tokens 461373440  tokens_per_s 75986  gpu_mem_gb 6.7200
+step   3,530  train_loss 3.4104  lr 0.0001  grad_norm 0.4098  scaler_scale 131072.0000  tokens 462684160  tokens_per_s 75853  gpu_mem_gb 6.7200
+step   3,540  train_loss 3.4375  lr 0.0001  grad_norm 0.3970  scaler_scale 131072.0000  tokens 463994880  tokens_per_s 75988  gpu_mem_gb 6.7200
+step   3,550  train_loss 3.3843  lr 0.0001  grad_norm 0.4102  scaler_scale 131072.0000  tokens 465305600  tokens_per_s 75854  gpu_mem_gb 6.7200
+step   3,560  train_loss 3.3235  lr 0.0001  grad_norm 0.4145  scaler_scale 131072.0000  tokens 466616320  tokens_per_s 75843  gpu_mem_gb 6.7200
+step   3,570  train_loss 3.3853  lr 0.0001  grad_norm 0.4388  scaler_scale 131072.0000  tokens 467927040  tokens_per_s 75784  gpu_mem_gb 6.7200
+step   3,580  train_loss 3.4348  lr 0.0001  grad_norm 0.4106  scaler_scale 131072.0000  tokens 469237760  tokens_per_s 75617  gpu_mem_gb 6.7200
+step   3,590  train_loss 3.4064  lr 0.0001  grad_norm 0.4324  scaler_scale 131072.0000  tokens 470548480  tokens_per_s 75679  gpu_mem_gb 6.7200
+step   3,600  train_loss 3.4392  lr 0.0001  grad_norm 0.4175  scaler_scale 131072.0000  tokens 471859200  tokens_per_s 75691  gpu_mem_gb 6.7200
+step   3,610  train_loss 3.4350  lr 0.0001  grad_norm 0.4038  scaler_scale 131072.0000  tokens 473169920  tokens_per_s 75620  gpu_mem_gb 6.7200
+step   3,620  train_loss 3.4537  lr 0.0001  grad_norm 0.4032  scaler_scale 131072.0000  tokens 474480640  tokens_per_s 75648  gpu_mem_gb 6.7200
+step   3,630  train_loss 3.3800  lr 0.0001  grad_norm 0.4060  scaler_scale 131072.0000  tokens 475791360  tokens_per_s 75585  gpu_mem_gb 6.7200
+step   3,640  train_loss 3.3993  lr 0.0001  grad_norm 0.4123  scaler_scale 131072.0000  tokens 477102080  tokens_per_s 75492  gpu_mem_gb 6.7200
+step   3,650  train_loss 3.4231  lr 0.0001  grad_norm 0.4136  scaler_scale 131072.0000  tokens 478412800  tokens_per_s 75310  gpu_mem_gb 6.7200
+step   3,660  train_loss 3.4176  lr 0.0001  grad_norm 0.3892  scaler_scale 131072.0000  tokens 479723520  tokens_per_s 75437  gpu_mem_gb 6.7200
+step   3,670  train_loss 3.4012  lr 0.0001  grad_norm 0.4127  scaler_scale 131072.0000  tokens 481034240  tokens_per_s 75534  gpu_mem_gb 6.7200
+step   3,680  train_loss 3.4186  lr 0.0001  grad_norm 0.3975  scaler_scale 131072.0000  tokens 482344960  tokens_per_s 75572  gpu_mem_gb 6.7200
+step   3,690  train_loss 3.4383  lr 0.0001  grad_norm 0.4107  scaler_scale 131072.0000  tokens 483655680  tokens_per_s 75605  gpu_mem_gb 6.7200
+step   3,700  train_loss 3.3702  lr 0.0001  grad_norm 0.4042  scaler_scale 131072.0000  tokens 484966400  tokens_per_s 75428  gpu_mem_gb 6.7200
+step   3,710  train_loss 3.4135  lr 0.0001  grad_norm 0.4070  scaler_scale 131072.0000  tokens 486277120  tokens_per_s 75610  gpu_mem_gb 6.7200
+step   3,720  train_loss 3.3797  lr 0.0001  grad_norm 0.4022  scaler_scale 131072.0000  tokens 487587840  tokens_per_s 75622  gpu_mem_gb 6.7200
+step   3,730  train_loss 3.4043  lr 0.0001  grad_norm 0.4210  scaler_scale 131072.0000  tokens 488898560  tokens_per_s 75641  gpu_mem_gb 6.7200
+step   3,740  train_loss 3.3963  lr 0.0001  grad_norm 0.4054  scaler_scale 131072.0000  tokens 490209280  tokens_per_s 75487  gpu_mem_gb 6.7200
+step   3,750  train_loss 3.3756  lr 0.0001  grad_norm 0.4015  scaler_scale 131072.0000  tokens 491520000  tokens_per_s 75607  gpu_mem_gb 6.7200
+step   3,750  val_loss 3.4298  val_ppl 30.8700
+  step   3,750 | val loss 3.4298 | ppl 30.87
+[2026-09-03T07:15:54+00:00] CHECKPOINT_BEST step=3750  val_loss=3.42977
+[2026-09-03T07:15:55+00:00] CHECKPOINT_LAST step=3750  tokens_seen=491520000
+step   3,760  train_loss 3.4219  lr 0.0001  grad_norm 0.4092  scaler_scale 131072.0000  tokens 492830720  tokens_per_s 54325  gpu_mem_gb 6.7200
+step   3,770  train_loss 3.3830  lr 0.0001  grad_norm 0.4157  scaler_scale 131072.0000  tokens 494141440  tokens_per_s 75617  gpu_mem_gb 6.7200
+step   3,780  train_loss 3.3686  lr 0.0001  grad_norm 0.4032  scaler_scale 131072.0000  tokens 495452160  tokens_per_s 75683  gpu_mem_gb 6.7200
+step   3,790  train_loss 3.4200  lr 0.0001  grad_norm 0.4194  scaler_scale 131072.0000  tokens 496762880  tokens_per_s 75791  gpu_mem_gb 6.7200
+step   3,800  train_loss 3.4248  lr 0.0001  grad_norm 0.4149  scaler_scale 131072.0000  tokens 498073600  tokens_per_s 75792  gpu_mem_gb 6.7200
+step   3,810  train_loss 3.4108  lr 0.0001  grad_norm 0.4010  scaler_scale 131072.0000  tokens 499384320  tokens_per_s 75548  gpu_mem_gb 6.7200
+step   3,820  train_loss 3.4011  lr 0.0001  grad_norm 0.4137  scaler_scale 131072.0000  tokens 500695040  tokens_per_s 75560  gpu_mem_gb 6.7200
+step   3,830  train_loss 3.4699  lr 0.0001  grad_norm 0.4012  scaler_scale 131072.0000  tokens 502005760  tokens_per_s 75631  gpu_mem_gb 6.7200
+step   3,840  train_loss 3.4298  lr 0.0001  grad_norm 0.4100  scaler_scale 131072.0000  tokens 503316480  tokens_per_s 75496  gpu_mem_gb 6.7200
+step   3,850  train_loss 3.4059  lr 0.0001  grad_norm 0.4026  scaler_scale 131072.0000  tokens 504627200  tokens_per_s 75694  gpu_mem_gb 6.7200
+step   3,860  train_loss 3.4514  lr 0.0001  grad_norm 0.4203  scaler_scale 131072.0000  tokens 505937920  tokens_per_s 75487  gpu_mem_gb 6.7200
+step   3,870  train_loss 3.4274  lr 0.0001  grad_norm 0.4002  scaler_scale 131072.0000  tokens 507248640  tokens_per_s 75632  gpu_mem_gb 6.7200
+step   3,880  train_loss 3.4291  lr 0.0001  grad_norm 0.4074  scaler_scale 131072.0000  tokens 508559360  tokens_per_s 75772  gpu_mem_gb 6.7200
+step   3,890  train_loss 3.4917  lr 0.0001  grad_norm 0.4267  scaler_scale 131072.0000  tokens 509870080  tokens_per_s 75660  gpu_mem_gb 6.7200
+step   3,900  train_loss 3.3854  lr 0.0001  grad_norm 0.4095  scaler_scale 131072.0000  tokens 511180800  tokens_per_s 75683  gpu_mem_gb 6.7200
+step   3,910  train_loss 3.3895  lr 0.0001  grad_norm 0.4050  scaler_scale 131072.0000  tokens 512491520  tokens_per_s 75680  gpu_mem_gb 6.7200
+step   3,920  train_loss 3.3707  lr 0.0001  grad_norm 0.4009  scaler_scale 131072.0000  tokens 513802240  tokens_per_s 75727  gpu_mem_gb 6.7200
+step   3,930  train_loss 3.3949  lr 0.0001  grad_norm 0.4086  scaler_scale 131072.0000  tokens 515112960  tokens_per_s 75704  gpu_mem_gb 6.7200
+step   3,936  train_loss 3.4371  lr 0.0001  grad_norm 0.4160  scaler_scale 131072.0000  tokens 515899392  tokens_per_s 125931  gpu_mem_gb 6.7200
+step   3,936  val_loss 3.4237  val_ppl 30.6820
+  step   3,936 | val loss 3.4237 | ppl 30.68
+[2026-09-03T07:21:23+00:00] CHECKPOINT_BEST step=3936  val_loss=3.42366
+[2026-09-03T07:21:24+00:00] CHECKPOINT_LAST step=3936  tokens_seen=515899392
+[2026-09-03T07:21:24+00:00] RUN_END      step=3936  tokens_seen=515899392  best_val_loss=3.42366

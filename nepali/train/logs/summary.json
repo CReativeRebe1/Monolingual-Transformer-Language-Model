@@ -1,0 +1,12 @@
+{
+  "model": "model_l",
+  "steps": 4358,
+  "tokens_seen": 571211776,
+  "best_val_loss": 3.937099475127,
+  "params": 23846784,
+  "run_ids": [
+    "20260903T104152Z",
+    "20260903T124537Z"
+  ],
+  "vocab_size": 16000
+}

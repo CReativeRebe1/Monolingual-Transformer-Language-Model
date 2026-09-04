@@ -1,0 +1,143 @@
+{
+  "model": "model_l",
+  "language": "nepali",
+  "split": "test",
+  "checkpoint": "nepali\\train\\nepali_ckpt_best.pt",
+  "checkpoint_step": 4358,
+  "params": 23846784,
+  "vocab_size": 16000,
+  "perplexity": {
+    "split": "test",
+    "n_tokens": 643072,
+    "n_bytes": 8042895,
+    "mean_nll_nats": 3.9543614296396825,
+    "perplexity": 52.1623739610517,
+    "bits_per_byte": 0.45613994065736746,
+    "bits_per_token": 5.704937624423762
+  },
+  "generation_protocol": {
+    "n_docs": 200,
+    "prefix_tokens": 128,
+    "continuation_tokens": 128,
+    "gen_batch": 4,
+    "seed": 42,
+    "bleu_ngram_order": 4
+  },
+  "generation": {
+    "greedy": {
+      "decoding": {
+        "temperature": 0.0
+      },
+      "assignment_required": true,
+      "bleu": 0.7795,
+      "chrf": 18.3526,
+      "rouge_l": 7.4963,
+      "n_samples": 200,
+      "mean_length_words": 96.0,
+      "distinct_1": 0.0818,
+      "distinct_2": 0.16,
+      "distinct_3": 0.1998,
+      "repetition_rate_4gram": 0.6749,
+      "self_bleu": 0.5386
+    },
+    "t0.5": {
+      "decoding": {
+        "temperature": 0.5
+      },
+      "assignment_required": true,
+      "bleu": 1.0945,
+      "chrf": 23.5597,
+      "rouge_l": 8.5596,
+      "n_samples": 200,
+      "mean_length_words": 96.09,
+      "distinct_1": 0.219,
+      "distinct_2": 0.5679,
+      "distinct_3": 0.7424,
+      "repetition_rate_4gram": 0.1523,
+      "self_bleu": 0.0
+    },
+    "t1.0": {
+      "decoding": {
+        "temperature": 1.0
+      },
+      "assignment_required": true,
+      "bleu": 0.7004,
+      "chrf": 26.2563,
+      "rouge_l": 7.334,
+      "n_samples": 200,
+      "mean_length_words": 92.6,
+      "distinct_1": 0.4415,
+      "distinct_2": 0.9175,
+      "distinct_3": 0.9839,
+      "repetition_rate_4gram": 0.0008,
+      "self_bleu": 0.0
+    },
+    "t1.5": {
+      "decoding": {
+        "temperature": 1.5
+      },
+      "assignment_required": true,
+      "bleu": 0.0,
+      "chrf": 23.8592,
+      "rouge_l": 3.0328,
+      "n_samples": 200,
+      "mean_length_words": 92.93,
+      "distinct_1": 0.5914,
+      "distinct_2": 0.9934,
+      "distinct_3": 0.9995,
+      "repetition_rate_4gram": 0.0,
+      "self_bleu": 0.0
+    },
+    "t0.7_top50": {
+      "decoding": {
+        "temperature": 0.7,
+        "top_k": 50
+      },
+      "assignment_required": false,
+      "bleu": 0.9518,
+      "chrf": 25.7006,
+      "rouge_l": 9.0563,
+      "n_samples": 200,
+      "mean_length_words": 97.83,
+      "distinct_1": 0.277,
+      "distinct_2": 0.7218,
+      "distinct_3": 0.8925,
+      "repetition_rate_4gram": 0.0309,
+      "self_bleu": 0.0
+    },
+    "t0.8_top_p0.9": {
+      "decoding": {
+        "temperature": 0.8,
+        "top_p": 0.9
+      },
+      "assignment_required": false,
+      "bleu": 1.1682,
+      "chrf": 26.5373,
+      "rouge_l": 8.7993,
+      "n_samples": 200,
+      "mean_length_words": 96.04,
+      "distinct_1": 0.3171,
+      "distinct_2": 0.7894,
+      "distinct_3": 0.9311,
+      "repetition_rate_4gram": 0.0183,
+      "self_bleu": 0.0
+    },
+    "t1.0_top_p0.95": {
+      "decoding": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "assignment_required": false,
+      "bleu": 0.7327,
+      "chrf": 26.5426,
+      "rouge_l": 7.573,
+      "n_samples": 200,
+      "mean_length_words": 93.69,
+      "distinct_1": 0.415,
+      "distinct_2": 0.9009,
+      "distinct_3": 0.9779,
+      "repetition_rate_4gram": 0.0019,
+      "self_bleu": 0.0
+    }
+  }
+}
