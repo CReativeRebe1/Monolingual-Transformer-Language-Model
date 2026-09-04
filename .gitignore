@@ -7,6 +7,11 @@ __pycache__/
 venv/
 *.ipynb_checkpoints/
 
+# The Kaggle working notebook. Every cell of it is committed verbatim in
+# notebooks/phase2_kaggle.md, which is the reproducible artifact; the .ipynb adds only stored
+# output blobs and JSON diffs nobody can read in a review.
+notebooks/*.ipynb
+
 # --- Large artifacts: Drive, never git (spec requirement) ---
 # Raw / intermediate corpora
 */data/raw/**
@@ -20,6 +25,10 @@ venv/
 # Encoded training corpora (memmap bin/idx — large, regenerable from tokenizer + splits)
 *.bin
 *.idx
+
+# The Kaggle upload archive built by scripts/pack_kaggle.py -- 1.5 GB, and fully regenerable from
+# the encoded corpora plus the code that is already tracked.
+dist/
 
 # Model checkpoints
 *.pt
@@ -42,6 +51,11 @@ lid.176*.ftz
 # --- Logs / experiment tracking ---
 wandb/
 *.log
+
+# Smoke runs are throwaway 50-step shape/resume checks, written to their own subdirectory so they
+# cannot append into the real run's permanently-append-only log.
+*/train/logs/smoke/
+*/train/checkpoints/
 
 # --- OS / editor ---
 .DS_Store
@@ -107,3 +121,13 @@ report/tables/
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+
+# --- Phase-2 training logs: kept, and kept LAST ---
+# These ARE the deliverable -- the report's loss curves are plotted from train_log.jsonl and
+# train.log is its human-readable mirror. Both are append-only and small (a few hundred KB for a
+# full run). The negations must sit at the very end of this file: gitignore is last-match-wins, and
+# the LaTeX `*.log` rule above would otherwise re-exclude train.log after an earlier negation
+# un-excluded it -- which is exactly what `git check-ignore -v` reported the first time.
+!*/train/logs/train.log
+!*/train/logs/train_log.jsonl
+!*/train/logs/summary.json
