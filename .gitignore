@@ -122,7 +122,18 @@ report/tables/
 *.fls
 *.fdb_latexmk
 
-# --- Phase-2 training logs: kept, and kept LAST ---
+# --- Phase 3: reasoning finetuning ---
+# Finetuned checkpoints go to Drive (the *.pt rule already covers them; the directory rule also
+# keeps optimizer-only leftovers out). Smoke runs are throwaway shape/resume checks. Per-example
+# evaluation rows are regenerable in minutes from a checkpoint and are uploaded with it.
+# The 19 MB train split is regenerable byte-for-byte by generate.py and lives on Drive; val and the
+# four test splits (~1 MB each) are committed so the evaluated examples can be read in the repo.
+*/reasoning/checkpoints/
+*/reasoning/logs/smoke/
+*/reasoning/results/rows/
+*/reasoning/data/train.jsonl
+
+# --- Phase-2 and Phase-3 training logs: kept, and kept LAST ---
 # These ARE the deliverable -- the report's loss curves are plotted from train_log.jsonl and
 # train.log is its human-readable mirror. Both are append-only and small (a few hundred KB for a
 # full run). The negations must sit at the very end of this file: gitignore is last-match-wins, and
@@ -131,3 +142,9 @@ report/tables/
 !*/train/logs/train.log
 !*/train/logs/train_log.jsonl
 !*/train/logs/summary.json
+!*/reasoning/logs/*/train.log
+!*/reasoning/logs/*/train_log.jsonl
+!*/reasoning/logs/*/summary.json
+
+#need combined pdf so only phase 3 report not neeeded as we already have phase3.md version
+phase3_only.pdf
