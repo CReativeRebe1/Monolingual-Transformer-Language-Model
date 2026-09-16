@@ -78,3 +78,33 @@ def test_plot_training_loss_curve(tmp_path):
         model_label="Model H",
     )
     _assert_nonempty_file(out)
+
+
+# ------------------------------------------------------------------ Phase 3
+
+def test_phase3_plots_render(tmp_path):
+    import numpy as np
+
+    from lma.viz.plots import (
+        plot_accuracy_bars, plot_attention_compare, plot_error_breakdown, plot_layer_compare,
+        plot_layer_head_grid, plot_scaling_curve, plot_sft_curves,
+    )
+
+    outs = []
+    outs.append(tmp_path / "sft.png")
+    plot_sft_curves([1, 2, 3], [2.0, 1.5, 1.0], [2, 3], [1.6, 1.2], [0.2, 0.5], outs[-1], "Model H")
+    outs.append(tmp_path / "bars.png")
+    plot_accuracy_bars(["test_id", "test_both"], {"sft": [0.8, 0.6], "replay": [0.7, 0.5]}, outs[-1],
+                       "EM", errors={"sft": [0.01, 0.02], "replay": [0.0, 0.03]}, reference=0.3)
+    outs.append(tmp_path / "grid.png")
+    plot_layer_head_grid(np.random.randn(10, 6), outs[-1], "delta", "Δ", diverging=True)
+    outs.append(tmp_path / "cmp.png")
+    plot_attention_compare(np.tril(np.ones((5, 5))) / 5, np.eye(5), ["क", "ख", "ग", "घ", "ङ"], outs[-1], "L0H0")
+    outs.append(tmp_path / "layers.png")
+    plot_layer_compare(list(range(10)), {"pre": list(range(10)), "ft": list(range(10))}, outs[-1], "t", "y")
+    outs.append(tmp_path / "scale.png")
+    plot_scaling_curve([1000, 5000, 20000], {"test_id": [0.3, 0.6, 0.8]}, outs[-1], "size", "examples")
+    outs.append(tmp_path / "err.png")
+    plot_error_breakdown(["sft", "replay"], {"no_stop": [1, 2], "middle_entity": [5, 3]}, outs[-1], "errors")
+    for out in outs:
+        _assert_nonempty_file(out)
