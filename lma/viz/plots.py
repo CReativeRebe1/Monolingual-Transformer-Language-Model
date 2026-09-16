@@ -290,3 +290,160 @@ def plot_diversity_grid(
     ax.set_title(f"{model_label}: generation diversity across decoding settings")
     ax.legend()
     _save(fig, out_path)
+
+
+# ------------------------------------------------------------------ Phase 3: reasoning finetuning
+
+def plot_sft_curves(
+    steps: list[int], train_loss: list[float], val_steps: list[float], val_loss: list[float],
+    val_em: list[float], out_path: Path, model_label: str,
+) -> None:
+    """Finetuning loss (train and validation, answer tokens only) with validation exact match on a
+    twin axis -- the selection metric drawn next to the loss it is chosen over."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(steps, train_loss, label="Train loss (answer tokens)", color="#4C72B0", alpha=0.8)
+    ax.plot(val_steps, val_loss, label="Validation loss (answer tokens)", color="#C44E52",
+            marker="o", markersize=3)
+    ax.set_xlabel("Finetuning step")
+    ax.set_ylabel("Masked cross-entropy loss")
+    ax2 = ax.twinx()
+    ax2.plot(val_steps, val_em, label="Validation exact match", color="#55A868", marker="s",
+             markersize=3)
+    ax2.set_ylabel("Validation exact match")
+    ax2.set_ylim(0, 1)
+    lines = ax.get_lines() + ax2.get_lines()
+    ax.legend(lines, [l.get_label() for l in lines], loc="center right")
+    ax.set_title(f"{model_label}: reasoning finetuning curves")
+    _save(fig, out_path)
+
+
+def plot_accuracy_bars(
+    group_labels: list[str], series: dict[str, list[float]], out_path: Path, title: str,
+    ylabel: str = "Exact match", errors: dict[str, list[float]] | None = None,
+    reference: float | None = None, reference_label: str = "Chance",
+) -> None:
+    """Grouped bars: one group per x label (e.g. test split), one bar per series (e.g. condition),
+    with optional error bars (std over seeds) and a horizontal reference line (e.g. chance)."""
+    x = np.arange(len(group_labels))
+    k = max(len(series), 1)
+    width = 0.8 / k
+    fig, ax = plt.subplots(figsize=(max(8, 1.4 * len(group_labels) + 3), 5))
+    for i, (name, vals) in enumerate(series.items()):
+        err = errors.get(name) if errors else None
+        ax.bar(x - 0.4 + width * (i + 0.5), vals, width, yerr=err, capsize=3 if err else 0, label=name)
+    if reference is not None:
+        ax.axhline(reference, color="black", linestyle="--", linewidth=1, label=reference_label)
+    ax.set_xticks(x)
+    ax.set_xticklabels(group_labels, rotation=15, ha="right")
+    ax.set_ylim(0, 1.05)
+    ax.set_xlabel("Evaluation split")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    _save(fig, out_path)
+
+
+def plot_layer_head_grid(
+    grid, out_path: Path, title: str, colorbar_label: str, diverging: bool = False,
+) -> None:
+    """A [layers x heads] grid (e.g. answer-pointer score, or its change after finetuning).
+    Diverging colour map centred on zero for differences, sequential otherwise."""
+    grid = np.asarray(grid)
+    fig, ax = plt.subplots(figsize=(6.5, 6))
+    if diverging:
+        lim = float(np.abs(grid).max()) or 1.0
+        im = ax.imshow(grid, cmap="RdBu_r", vmin=-lim, vmax=lim, aspect="auto")
+    else:
+        im = ax.imshow(grid, cmap="viridis", aspect="auto")
+    for (i, j), v in np.ndenumerate(grid):
+        ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=6,
+                color="black" if diverging else "white")
+    ax.set_xticks(range(grid.shape[1]))
+    ax.set_yticks(range(grid.shape[0]))
+    ax.set_xlabel("Head")
+    ax.set_ylabel("Layer (0 = first)")
+    ax.set_title(title)
+    fig.colorbar(im, ax=ax, label=colorbar_label)
+    _save(fig, out_path)
+
+
+def plot_attention_compare(
+    before, after, token_labels: list[str], out_path: Path, title: str,
+    left_label: str = "Pretrained", right_label: str = "Finetuned",
+) -> None:
+    """The same head on the same prompt, before and after finetuning, side by side on one colour
+    scale so a change in intensity is a change in the model, not in the colour normalisation."""
+    before, after = np.asarray(before), np.asarray(after)
+    vmax = float(max(before.max(), after.max()))
+    font = devanagari_font()
+    kw = {"fontfamily": font} if font else {}
+    fig, axes = plt.subplots(1, 2, figsize=(15, 7))
+    n = len(token_labels)
+    stride = max(1, n // 30)
+    ticks = list(range(0, n, stride))
+    for ax, w, lab in ((axes[0], before, left_label), (axes[1], after, right_label)):
+        im = ax.imshow(w, cmap="viridis", vmin=0, vmax=vmax, aspect="auto", interpolation="nearest")
+        ax.set_xticks(ticks)
+        ax.set_xticklabels([token_labels[i] for i in ticks], rotation=90, fontsize=6, **kw)
+        ax.set_yticks(ticks)
+        ax.set_yticklabels([token_labels[i] for i in ticks], fontsize=6, **kw)
+        ax.set_xlabel("Key position (attended to)")
+        ax.set_ylabel("Query position (attending from)")
+        ax.set_title(lab)
+    fig.colorbar(im, ax=axes.ravel().tolist(), label="Attention weight")
+    fig.suptitle(title, **kw)
+    _save(fig, out_path)
+
+
+def plot_layer_compare(
+    layers: list[int], series: dict[str, list[float]], out_path: Path, title: str, ylabel: str,
+) -> None:
+    """A per-layer statistic for several models or inputs (e.g. entropy, pretrained vs finetuned)."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    styles = ["-o", "--s", "-^", "--D", "-v", "--x"]
+    for i, (name, vals) in enumerate(series.items()):
+        ax.plot(layers, vals, styles[i % len(styles)], label=name, markersize=4)
+    ax.set_xlabel("Layer (0 = first)")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    _save(fig, out_path)
+
+
+def plot_scaling_curve(
+    xs: list[float], series: dict[str, list[float]], out_path: Path, title: str, xlabel: str,
+    ylabel: str = "Exact match", log_x: bool = True,
+) -> None:
+    """Accuracy against a resource (e.g. training examples), one line per evaluation split."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for name, vals in series.items():
+        ax.plot(xs, vals, marker="o", label=name)
+    if log_x:
+        ax.set_xscale("log")
+    ax.set_xticks(xs)
+    ax.set_xticklabels([f"{x:g}" for x in xs])
+    ax.set_ylim(0, 1.05)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    _save(fig, out_path)
+
+
+def plot_error_breakdown(
+    conditions: list[str], counts: dict[str, list[int]], out_path: Path, title: str,
+) -> None:
+    """Stacked bars of error types per condition: how a model fails, not only how often."""
+    fig, ax = plt.subplots(figsize=(max(8, 1.3 * len(conditions) + 3), 5))
+    bottom = np.zeros(len(conditions))
+    for name, vals in counts.items():
+        vals = np.asarray(vals, dtype=float)
+        ax.bar(conditions, vals, bottom=bottom, label=name.replace("_", " "))
+        bottom += vals
+    ax.set_xlabel("Condition")
+    ax.set_ylabel("Number of wrong answers")
+    ax.set_title(title)
+    ax.tick_params(axis="x", rotation=15)
+    ax.legend(fontsize=8)
+    _save(fig, out_path)
+
