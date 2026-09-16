@@ -54,6 +54,11 @@ def main() -> int:
     p.add_argument("--continuation-tokens", type=int, default=128)
     p.add_argument("--skip-generation", action="store_true")
     p.add_argument("--out", type=Path, default=None)
+    p.add_argument("--results-dir", type=Path, default=RESULTS_DIR,
+                   help="where result JSON goes (the NoPE bonus writes to hindi/nope/results)")
+    p.add_argument("--figures-dir", type=Path, default=FIGURES_DIR)
+    p.add_argument("--label", default=MODEL_NAME, help="model name used in results and plot titles")
+    p.add_argument("--figure-prefix", default="hindi", help="figure filename prefix")
     args = p.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -61,7 +66,7 @@ def main() -> int:
     model = model.to(device).eval()
     tokenizer = Tokenizer(TOKENIZER_PATH)
 
-    print(f"{MODEL_NAME}: checkpoint step {state.step:,}, {model.param_count()[0]:,} params, "
+    print(f"{args.label}: checkpoint step {state.step:,}, {model.param_count()[0]:,} params, "
           f"evaluating on {args.split}")
 
     bin_path = args.data_dir / f"{args.split}.bin"
@@ -76,7 +81,7 @@ def main() -> int:
           f"| {ppl.n_tokens:,} tokens over {ppl.n_bytes:,} bytes")
 
     results = {
-        "model": MODEL_NAME, "language": "hindi", "split": args.split,
+        "model": args.label, "language": "hindi", "split": args.split,
         "checkpoint": str(args.checkpoint), "checkpoint_step": state.step,
         "params": model.param_count()[0], "vocab_size": model.config.vocab_size,
         "perplexity": ppl.to_dict(),
@@ -124,8 +129,8 @@ def main() -> int:
             if name == "t0.5":
                 # One representative setting's raw generations are kept for the report's qualitative
                 # section. Keeping all five would be five times the file for no extra insight.
-                RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-                (RESULTS_DIR / "samples.json").write_text(
+                args.results_dir.mkdir(parents=True, exist_ok=True)
+                (args.results_dir / "samples.json").write_text(
                     json.dumps([vars(c) for c in conts[:25]], ensure_ascii=False, indent=2),
                     encoding="utf-8",
                 )
@@ -135,10 +140,10 @@ def main() -> int:
             names,
             [results["generation"][n]["distinct_2"] for n in names],
             [results["generation"][n]["self_bleu"] for n in names],
-            FIGURES_DIR / "hindi_diversity_grid.png", MODEL_NAME,
+            args.figures_dir / f"{args.figure_prefix}_diversity_grid.png", args.label,
         )
 
-    out = args.out or RESULTS_DIR / f"metrics_{args.split}.json"
+    out = args.out or args.results_dir / f"metrics_{args.split}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"wrote {out}")

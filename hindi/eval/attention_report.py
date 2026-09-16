@@ -50,6 +50,14 @@ def main() -> int:
     p.add_argument("--docs", type=int, default=8, help="held-out documents to average over")
     p.add_argument("--heatmap-context", type=int, default=48,
                    help="shorter window for the heatmaps, so token labels stay legible")
+    p.add_argument("--results-dir", type=Path, default=RESULTS_DIR,
+                   help="where result JSON goes (the NoPE bonus writes to hindi/nope/results)")
+    p.add_argument("--figures-dir", type=Path, default=FIGURES_DIR)
+    p.add_argument("--label", default=MODEL_NAME, help="model name used in results and plot titles")
+    p.add_argument("--figure-prefix", default="hindi", help="figure filename prefix")
+    p.add_argument("--extra-heads", default="",
+                   help="additional heatmaps as layer:head,... -- the NoPE bonus passes the standard "
+                        "model's plotted heads so the two can be compared head for head")
     args = p.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -60,7 +68,7 @@ def main() -> int:
     bin_path = args.data_dir / f"{args.split}.bin"
     idx_path = args.data_dir / f"{args.split}.idx"
     docs = sample_documents(bin_path, idx_path, args.docs, args.context, seed=42)
-    print(f"{MODEL_NAME}: step {state.step:,} | {len(docs)} documents x {args.context} tokens")
+    print(f"{args.label}: step {state.step:,} | {len(docs)} documents x {args.context} tokens")
 
     runs = []
     for _, doc in docs:
@@ -70,8 +78,8 @@ def main() -> int:
 
     per_layer = layer_means(stats)
     counts = role_counts(stats)
-    save_stats(stats, RESULTS_DIR / "attention_stats.json", extra={
-        "model": MODEL_NAME, "language": LANG, "checkpoint_step": state.step,
+    save_stats(stats, args.results_dir / "attention_stats.json", extra={
+        "model": args.label, "language": LANG, "checkpoint_step": state.step,
         "context_tokens": args.context, "n_documents": len(docs),
         "layer_means": {str(k): v for k, v in per_layer.items()},
     })
@@ -83,17 +91,17 @@ def main() -> int:
     print("\n  head roles:", ", ".join(f"{k}={v}" for k, v in counts.items()))
 
     # ---- figures
-    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    args.figures_dir.mkdir(parents=True, exist_ok=True)
     plot_head_taxonomy(
         [s.mean_distance for s in stats], [s.entropy_normalised for s in stats],
         [s.layer for s in stats], [s.role for s in stats],
-        FIGURES_DIR / f"{LANG}_head_taxonomy.png", MODEL_NAME,
+        args.figures_dir / f"{args.figure_prefix}_head_taxonomy.png", args.label,
     )
     layers = sorted(per_layer)
     plot_attention_by_layer(
         layers, [per_layer[l]["entropy_normalised"] for l in layers],
         [per_layer[l]["mean_distance"] for l in layers],
-        FIGURES_DIR / f"{LANG}_attention_by_layer.png", MODEL_NAME,
+        args.figures_dir / f"{args.figure_prefix}_attention_by_layer.png", args.label,
     )
 
     # Heatmaps on a short window so the Devanagari token labels stay readable. An early, a middle
@@ -110,26 +118,30 @@ def main() -> int:
         _, _, attentions = model(short, output_attentions=True)
     n_layers = model.config.n_layers
     n_plotted = 0
-    for layer in sorted({0, n_layers // 2, n_layers - 1}):
+    extra: dict[int, set[int]] = {}
+    for item in filter(None, args.extra_heads.split(",")):
+        layer, head = (int(v) for v in item.split(":"))
+        extra.setdefault(layer, set()).add(head)
+    for layer in sorted({0, n_layers // 2, n_layers - 1} | set(extra)):
         by_head = [s for s in stats if s.layer == layer]
         chosen = {
             min(by_head, key=lambda s: s.entropy_normalised).head,
             max(by_head, key=lambda s: s.entropy_normalised).head,
             max(by_head, key=lambda s: s.prev_token_mass).head,
-        }
+        } | extra.get(layer, set())
         for head in sorted(chosen):
             s = next(h for h in by_head if h.head == head)
             plot_attention_heatmap(
                 attentions[layer][0, head].float().cpu().numpy(), labels,
-                FIGURES_DIR / f"{LANG}_attn_L{layer}H{head}.png",
-                f"{MODEL_NAME}: layer {layer}, head {head} "
+                args.figures_dir / f"{args.figure_prefix}_attn_L{layer}H{head}.png",
+                f"{args.label}: layer {layer}, head {head} "
                 f"({s.role.replace('_', ' ')}, distance {s.mean_distance:.1f}, "
                 f"entropy {s.entropy_normalised:.2f})",
             )
             n_plotted += 1
     print(f"  plotted {n_plotted} heatmaps across layers "
           f"{sorted({0, n_layers // 2, n_layers - 1})}")
-    print(f"\nwrote figures to {FIGURES_DIR}")
+    print(f"\nwrote figures to {args.figures_dir}")
     return 0
 
 
