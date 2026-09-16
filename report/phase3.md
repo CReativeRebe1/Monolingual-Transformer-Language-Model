@@ -6,9 +6,6 @@
 - **Checkpoints + data (Drive):** <https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing>
 - **Dataset (HuggingFace):** <https://huggingface.co/datasets/YogendraPatel/LMA_Individual_Project>
 
-> The Markdown edition. `report/phase3.tex` is the typeset version; its content is the same, except
-> that this file shows the Devanagari examples in the original script (the LaTeX build uses pdflatex
-> and transliterates them).
 
 **Headline.** Each model was finetuned, independently and with its own tokenizer, on a synthetic
 comparative-reasoning dataset of 20,000 examples written in its own language. The test design is a
@@ -836,20 +833,3 @@ evaluations, two attention analyses) ran in under 1 h 35 min.
 | Attention analysis | `lma/reasoning/pointer.py`, `<lang>/reasoning/attention_compare.py`, `results/attention_compare.json` |
 | H vs L comparison | `report/phase3_comparison.md`, `report/figures/phase3_h_vs_l_em.png` |
 | Development log | `PHASE3_LOG.md` |
-
-## 13. Limitations
-
-- **Seeds.** The main conditions have 3 seeds; the data-size points have one. Differences under
-  ~0.05 between single-seed points are within the seed spread of full SFT.
-- **Model L's selected LR.** Selection on val EM alone picked a learning rate that ruined plain SFT's
-  language model. A selection rule with a perplexity constraint would have chosen differently; the
-  replay condition shows the reasoning result does not depend on it.
-- **Name memorisation was not engineered away.** The report documents it rather than removing it.
-  Entity-name augmentation during training (fresh random names per epoch) or placeholder entities
-  would be the direct fix.
-- **Attention on one seed.** The attention comparison uses seed 0 of SFT + replay. The pointer-score
-  finding is consistent across both languages, but not across seeds.
-- **Synthetic, templated data.** Four families and ~40–55 sentence skeletons per family are far
-  narrower than natural text. Held-out wording tests one kind of shift, not naturalistic phrasing.
-- **No KV cache.** Generation recomputes the full prefix. That is irrelevant at 33-token prompts and
-  1–4-token answers, but it would not scale to longer outputs.
