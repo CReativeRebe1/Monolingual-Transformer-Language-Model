@@ -1,0 +1,18 @@
+[2026-09-14T18:55:49+00:00] RUN_START    sft_config={'lr': 0.0003, 'min_lr_ratio': 0.1, 'warmup_fraction': 0.05, 'weight_decay': 0.1, 'beta1': 0.9, 'beta2': 0.95, 'grad_clip': 1.0, 'batch_size': 64, 'epochs': 3.0, 'max_steps': 0, 'dropout': 0.1, 'replay': False, 'replay_batch': 8, 'replay_block': 256, 'replay_weight': 1.0, 'eval_every': 10, 'val_em_examples': 1000, 'patience': 4, 'log_every': 10, 'seed': 0, 'lora_rank': 0, 'lora_alpha': None, 'train_size': 1000, 'eval_batch_size': 64}  schedule={'peak_lr': 0.0003, 'warmup_steps': 2, 'total_steps': 47, 'min_lr_ratio': 0.1}  meta={'run': 'sft_lr0.0003_n1000_s0', 'language': 'nepali', 'model': 'model_l', 'init_checkpoint': 'C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\nepali\\train\\nepali_ckpt_best.pt', 'tokenizer': 'C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\nepali\\tokenizer\\nepali_unigram_16000.model', 'data_seed': 1234}  n_train=1000  n_val=1000  trainable_params=23846784  device=cuda
+SFT sft_lr0.0003_n1000_s0: 1,000 examples, 47 steps, lr 0.0003, replay False, lora r=0, 23,846,784 trainable params
+step       1  train_loss 6.4710  lr 0.0001  grad_norm 40.5289  epoch 0.0640
+step      10  train_loss 1.8928  lr 0.0003  grad_norm 10.2120  epoch 0.6400
+step      10  val_loss 1.8525  val_em 0.1630
+  step    10/47  val_loss 1.8525  val_em 0.163  best 0.163@10  6s
+step      20  train_loss 1.0038  lr 0.0002  grad_norm 7.1726  epoch 1.2800
+step      20  val_loss 1.4332  val_em 0.2860
+  step    20/47  val_loss 1.4332  val_em 0.286  best 0.286@20  11s
+step      30  train_loss 1.2252  lr 0.0001  grad_norm 10.3305  epoch 1.9200
+step      30  val_loss 1.3575  val_em 0.2730
+  step    30/47  val_loss 1.3575  val_em 0.273  best 0.286@20  16s
+step      40  train_loss 0.7105  lr 0.0001  grad_norm 5.3079  epoch 2.5600
+step      40  val_loss 1.2484  val_em 0.2920
+  step    40/47  val_loss 1.2484  val_em 0.292  best 0.292@40  21s
+step      47  val_loss 1.2616  val_em 0.3000
+  step    47/47  val_loss 1.2616  val_em 0.300  best 0.300@47  25s
+[2026-09-14T18:56:14+00:00] RUN_END      run=sft_lr0.0003_n1000_s0  steps=47  total_steps=47  best_val_em=0.3  best_step=47  best_val_loss=1.2616355971195534  stopped_early=False  tokens_seen=7454  trainable_params=23846784  wall_s=25.5

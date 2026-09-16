@@ -1,0 +1,118 @@
+[2026-09-14T17:34:29+00:00] RUN_START    sft_config={'lr': 5e-05, 'min_lr_ratio': 0.1, 'warmup_fraction': 0.05, 'weight_decay': 0.1, 'beta1': 0.9, 'beta2': 0.95, 'grad_clip': 1.0, 'batch_size': 64, 'epochs': 3.0, 'max_steps': 0, 'dropout': 0.1, 'replay': False, 'replay_batch': 8, 'replay_block': 256, 'replay_weight': 1.0, 'eval_every': 100, 'val_em_examples': 1000, 'patience': 4, 'log_every': 10, 'seed': 0, 'lora_rank': 0, 'lora_alpha': None, 'train_size': 0, 'eval_batch_size': 64}  schedule={'peak_lr': 5e-05, 'warmup_steps': 46, 'total_steps': 938, 'min_lr_ratio': 0.1}  meta={'run': 'sft_lr5e-05_s0', 'language': 'hindi', 'model': 'model_h', 'init_checkpoint': 'C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\hindi\\train\\hindi_ckpt_best.pt', 'tokenizer': 'C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\hindi\\tokenizer\\hindi_unigram_16000.model', 'data_seed': 1234}  n_train=20000  n_val=1000  trainable_params=23846784  device=cuda
+SFT sft_lr5e-05_s0: 20,000 examples, 938 steps, lr 5e-05, replay False, lora r=0, 23,846,784 trainable params
+step       1  train_loss 6.6427  lr 0.0000  grad_norm 46.0632  epoch 0.0030
+step      10  train_loss 3.8054  lr 0.0000  grad_norm 32.8836  epoch 0.0320
+step      20  train_loss 2.1271  lr 0.0000  grad_norm 17.3790  epoch 0.0640
+step      30  train_loss 1.8593  lr 0.0000  grad_norm 16.0404  epoch 0.0960
+step      40  train_loss 1.8285  lr 0.0000  grad_norm 14.6247  epoch 0.1280
+step      50  train_loss 1.5646  lr 0.0000  grad_norm 12.5044  epoch 0.1600
+step      60  train_loss 1.5775  lr 0.0000  grad_norm 10.9721  epoch 0.1920
+step      70  train_loss 1.4682  lr 0.0000  grad_norm 10.9375  epoch 0.2240
+step      80  train_loss 1.2534  lr 0.0000  grad_norm 10.1845  epoch 0.2560
+step      90  train_loss 1.1532  lr 0.0000  grad_norm 9.2056  epoch 0.2880
+step     100  train_loss 1.3926  lr 0.0000  grad_norm 10.0327  epoch 0.3200
+step     100  val_loss 1.1200  val_em 0.3410
+  step   100/938  val_loss 1.1200  val_em 0.341  best 0.341@100  18s
+step     110  train_loss 1.3736  lr 0.0000  grad_norm 10.9071  epoch 0.3520
+step     120  train_loss 1.3402  lr 0.0000  grad_norm 9.9913  epoch 0.3840
+step     130  train_loss 1.2320  lr 0.0000  grad_norm 9.2535  epoch 0.4160
+step     140  train_loss 1.1372  lr 0.0000  grad_norm 9.1832  epoch 0.4480
+step     150  train_loss 1.1809  lr 0.0000  grad_norm 8.8311  epoch 0.4800
+step     160  train_loss 1.1966  lr 0.0000  grad_norm 9.0566  epoch 0.5120
+step     170  train_loss 1.3099  lr 0.0000  grad_norm 10.1049  epoch 0.5440
+step     180  train_loss 1.0778  lr 0.0000  grad_norm 7.5093  epoch 0.5760
+step     190  train_loss 1.2755  lr 0.0000  grad_norm 9.5650  epoch 0.6080
+step     200  train_loss 1.0136  lr 0.0000  grad_norm 9.9921  epoch 0.6400
+step     200  val_loss 0.9494  val_em 0.3420
+  step   200/938  val_loss 0.9494  val_em 0.342  best 0.342@200  35s
+step     210  train_loss 1.0519  lr 0.0000  grad_norm 8.0462  epoch 0.6720
+step     220  train_loss 1.1394  lr 0.0000  grad_norm 8.8440  epoch 0.7040
+step     230  train_loss 1.0528  lr 0.0000  grad_norm 8.2657  epoch 0.7360
+step     240  train_loss 1.0640  lr 0.0000  grad_norm 9.0013  epoch 0.7680
+step     250  train_loss 0.9289  lr 0.0000  grad_norm 7.5757  epoch 0.8000
+step     260  train_loss 0.9282  lr 0.0000  grad_norm 8.5795  epoch 0.8320
+step     270  train_loss 1.0499  lr 0.0000  grad_norm 8.5117  epoch 0.8640
+step     280  train_loss 1.0549  lr 0.0000  grad_norm 7.8031  epoch 0.8960
+step     290  train_loss 0.9270  lr 0.0000  grad_norm 7.8739  epoch 0.9280
+step     300  train_loss 1.1507  lr 0.0000  grad_norm 8.3018  epoch 0.9600
+step     300  val_loss 0.8939  val_em 0.3440
+  step   300/938  val_loss 0.8939  val_em 0.344  best 0.344@300  56s
+step     310  train_loss 0.9354  lr 0.0000  grad_norm 7.2930  epoch 0.9920
+step     320  train_loss 0.7513  lr 0.0000  grad_norm 7.2112  epoch 1.0240
+step     330  train_loss 0.8128  lr 0.0000  grad_norm 7.3269  epoch 1.0560
+step     340  train_loss 0.7286  lr 0.0000  grad_norm 6.5126  epoch 1.0880
+step     350  train_loss 0.8362  lr 0.0000  grad_norm 6.8648  epoch 1.1200
+step     360  train_loss 0.8992  lr 0.0000  grad_norm 7.6491  epoch 1.1520
+step     370  train_loss 0.8324  lr 0.0000  grad_norm 7.3916  epoch 1.1840
+step     380  train_loss 0.8148  lr 0.0000  grad_norm 7.3970  epoch 1.2160
+step     390  train_loss 0.9287  lr 0.0000  grad_norm 9.0644  epoch 1.2480
+step     400  train_loss 0.9006  lr 0.0000  grad_norm 7.3914  epoch 1.2800
+step     400  val_loss 0.8287  val_em 0.3610
+  step   400/938  val_loss 0.8287  val_em 0.361  best 0.361@400  75s
+step     410  train_loss 0.7179  lr 0.0000  grad_norm 7.2009  epoch 1.3120
+step     420  train_loss 0.9040  lr 0.0000  grad_norm 6.9581  epoch 1.3440
+step     430  train_loss 0.6243  lr 0.0000  grad_norm 5.5393  epoch 1.3760
+step     440  train_loss 0.8693  lr 0.0000  grad_norm 6.8749  epoch 1.4080
+step     450  train_loss 0.8273  lr 0.0000  grad_norm 7.7710  epoch 1.4400
+step     460  train_loss 0.6776  lr 0.0000  grad_norm 6.7199  epoch 1.4720
+step     470  train_loss 0.9050  lr 0.0000  grad_norm 7.1726  epoch 1.5040
+step     480  train_loss 0.7027  lr 0.0000  grad_norm 6.9642  epoch 1.5360
+step     490  train_loss 0.8864  lr 0.0000  grad_norm 8.7130  epoch 1.5680
+step     500  train_loss 0.8591  lr 0.0000  grad_norm 7.2863  epoch 1.6000
+step     500  val_loss 0.7960  val_em 0.3570
+  step   500/938  val_loss 0.7960  val_em 0.357  best 0.361@400  93s
+step     510  train_loss 0.8818  lr 0.0000  grad_norm 6.9774  epoch 1.6320
+step     520  train_loss 0.7949  lr 0.0000  grad_norm 6.9419  epoch 1.6640
+step     530  train_loss 0.9280  lr 0.0000  grad_norm 7.2731  epoch 1.6960
+step     540  train_loss 0.9576  lr 0.0000  grad_norm 7.8646  epoch 1.7280
+step     550  train_loss 0.7669  lr 0.0000  grad_norm 6.5159  epoch 1.7600
+step     560  train_loss 0.8963  lr 0.0000  grad_norm 7.2754  epoch 1.7920
+step     570  train_loss 0.9330  lr 0.0000  grad_norm 7.4229  epoch 1.8240
+step     580  train_loss 0.8285  lr 0.0000  grad_norm 7.1938  epoch 1.8560
+step     590  train_loss 0.8100  lr 0.0000  grad_norm 6.3624  epoch 1.8880
+step     600  train_loss 0.7016  lr 0.0000  grad_norm 6.6534  epoch 1.9200
+step     600  val_loss 0.7473  val_em 0.3680
+  step   600/938  val_loss 0.7473  val_em 0.368  best 0.368@600  112s
+step     610  train_loss 0.8128  lr 0.0000  grad_norm 7.6884  epoch 1.9520
+step     620  train_loss 1.0617  lr 0.0000  grad_norm 8.2098  epoch 1.9840
+step     630  train_loss 0.5325  lr 0.0000  grad_norm 5.6693  epoch 2.0160
+step     640  train_loss 0.7255  lr 0.0000  grad_norm 7.3521  epoch 2.0480
+step     650  train_loss 0.7536  lr 0.0000  grad_norm 7.3174  epoch 2.0800
+step     660  train_loss 0.8082  lr 0.0000  grad_norm 7.8152  epoch 2.1120
+step     670  train_loss 0.7723  lr 0.0000  grad_norm 7.2776  epoch 2.1440
+step     680  train_loss 0.8678  lr 0.0000  grad_norm 8.0825  epoch 2.1760
+step     690  train_loss 0.5835  lr 0.0000  grad_norm 5.9575  epoch 2.2080
+step     700  train_loss 0.8260  lr 0.0000  grad_norm 8.3200  epoch 2.2400
+step     700  val_loss 0.7359  val_em 0.3610
+  step   700/938  val_loss 0.7360  val_em 0.361  best 0.368@600  129s
+step     710  train_loss 0.7052  lr 0.0000  grad_norm 6.3573  epoch 2.2720
+step     720  train_loss 0.7435  lr 0.0000  grad_norm 7.3545  epoch 2.3040
+step     730  train_loss 0.7716  lr 0.0000  grad_norm 6.6925  epoch 2.3360
+step     740  train_loss 0.6152  lr 0.0000  grad_norm 5.8839  epoch 2.3680
+step     750  train_loss 0.6644  lr 0.0000  grad_norm 7.2107  epoch 2.4000
+step     760  train_loss 0.7011  lr 0.0000  grad_norm 6.7913  epoch 2.4320
+step     770  train_loss 0.7610  lr 0.0000  grad_norm 7.3329  epoch 2.4640
+step     780  train_loss 0.6847  lr 0.0000  grad_norm 6.9876  epoch 2.4960
+step     790  train_loss 0.6099  lr 0.0000  grad_norm 6.3416  epoch 2.5280
+step     800  train_loss 0.6475  lr 0.0000  grad_norm 6.4799  epoch 2.5600
+step     800  val_loss 0.7326  val_em 0.3660
+  step   800/938  val_loss 0.7326  val_em 0.366  best 0.368@600  145s
+step     810  train_loss 0.7217  lr 0.0000  grad_norm 6.9624  epoch 2.5920
+step     820  train_loss 0.6128  lr 0.0000  grad_norm 6.4404  epoch 2.6240
+step     830  train_loss 0.7458  lr 0.0000  grad_norm 7.6381  epoch 2.6560
+step     840  train_loss 0.7658  lr 0.0000  grad_norm 7.5558  epoch 2.6880
+step     850  train_loss 0.7470  lr 0.0000  grad_norm 7.4834  epoch 2.7200
+step     860  train_loss 0.7950  lr 0.0000  grad_norm 7.1135  epoch 2.7520
+step     870  train_loss 0.6936  lr 0.0000  grad_norm 6.8673  epoch 2.7840
+step     880  train_loss 0.8326  lr 0.0000  grad_norm 7.2737  epoch 2.8160
+step     890  train_loss 0.7983  lr 0.0000  grad_norm 7.3536  epoch 2.8480
+step     900  train_loss 0.6757  lr 0.0000  grad_norm 7.2681  epoch 2.8800
+step     900  val_loss 0.7172  val_em 0.3600
+  step   900/938  val_loss 0.7172  val_em 0.360  best 0.368@600  162s
+step     910  train_loss 0.7640  lr 0.0000  grad_norm 7.6313  epoch 2.9120
+step     920  train_loss 0.7650  lr 0.0000  grad_norm 7.1217  epoch 2.9440
+step     930  train_loss 0.6689  lr 0.0000  grad_norm 7.0673  epoch 2.9760
+step     938  val_loss 0.7113  val_em 0.3550
+  step   938/938  val_loss 0.7113  val_em 0.355  best 0.368@600  170s
+[2026-09-14T17:37:20+00:00] EARLY_STOP   step=938  best_step=600  best_val_em=0.368
+[2026-09-14T17:37:20+00:00] RUN_END      run=sft_lr5e-05_s0  steps=938  total_steps=938  best_val_em=0.368  best_step=600  best_val_loss=0.7472907052459298  stopped_early=True  tokens_seen=136987  trainable_params=23846784  wall_s=170.3

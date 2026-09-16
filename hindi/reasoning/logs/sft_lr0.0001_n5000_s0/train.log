@@ -1,0 +1,45 @@
+[2026-09-14T18:09:42+00:00] RUN_START    sft_config={'lr': 0.0001, 'min_lr_ratio': 0.1, 'warmup_fraction': 0.05, 'weight_decay': 0.1, 'beta1': 0.9, 'beta2': 0.95, 'grad_clip': 1.0, 'batch_size': 64, 'epochs': 3.0, 'max_steps': 0, 'dropout': 0.1, 'replay': False, 'replay_batch': 8, 'replay_block': 256, 'replay_weight': 1.0, 'eval_every': 29, 'val_em_examples': 1000, 'patience': 4, 'log_every': 10, 'seed': 0, 'lora_rank': 0, 'lora_alpha': None, 'train_size': 5000, 'eval_batch_size': 64}  schedule={'peak_lr': 0.0001, 'warmup_steps': 11, 'total_steps': 235, 'min_lr_ratio': 0.1}  meta={'run': 'sft_lr0.0001_n5000_s0', 'language': 'hindi', 'model': 'model_h', 'init_checkpoint': 'C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\hindi\\train\\hindi_ckpt_best.pt', 'tokenizer': 'C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\hindi\\tokenizer\\hindi_unigram_16000.model', 'data_seed': 1234}  n_train=5000  n_val=1000  trainable_params=23846784  device=cuda
+SFT sft_lr0.0001_n5000_s0: 5,000 examples, 235 steps, lr 0.0001, replay False, lora r=0, 23,846,784 trainable params
+step       1  train_loss 6.1643  lr 0.0000  grad_norm 43.4124  epoch 0.0130
+step      10  train_loss 2.1831  lr 0.0001  grad_norm 16.7946  epoch 0.1280
+step      20  train_loss 1.8150  lr 0.0001  grad_norm 10.5475  epoch 0.2560
+step      29  val_loss 1.3945  val_em 0.2660
+  step    29/235  val_loss 1.3945  val_em 0.266  best 0.266@29  8s
+step      30  train_loss 1.4104  lr 0.0001  grad_norm 9.9110  epoch 0.3840
+step      40  train_loss 1.4372  lr 0.0001  grad_norm 8.3722  epoch 0.5120
+step      50  train_loss 1.4092  lr 0.0001  grad_norm 7.9725  epoch 0.6400
+step      58  val_loss 1.1920  val_em 0.3010
+  step    58/235  val_loss 1.1920  val_em 0.301  best 0.301@58  17s
+step      60  train_loss 1.3832  lr 0.0001  grad_norm 9.5563  epoch 0.7680
+step      70  train_loss 1.2917  lr 0.0001  grad_norm 8.6241  epoch 0.8960
+step      80  train_loss 1.0008  lr 0.0001  grad_norm 7.3911  epoch 1.0240
+step      87  val_loss 1.0950  val_em 0.3240
+  step    87/235  val_loss 1.0950  val_em 0.324  best 0.324@87  25s
+step      90  train_loss 1.2092  lr 0.0001  grad_norm 8.7729  epoch 1.1520
+step     100  train_loss 1.1284  lr 0.0001  grad_norm 8.8890  epoch 1.2800
+step     110  train_loss 0.9934  lr 0.0001  grad_norm 8.6470  epoch 1.4080
+step     116  val_loss 1.0253  val_em 0.3100
+  step   116/235  val_loss 1.0253  val_em 0.310  best 0.324@87  32s
+step     120  train_loss 1.0641  lr 0.0001  grad_norm 8.2014  epoch 1.5360
+step     130  train_loss 0.8235  lr 0.0001  grad_norm 7.0571  epoch 1.6640
+step     140  train_loss 0.8689  lr 0.0000  grad_norm 7.7700  epoch 1.7920
+step     145  val_loss 0.9234  val_em 0.3260
+  step   145/235  val_loss 0.9234  val_em 0.326  best 0.326@145  40s
+step     150  train_loss 1.0166  lr 0.0000  grad_norm 7.9075  epoch 1.9200
+step     160  train_loss 0.6715  lr 0.0000  grad_norm 7.4039  epoch 2.0480
+step     170  train_loss 0.8111  lr 0.0000  grad_norm 7.2184  epoch 2.1760
+step     174  val_loss 0.9137  val_em 0.3300
+  step   174/235  val_loss 0.9137  val_em 0.330  best 0.330@174  48s
+step     180  train_loss 0.6513  lr 0.0000  grad_norm 7.0315  epoch 2.3040
+step     190  train_loss 0.7123  lr 0.0000  grad_norm 7.0021  epoch 2.4320
+step     200  train_loss 0.7932  lr 0.0000  grad_norm 7.4098  epoch 2.5600
+step     203  val_loss 0.9037  val_em 0.3310
+  step   203/235  val_loss 0.9037  val_em 0.331  best 0.331@203  56s
+step     210  train_loss 0.5920  lr 0.0000  grad_norm 6.6974  epoch 2.6880
+step     220  train_loss 0.6868  lr 0.0000  grad_norm 7.2769  epoch 2.8160
+step     230  train_loss 0.7480  lr 0.0000  grad_norm 7.3970  epoch 2.9440
+step     232  val_loss 0.8914  val_em 0.3270
+  step   232/235  val_loss 0.8914  val_em 0.327  best 0.331@203  64s
+step     235  val_loss 0.8872  val_em 0.3310
+  step   235/235  val_loss 0.8873  val_em 0.331  best 0.331@203  68s
+[2026-09-14T18:10:50+00:00] RUN_END      run=sft_lr0.0001_n5000_s0  steps=235  total_steps=235  best_val_em=0.331  best_step=203  best_val_loss=0.9037099441329202  stopped_early=False  tokens_seen=34238  trainable_params=23846784  wall_s=67.5
