@@ -190,11 +190,78 @@ def check_ckpts_differ() -> tuple[bool, str]:
     )
 
 
+def _finetuned_ckpts(language: str) -> list[Path]:
+    """Every Phase-3 best checkpoint for a language, smoke runs excluded."""
+    root = REPO_ROOT / language / "reasoning" / "checkpoints"
+    if not root.exists():
+        return []
+    return sorted(p for p in root.glob("*/ckpt_best.pt") if "smoke" not in p.parts)
+
+
+def check_finetuned_lineage() -> tuple[bool, str]:
+    """Phase 3: every finetuned checkpoint descends from its OWN language's model and tokenizer.
+
+    Finetuning is where independence could quietly break: an SFT run started from the wrong
+    language's checkpoint, or with the other language's tokenizer, would still produce a working
+    checkpoint. So each finetuned file is checked on three counts:
+
+    1. its recorded init checkpoint and tokenizer paths lie inside its own language's directory
+    2. its embedding table is close to its own pretrained model's (it was finetuned from it) and
+       unrelated to the other language's pretrained model
+    3. no parameter tensor is numerically identical to any tensor of the other language's
+       finetuned model of the same run type
+    """
+    hi_ft, ne_ft = _finetuned_ckpts("hindi"), _finetuned_ckpts("nepali")
+    if not hi_ft and not ne_ft:
+        return True, "skipped: no finetuned checkpoints yet"
+    try:
+        import torch
+    except ImportError:
+        return True, "torch unavailable: finetuned lineage check skipped"
+
+    problems, cosines = [], []
+    pre = {lang: _best_ckpt(lang) for lang in ("hindi", "nepali")}
+    pre_emb = {lang: torch.load(p, map_location="cpu", weights_only=False)["model"]["tok_emb.weight"]
+               for lang, p in pre.items() if p is not None}
+    loaded: dict[str, dict[str, dict]] = {"hindi": {}, "nepali": {}}
+    for lang, other, paths in (("hindi", "nepali", hi_ft), ("nepali", "hindi", ne_ft)):
+        for path in paths:
+            payload = torch.load(path, map_location="cpu", weights_only=False)
+            meta = payload.get("extra", {}).get("meta", {})
+            for key in ("init_checkpoint", "tokenizer"):
+                value = str(meta.get(key, "")).replace("\\", "/")
+                if f"/{other}/" in value or not f"/{lang}/" in value:
+                    problems.append(f"{path.parent.name} ({lang}) {key} = {value}")
+            emb = payload["model"]["tok_emb.weight"]
+            if lang in pre_emb and other in pre_emb:
+                own = float(torch.nn.functional.cosine_similarity(emb.flatten(), pre_emb[lang].flatten(), dim=0))
+                cross = float(torch.nn.functional.cosine_similarity(emb.flatten(), pre_emb[other].flatten(), dim=0))
+                cosines.append((own, cross))
+                if not own > 0.5 > abs(cross):
+                    problems.append(f"{path.parent.name} ({lang}) embedding cosine own {own:+.3f} other {cross:+.3f}")
+            kind = path.parent.name.split("_")[0]
+            loaded[lang].setdefault(kind, payload["model"])
+    for kind in set(loaded["hindi"]) & set(loaded["nepali"]):
+        a, b = loaded["hindi"][kind], loaded["nepali"][kind]
+        same = [k for k in set(a) & set(b) if a[k].shape == b[k].shape and torch.equal(a[k], b[k])]
+        if same:
+            problems.append(f"{kind}: {len(same)} identical tensors between languages, e.g. {same[:2]}")
+    if problems:
+        return False, "; ".join(problems)
+    own_min = min((o for o, _ in cosines), default=float("nan"))
+    cross_max = max((abs(c) for _, c in cosines), default=float("nan"))
+    return True, (f"{len(hi_ft)} hindi + {len(ne_ft)} nepali finetuned checkpoints: every init checkpoint "
+                  f"and tokenizer is the run's own language; embedding cosine to own pretrained >= "
+                  f"{own_min:.4f}, to the other language's <= {cross_max:.4f}; no identical tensors "
+                  f"across languages for run types {sorted(set(loaded['hindi']) & set(loaded['nepali']))}")
+
+
 CHECKS = [
     ("No cross-language path references in code/configs", check_no_shared_paths),
     ("Zero document overlap between corpora", check_no_overlap),
     ("Tokenizer files and vocabularies differ", check_toks_differ),
     ("Checkpoint files differ (Phase 2+)", check_ckpts_differ),
+    ("Finetuned checkpoints descend from their own language (Phase 3)", check_finetuned_lineage),
 ]
 
 
