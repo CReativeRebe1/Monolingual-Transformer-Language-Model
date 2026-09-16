@@ -133,6 +133,11 @@ report/tables/
 */reasoning/results/rows/
 */reasoning/data/train.jsonl
 
+# --- Bonus: NoPE ablation ---
+# The checkpoint goes to Drive; smoke runs are throwaway.
+*/nope/checkpoints/
+*/nope/logs/smoke/
+
 # --- Phase-2 and Phase-3 training logs: kept, and kept LAST ---
 # These ARE the deliverable -- the report's loss curves are plotted from train_log.jsonl and
 # train.log is its human-readable mirror. Both are append-only and small (a few hundred KB for a
@@ -148,3 +153,6 @@ report/tables/
 
 #need combined pdf so only phase 3 report not neeeded as we already have phase3.md version
 phase3_only.pdf
+!*/nope/logs/train.log
+!*/nope/logs/train_log.jsonl
+!*/nope/logs/summary.json

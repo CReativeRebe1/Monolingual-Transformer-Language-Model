@@ -319,3 +319,49 @@ def test_generation_does_not_leave_the_model_in_eval_mode():
     m.train()
     m.generate(torch.randint(0, SMALL.vocab_size, (1, 3)), max_new_tokens=2, temperature=0.0)
     assert m.training
+
+
+# ------------------------------------------------------------------ bonus: NoPE ablation
+
+NOPE = GPTConfig(vocab_size=97, d_model=32, n_layers=2, n_heads=4, mlp_hidden=88, max_seq_len=16,
+                 use_rope=False)
+
+
+def test_nope_first_layer_cannot_tell_identical_tokens_apart():
+    """Without RoPE, q and k are pure content: from the last position of [a, b, a], layer 0 must put
+    exactly the same attention on both copies of `a`. With RoPE the two copies differ."""
+    torch.manual_seed(0)
+    x = torch.tensor([[5, 9, 5]])
+    for cfg, should_match in ((NOPE, True), (SMALL, False)):
+        m = GPT(cfg).eval()
+        _, _, atts = m(x, output_attentions=True)
+        a = atts[0][0, :, 2]                       # [heads, keys] from query position 2
+        assert torch.allclose(a[:, 0], a[:, 2], atol=1e-6) == should_match
+
+
+def test_nope_keeps_the_parameter_count_and_the_causal_mask():
+    """RoPE has no parameters, so the ablation changes nothing but position information -- same
+    budget, same causality."""
+    assert analytic_param_count(NOPE)["total"] == analytic_param_count(SMALL)["total"]
+    assert GPT(NOPE).param_count() == GPT(SMALL).param_count()
+    m = GPT(NOPE).eval()
+    x = torch.randint(0, NOPE.vocab_size, (1, 8))
+    y = x.clone()
+    y[0, 5:] = (y[0, 5:] + 1) % NOPE.vocab_size
+    assert torch.allclose(m(x)[0][0, :5], m(y)[0][0, :5], atol=1e-5)
+
+
+def test_manual_and_fused_attention_paths_agree_without_rope():
+    """The attention-analysis path must describe the NoPE model it is run on, as for the RoPE model."""
+    torch.manual_seed(0)
+    m = GPT(NOPE).eval()
+    x = torch.randint(0, NOPE.vocab_size, (2, 12))
+    fused = m(x)[0]
+    manual = m(x, output_attentions=True)[0]
+    assert torch.allclose(fused, manual, atol=1e-5)
+
+
+def test_checkpoints_written_before_use_rope_existed_still_load_with_rope():
+    old = SMALL.to_dict()
+    old.pop("use_rope")
+    assert GPTConfig(**old).use_rope is True

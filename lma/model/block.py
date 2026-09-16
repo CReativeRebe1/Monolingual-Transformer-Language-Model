@@ -87,7 +87,7 @@ class Block(nn.Module):
         self.drop_mlp = nn.Dropout(dropout)
 
     def forward(
-        self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor,
+        self, x: torch.Tensor, cos: torch.Tensor | None, sin: torch.Tensor | None,
         output_attentions: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         attn_out, attn_weights = self.attn(self.norm_attn(x), cos, sin, output_attentions)

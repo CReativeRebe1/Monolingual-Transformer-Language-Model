@@ -447,3 +447,59 @@ def plot_error_breakdown(
     ax.legend(fontsize=8)
     _save(fig, out_path)
 
+
+# ------------------------------------------------------------------ Bonus: NoPE ablation
+
+def plot_loss_curves_compare(
+    runs: dict[str, tuple[list[int], list[float], list[int], list[float]]], out_path: Path, title: str,
+) -> None:
+    """Train and validation loss of several pretraining runs on one axis. `runs` maps a label to
+    (steps, train_loss, val_steps, val_loss) -- the shape `lma.train.logger.loss_curves` returns."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    colours = ["#4C72B0", "#C44E52", "#55A868", "#8172B2"]
+    for i, (name, (steps, train, vsteps, val)) in enumerate(runs.items()):
+        c = colours[i % len(colours)]
+        ax.plot(steps, train, color=c, alpha=0.45, linewidth=1, label=f"{name} — train")
+        ax.plot(vsteps, val, color=c, marker="o", markersize=3, linewidth=1.8, label=f"{name} — validation")
+    ax.set_xlabel("Training step")
+    ax.set_ylabel("Cross-entropy loss")
+    ax.set_ylim(top=min(ax.get_ylim()[1], 8))
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    _save(fig, out_path)
+
+
+def plot_loss_by_position(
+    curves: dict[str, list[float]], out_path: Path, title: str,
+) -> None:
+    """Mean next-token loss at each context position (log-scaled x), one line per model."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for name, vals in curves.items():
+        vals = np.asarray(vals)
+        ax.plot(np.arange(1, len(vals) + 1), vals, label=name, linewidth=1.2)
+    ax.set_xscale("log")
+    ax.set_xlabel("Position in the context window (1 = first token, log scale)")
+    ax.set_ylabel("Mean next-token loss (nats)")
+    ax.set_title(title)
+    ax.legend()
+    _save(fig, out_path)
+
+
+def plot_metric_bars(
+    group_labels: list[str], series: dict[str, list[float]], out_path: Path, title: str,
+    xlabel: str, ylabel: str,
+) -> None:
+    """Grouped bars for arbitrary metrics (no fixed y-range), e.g. chrF per decoding setting per model."""
+    x = np.arange(len(group_labels))
+    k = max(len(series), 1)
+    width = 0.8 / k
+    fig, ax = plt.subplots(figsize=(max(8, 1.2 * len(group_labels) + 3), 5))
+    for i, (name, vals) in enumerate(series.items()):
+        ax.bar(x - 0.4 + width * (i + 0.5), vals, width, label=name)
+    ax.set_xticks(x)
+    ax.set_xticklabels(group_labels, rotation=20, ha="right", fontsize=8)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    _save(fig, out_path)

@@ -64,6 +64,11 @@ class GPTConfig:
     rope_base: float = 10_000.0
     tie_embeddings: bool = True
     init_std: float = 0.02
+    # Bonus ablation switch. False removes the ONLY source of position information in this model --
+    # RoPE is applied to q and k and there is no positional table anywhere else -- leaving a "NoPE"
+    # decoder whose sole cue to token order is the causal mask. Defaults to True, and checkpoints
+    # written before the field existed load with the default, so every Phase-2 model is unaffected.
+    use_rope: bool = True
 
     @property
     def head_dim(self) -> int:
@@ -138,7 +143,10 @@ class GPT(nn.Module):
             raise ValueError(f"sequence length {T} exceeds max_seq_len {self.config.max_seq_len}")
 
         x = self.drop(self.tok_emb(idx))
-        cos, sin = self.rope_cos[:T], self.rope_sin[:T]
+        if self.config.use_rope:
+            cos, sin = self.rope_cos[:T], self.rope_sin[:T]
+        else:
+            cos, sin = None, None          # NoPE ablation: attention sees content only
 
         attentions: list[torch.Tensor] | None = [] if output_attentions else None
         for block in self.blocks:

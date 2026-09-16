@@ -53,7 +53,7 @@ class CausalSelfAttention(nn.Module):
         # convention).
 
     def forward(
-        self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor,
+        self, x: torch.Tensor, cos: torch.Tensor | None, sin: torch.Tensor | None,
         output_attentions: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         B, T, C = x.shape
@@ -66,8 +66,11 @@ class CausalSelfAttention(nn.Module):
 
         # RoPE on Q and K only -- V carries content, not position, and rotating it would make the
         # attention OUTPUT position-dependent rather than just the attention weights.
-        q = apply_rope(q, cos, sin)
-        k = apply_rope(k, cos, sin)
+        # cos/sin are None in the NoPE ablation (GPTConfig.use_rope=False): q and k are then pure
+        # content, and two identical tokens at different positions produce identical keys.
+        if cos is not None:
+            q = apply_rope(q, cos, sin)
+            k = apply_rope(k, cos, sin)
 
         if not output_attentions:
             y = F.scaled_dot_product_attention(
