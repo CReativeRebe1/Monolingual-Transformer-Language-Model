@@ -1,0 +1,18 @@
+{
+  "model": "model_h_nope",
+  "language": "hindi",
+  "split": "val",
+  "checkpoint": "hindi/nope/checkpoints/ckpt_best.pt",
+  "checkpoint_step": 3936,
+  "params": 23846784,
+  "vocab_size": 16000,
+  "perplexity": {
+    "split": "val",
+    "n_tokens": 821248,
+    "n_bytes": 8521544,
+    "mean_nll_nats": 3.5555612809045654,
+    "perplexity": 35.00746347518094,
+    "bits_per_byte": 0.4943547840255458,
+    "bits_per_token": 5.129590627537827
+  }
+}

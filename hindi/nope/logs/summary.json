@@ -1,0 +1,12 @@
+{
+  "model": "model_h_nope",
+  "steps": 3936,
+  "tokens_seen": 515899392,
+  "best_val_loss": 3.568113297224045,
+  "params": 23846784,
+  "run_ids": [
+    "20260915T150517Z"
+  ],
+  "vocab_size": 16000,
+  "use_rope": false
+}
