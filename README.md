@@ -44,6 +44,34 @@ each with the measurement recorded in `clean/config.py`. Full numbers in
 [`report/phase1.md`](report/phase1.md); the funnel and figures in [`result.md`](result.md) and
 `report/figures/`.
 
+## Phase 2 result
+
+| | Model H (Hindi) | Model L (Nepali) |
+|---|---:|---:|
+| Parameters | 23,846,784 | 23,846,784 |
+| Pretraining tokens (1 epoch) | 515,899,392 | 571,211,776 |
+| Test perplexity | 31.01 | 52.16 |
+| **Test bits-per-byte** | 0.4819 | **0.4561** |
+
+Full report: [`report/phase2.md`](report/phase2.md).
+
+## Phase 3 result
+
+Each model finetuned on a synthetic comparative/transitive reasoning dataset in its own language
+(20k train; test splits cross seen/unseen entities × seen/held-out wording). Exact match, SFT with
+pretraining replay, mean ± std over 3 seeds:
+
+| | pretrained | test_id | test_entity | test_wording | test_both | val PPL before → after |
+|---|---:|---:|---:|---:|---:|---:|
+| Model H | 0.000 | 0.422 ± 0.045 | 0.129 ± 0.009 | 0.397 ± 0.036 | 0.102 ± 0.005 | 30.3 → 35.5 |
+| Model L | 0.000 | 0.368 ± 0.011 | 0.134 ± 0.004 | 0.352 ± 0.011 | 0.107 ± 0.006 | 51.2 → 76.3 |
+
+Finetuning teaches the format and generalises across wording but not across entity names (the model
+answers with memorised training names). Replay prevents catastrophic forgetting (plain SFT: H 142,
+L 418,137).
+Answer-pointer heads appear in the last two layers. Full report with the four project questions
+answered: [`report/phase3.md`](report/phase3.md).
+
 ## Repository layout
 
 ```
@@ -80,8 +108,36 @@ pytest tests/ -q                                         # compliance suite
 bash scripts/reproduce.sh                                 # small-sample end-to-end pipeline (no GPU needed)
 ```
 
-Full pretraining runs on Kaggle (T4×2 / P100); notebooks in `notebooks/` are self-contained and
-resume from the Drive-hosted checkpoints below.
+**Phase 1 — corpora and tokenizers.** `scripts/run_crawl.py`, `scripts/fetch_downloaded.py` and
+`scripts/build_corpus.py --lang <lang>` build the cleaned splits; `scripts/tokenizer_sweep.py` and
+`scripts/encode_splits.py` produce the tokenizer and the encoded `.bin/.idx`. Or download the
+finished artifacts from Drive (below).
+
+**Phase 2 — pretraining and evaluation.** Full runs used Kaggle (2×T4); the notebook cells are in
+`notebooks/phase2_kaggle.md`, and every run resumes from `ckpt_last.pt`.
+
+```bash
+torchrun --standalone --nproc_per_node=2 hindi/train/pretrain.py      # or nepali/train/pretrain.py
+python hindi/eval/evaluate.py --checkpoint hindi/train/hindi_ckpt_best.pt --split test
+python hindi/eval/attention_report.py --checkpoint hindi/train/hindi_ckpt_best.pt
+```
+
+**Phase 3 — reasoning finetuning** (one 4 GB GPU is enough; ~50 minutes per language). Place the
+pretrained checkpoints from Drive at `hindi/train/hindi_ckpt_best.pt` and
+`nepali/train/nepali_ckpt_best.pt`, and the encoded splits at `<lang>/data/encoded/` (replay and
+perplexity read them).
+
+```bash
+python hindi/reasoning/generate.py                 # dataset, byte-reproducible (also run by the next line)
+python scripts/run_phase3.py --lang hindi          # baselines, LR sweep, 3 seeds × {SFT, replay},
+python scripts/run_phase3.py --lang nepali         #   data-size curve, summary, attention
+python scripts/phase3_compare.py                   # Model H vs Model L table + figure
+python scripts/verify_independence.py              # includes finetuned-checkpoint lineage
+```
+
+Individual steps: `<lang>/reasoning/finetune.py --condition {sft,replay}`,
+`<lang>/reasoning/evaluate.py --run <run> | --pretrained --shots N | --summarize`,
+`<lang>/reasoning/attention_compare.py --run <run>`. See `<lang>/reasoning/README.md`.
 
 ## Dataset storage
 
@@ -101,17 +157,22 @@ intermediates), so they are hosted in two places:
 | Encoded `.bin`/`.idx` | Nepali | 1.2 GB | Drive / HF |
 | Tokenizer model + vocab | both | 1.4 MB | **committed** in `<lang>/tokenizer/` |
 | Corpus statistics | both | 8 KB | **committed**: `<lang>/data/stats.json`, `<lang>/data/encoded/encoding.json`, `result.md` |
-| Pretrained checkpoint (best + last) | Hindi (Model H) | — | _pending — Phase 2_ |
-| Pretrained checkpoint (best + last) | Nepali (Model L) | — | _pending — Phase 2_ |
-| Finetuned (reasoning) checkpoint | both | — | _pending — Phase 3_ |
+| Pretrained checkpoint `hindi_ckpt_best.pt` | Hindi (Model H) | 286 MB | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) |
+| Pretrained checkpoint `nepali_ckpt_best.pt` | Nepali (Model L) | 286 MB | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) |
+| Finetuned checkpoints `reasoning/checkpoints/<run>/ckpt_best.pt` (10 runs) | Hindi (Model H) | 286 MB each (weights + optimizer, resume-capable); 2.9 GB for all 10 | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) — recommended: `replay_lr0.0001_s0` |
+| Finetuned checkpoints `reasoning/checkpoints/<run>/ckpt_best.pt` (10 runs) | Nepali (Model L) | 286 MB each (weights + optimizer, resume-capable); 2.9 GB for all 10 | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) — recommended: `replay_lr0.0003_s0` |
+| Reasoning train split `reasoning/data/train.jsonl` + per-example eval rows | both | 19 MB + 19 MB per language | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) (train regenerable byte-for-byte by `generate.py`) |
+| Reasoning val + test splits, dataset stats, logs, eval summaries | both | ~6 MB | **committed** in `<lang>/reasoning/` |
 
 ## Status
 
 - [x] Phase 1 — Data Collection and Tokenizer Construction (due 19 Aug 2026) — corpora built,
       cleaned, deduplicated, decontaminated, tokenized and encoded; see
       [`result.md`](result.md) and [`report/phase1.md`](report/phase1.md). Remaining: Drive upload.
-- [ ] Phase 2 — Model Implementation, Pretraining, Evaluation (due 5 Sep 2026)
-- [ ] Phase 3 — Reasoning Finetuning, Attention Analysis, Final Report (due 16 Sep 2026)
+- [x] Phase 2 — Model Implementation, Pretraining, Evaluation (due 5 Sep 2026) — see
+      [`report/phase2.md`](report/phase2.md).
+- [x] Phase 3 — Reasoning Finetuning, Attention Analysis, Final Report (due 16 Sep 2026) — see
+      [`report/phase3.md`](report/phase3.md) and [`PHASE3_LOG.md`](PHASE3_LOG.md).
 
 ## Development log
 
