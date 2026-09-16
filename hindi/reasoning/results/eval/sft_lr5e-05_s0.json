@@ -1,0 +1,199 @@
+{
+  "label": "sft_lr5e-05_s0",
+  "language": "hindi",
+  "model": "model_h",
+  "checkpoint": "C:\\Users\\ASUS\\OneDrive\\Desktop\\LMA\\individualProject\\individual-project-CReativeRebe1\\hindi\\reasoning\\checkpoints\\sft_lr5e-05_s0\\ckpt_best.pt",
+  "checkpoint_step": 600,
+  "shots": 0,
+  "splits": {
+    "val": {
+      "all": {
+        "n": 1000,
+        "em": 0.368,
+        "prefix": 0.368,
+        "stopped": 1.0,
+        "cand_acc": 0.372
+      },
+      "by_task": {
+        "cmp2": {
+          "n": 208,
+          "em": 0.34615384615384615,
+          "prefix": 0.34615384615384615,
+          "stopped": 1.0,
+          "cand_acc": 0.35096153846153844
+        },
+        "cmp3": {
+          "n": 198,
+          "em": 0.2676767676767677,
+          "prefix": 0.2676767676767677,
+          "stopped": 1.0,
+          "cand_acc": 0.26262626262626265
+        },
+        "ext3": {
+          "n": 198,
+          "em": 0.4292929292929293,
+          "prefix": 0.4292929292929293,
+          "stopped": 1.0,
+          "cand_acc": 0.4444444444444444
+        },
+        "ext4": {
+          "n": 198,
+          "em": 0.3181818181818182,
+          "prefix": 0.3181818181818182,
+          "stopped": 1.0,
+          "cand_acc": 0.32323232323232326
+        },
+        "pair3": {
+          "n": 198,
+          "em": 0.4797979797979798,
+          "prefix": 0.4797979797979798,
+          "stopped": 1.0,
+          "cand_acc": 0.4797979797979798
+        }
+      },
+      "by_family": {
+        "F1": {
+          "n": 334,
+          "em": 0.38922155688622756,
+          "prefix": 0.38922155688622756,
+          "stopped": 1.0,
+          "cand_acc": 0.40119760479041916
+        },
+        "F2": {
+          "n": 333,
+          "em": 0.3843843843843844,
+          "prefix": 0.3843843843843844,
+          "stopped": 1.0,
+          "cand_acc": 0.38738738738738737
+        },
+        "F3": {
+          "n": 333,
+          "em": 0.3303303303303303,
+          "prefix": 0.3303303303303303,
+          "stopped": 1.0,
+          "cand_acc": 0.32732732732732733
+        }
+      },
+      "by_attr": {
+        "age": {
+          "n": 168,
+          "em": 0.36904761904761907,
+          "prefix": 0.36904761904761907,
+          "stopped": 1.0,
+          "cand_acc": 0.36904761904761907
+        },
+        "height": {
+          "n": 168,
+          "em": 0.38095238095238093,
+          "prefix": 0.38095238095238093,
+          "stopped": 1.0,
+          "cand_acc": 0.38095238095238093
+        },
+        "obj_weight": {
+          "n": 165,
+          "em": 0.4303030303030303,
+          "prefix": 0.4303030303030303,
+          "stopped": 1.0,
+          "cand_acc": 0.42424242424242425
+        },
+        "price": {
+          "n": 166,
+          "em": 0.29518072289156627,
+          "prefix": 0.29518072289156627,
+          "stopped": 1.0,
+          "cand_acc": 0.3072289156626506
+        },
+        "quantity": {
+          "n": 165,
+          "em": 0.3575757575757576,
+          "prefix": 0.3575757575757576,
+          "stopped": 1.0,
+          "cand_acc": 0.37575757575757573
+        },
+        "weight": {
+          "n": 168,
+          "em": 0.375,
+          "prefix": 0.375,
+          "stopped": 1.0,
+          "cand_acc": 0.375
+        }
+      },
+      "errors": {
+        "no_stop": 0,
+        "reversed_extreme": 376,
+        "middle_entity": 148,
+        "equal_case_miss": 107,
+        "out_of_prompt_name": 1,
+        "format_failure": 0
+      },
+      "heuristics": {
+        "first_mentioned": {
+          "all": 0.282,
+          "pair3": 0.2676767676767677,
+          "ext4": 0.19696969696969696,
+          "ext3": 0.2727272727272727,
+          "cmp3": 0.2878787878787879,
+          "cmp2": 0.3798076923076923
+        },
+        "last_mentioned": {
+          "all": 0.249,
+          "pair3": 0.2222222222222222,
+          "ext4": 0.14646464646464646,
+          "ext3": 0.26262626262626265,
+          "cmp3": 0.2222222222222222,
+          "cmp2": 0.38461538461538464
+        },
+        "most_frequent": {
+          "all": 0.136,
+          "pair3": 0.0,
+          "ext4": 0.0,
+          "ext3": 0.0,
+          "cmp3": 0.2878787878787879,
+          "cmp2": 0.3798076923076923
+        },
+        "random_candidate": {
+          "all": 0.332,
+          "pair3": 0.42424242424242425,
+          "ext4": 0.2676767676767677,
+          "ext3": 0.3787878787878788,
+          "cmp3": 0.26262626262626265,
+          "cmp2": 0.3269230769230769
+        }
+      },
+      "chance": {
+        "all": 0.30033333333333334,
+        "pair3": 0.3333333333333333,
+        "ext4": 0.25,
+        "ext3": 0.3333333333333333,
+        "cmp3": 0.25,
+        "cmp2": 0.3333333333333333
+      }
+    }
+  },
+  "train_config": {
+    "lr": 5e-05,
+    "min_lr_ratio": 0.1,
+    "warmup_fraction": 0.05,
+    "weight_decay": 0.1,
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "grad_clip": 1.0,
+    "batch_size": 64,
+    "epochs": 3.0,
+    "max_steps": 0,
+    "dropout": 0.1,
+    "replay": false,
+    "replay_batch": 8,
+    "replay_block": 256,
+    "replay_weight": 1.0,
+    "eval_every": 100,
+    "val_em_examples": 1000,
+    "patience": 4,
+    "log_every": 10,
+    "seed": 0,
+    "lora_rank": 0,
+    "lora_alpha": null,
+    "train_size": 0,
+    "eval_batch_size": 64
+  }
+}
