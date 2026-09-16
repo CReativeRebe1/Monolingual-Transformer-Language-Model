@@ -229,6 +229,7 @@ sentences. Two pathologies, two stages.
 | Manual share (words / tokens) | 21.2% / **22.5%** | 24.7% / **24.7%** |
 | Train / val / test docs | 3,577,045 / 5,000 / 5,000 | 5,526,928 / 5,000 / 5,000 |
 | Train / val / test tokens | 515,972,223 / 821,762 / 846,668 | 571,227,702 / 634,788 / 643,767 |
+| **Final perplexity val / test** (model trained on this corpus) | **30.34 / 31.01** | **51.23 / 52.16** |
 
 The **20% floor is enforced in code**: each pipeline raises at the end of a run if the final manual
 share falls below it (`MANUAL_FLOOR` in `<lang>/clean/run.py`), after writing `stats.json` so the

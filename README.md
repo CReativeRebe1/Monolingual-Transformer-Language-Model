@@ -69,8 +69,22 @@ pretraining replay, mean ± std over 3 seeds:
 Finetuning teaches the format and generalises across wording but not across entity names (the model
 answers with memorised training names). Replay prevents catastrophic forgetting (plain SFT: H 142,
 L 418,137).
-Answer-pointer heads appear in the last two layers. Full report with the four project questions
-answered: [`report/phase3.md`](report/phase3.md).
+Answer-pointer heads appear in the last two layers. Full Phase 3 report with the four project
+questions answered: [`report/phase3.md`](report/phase3.md).
+
+## Final report
+
+[`report/final_report.pdf`](report/final_report.pdf) (source `report/final_report.tex`) is the
+consolidated report for the whole project: Phases 1–3, the answers to the four project questions,
+and a short section on the bonus ablation.
+
+## Bonus: no positional encoding (NoPE)
+
+The optional ablation lives on the [`bonus`](https://github.com/CL3-410/individual-project-CReativeRebe1/tree/bonus) branch. Model H was retrained with RoPE
+removed (`use_rope=False`), with everything else identical, and the full Phase-2 evaluation suite
+was run on it. Test perplexity went from 31.01 to 35.72 and bits-per-byte from 0.4819 to 0.5017.
+Code is in `hindi/nope/`, results and logs in `hindi/nope/{results,logs}/`, and the write-up in
+`report/bonusPhaseReport.md` on that branch. The checkpoint is on Drive (see below).
 
 ## Repository layout
 
@@ -86,12 +100,11 @@ hindi/          Model H (Hindi) -- self-contained artifacts, each subdir has its
   train/          pretraining entry point, logs, loss curves               (Phase 2)
   eval/           PPL/BPB, BLEU/chrF/ROUGE-L, attention analysis           (Phase 2)
   reasoning/      synthetic reasoning data generator + finetuning          (Phase 3)
-  configs/        run configuration files
 nepali/         Model L (Nepali) -- identical structure, entirely separate artifacts
 scripts/        run_crawl, run_wiki, fetch_downloaded, build_corpus, tokenizer_sweep,
                 encode_splits, summarize_runs, verify_independence, reproduce.sh
 tests/          pytest suite (filters, dedup, tokenizer roundtrip, crawler resume, ...)
-report/         phase1.md / phase2.md / phase3.md + figures/ + tables/  (everything graded lives here)
+report/         final_report.pdf + phase1/2/3 reports + figures/  (everything graded lives here)
 ```
 
 The two language directories share *code* (`lma/`) but no *artifacts*: separate corpora,
@@ -163,16 +176,19 @@ intermediates), so they are hosted in two places:
 | Finetuned checkpoints `reasoning/checkpoints/<run>/ckpt_best.pt` (10 runs) | Nepali (Model L) | 286 MB each (weights + optimizer, resume-capable); 2.9 GB for all 10 | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) — recommended: `replay_lr0.0003_s0` |
 | Reasoning train split `reasoning/data/train.jsonl` + per-example eval rows | both | 19 MB + 19 MB per language | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) (train regenerable byte-for-byte by `generate.py`) |
 | Reasoning val + test splits, dataset stats, logs, eval summaries | both | ~6 MB | **committed** in `<lang>/reasoning/` |
+| Bonus NoPE checkpoint `hindi/nope/checkpoints/ckpt_best.pt` | Hindi (Model H, no RoPE) | 286 MB | [Drive](https://drive.google.com/drive/folders/1lkP2GJKqgr-uzzz-WLeChOM_flqOe8xQ?usp=sharing) |
 
 ## Status
 
 - [x] Phase 1 — Data Collection and Tokenizer Construction (due 19 Aug 2026) — corpora built,
       cleaned, deduplicated, decontaminated, tokenized and encoded; see
-      [`result.md`](result.md) and [`report/phase1.md`](report/phase1.md). Remaining: Drive upload.
+      [`result.md`](result.md) and [`report/phase1.md`](report/phase1.md).
 - [x] Phase 2 — Model Implementation, Pretraining, Evaluation (due 5 Sep 2026) — see
       [`report/phase2.md`](report/phase2.md).
 - [x] Phase 3 — Reasoning Finetuning, Attention Analysis, Final Report (due 16 Sep 2026) — see
-      [`report/phase3.md`](report/phase3.md) and [`PHASE3_LOG.md`](PHASE3_LOG.md).
+      [`report/phase3.md`](report/phase3.md), [`report/final_report.pdf`](report/final_report.pdf)
+      and [`PHASE3_LOG.md`](PHASE3_LOG.md).
+- [x] Bonus — NoPE ablation on Model H — on the `bonus` branch.
 
 ## Development log
 
